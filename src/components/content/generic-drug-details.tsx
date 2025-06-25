@@ -97,9 +97,9 @@ export const GenericDrugDetails: React.FC<GenericDrugDetailsProps> = ({ drug }) 
   }
 
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-6 p-4">
       {/* Drug Details Card */}
-      <Card className="rounded-t-lg px-4 py-4">
+      <Card className="rounded-t-lg">
         <CardHeader className="flex flex-row items-center justify-between py-3 bg-blue-50 border-b border-gray-200">
           <CardTitle className="font-bold">Drug Details</CardTitle>
           <div className="flex space-x-2">
@@ -150,7 +150,7 @@ export const GenericDrugDetails: React.FC<GenericDrugDetailsProps> = ({ drug }) 
       </Card>
 
       {/* Approvals Card */}
-      <Card className="rounded-t-lg mt-6 px-4 py-4">
+      <Card className="rounded-t-lg mt-6">
         <CardHeader className="flex flex-row items-center justify-between py-3 bg-blue-50 border-b border-gray-200">
           <CardTitle className="font-bold">Approvals</CardTitle>
           <Button size="sm" variant="outline" onClick={handleAddApproval}>
@@ -206,7 +206,7 @@ export const GenericDrugDetails: React.FC<GenericDrugDetailsProps> = ({ drug }) 
       </Card>
 
       {/* Aliases Card */}
-      <Card className="rounded-t-lg mt-6 px-4 py-4">
+      <Card className="rounded-t-lg mt-6">
         <CardHeader className="flex flex-row items-center justify-between py-3 bg-blue-50 border-b border-gray-200">
           <CardTitle className="font-bold">Aliases</CardTitle>
           <Button size="sm" variant="outline" onClick={handleAddAlias}>
