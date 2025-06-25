@@ -1,0 +1,41 @@
+﻿row,manufacturer_drug_key,generic_key,generickey,drug_full_name,manufacturer,brandkey,biosimilar_suffix,biosimilar,orig_drug name ,drug_discon_date,maintain_dose,maintain_measure,maintain_reg,montherapy,half_life,registry
+1,humira:adalimumab,adalim,adalim,humira (adalimumab),AbbVie,humira,,0,,N/A for RA,40,mg,every other week,Approved as monotherapy,,RA
+2,idacio:adalimumab:aacf,adalim,adalim,idacio (adalimumab-aacf),Fresenius Kabi,idacio,-aacf,1,Humira,N/A for RA,40,mg,every other week,Approved as monotherapy,,RA
+3,yusimry:adalimumab:aqvh,adalim,adalim,yusimry (adalimumab-aqvh),Coherus,yusimry,-aqvh,1,Humira,N/A for RA,40,mg,every other week,Approved as monotherapy,,RA
+4,hulio:adalimumab:fkjp,adalim,adalim,hulio (adalimumab-fkjp),Viatris,hulio,-fkjp,1,Humira,N/A for RA,40,mg,every other week,Approved as monotherapy,,RA
+5,abrilada:adalimumab:afzb,adalim,adalim,abrilada (adalimumab-afzb),Pfizer,abrilada,-afzb,1,Humira,N/A for RA,40,mg,every other week,Approved as monotherapy,,RA
+6,hadlima:adalimumab:bwwd,adalim,adalim,hadlima (adalimumab-bwwd),"Organon, Samsung",hadlima,-bwwd,1,Humira,N/A for RA,40,mg,every other week,Approved as monotherapy,,RA
+7,hyrimoz:adalimumab:adaz,adalim,adalim,hyrimoz (adalimumab-adaz),Sandoz,hyrimoz,-adaz,1,Humira,N/A for RA,40,mg,every other week,Approved as monotherapy,,RA
+8,cyltezo:adalimumab:adbm,adalim,adalim,cyltezo (adalimumab-adbm),BI,cyltezo,-adbm,1,Humira,N/A for RA,40,mg,every other week,Approved as monotherapy,,RA
+9,amjevita:adalimumab:atto,adalim,adalim,amjevita (adalimumab-atto),Amgen ,amjevita,-atto,1,Humira,N/A for RA,40,mg,every other week,Approved as monotherapy,,RA
+10,yuflyma:adalimumab:aaty,adalim,adalim,yuflyma (adalimumab-aaty),Celltrion,yuflyma,-aaty,1,Humira,N/A for RA,40,mg,every other week,Approved as monotherapy,,RA
+11,remicade:infliximab,inflix,inflix,remicade (infliximab),Janssen,remicade,,0,,N/A for RA,3,mg/kg,every 8 weeks (starting at week 14),Approved with MTX,,RA
+12,avsola:infliximab:axxq,inflix,inflix,avsola (infliximab-axxq),Amgen ,avsola,-axxq,1,Remicade,N/A for RA,3,mg/kg,every 8 weeks (starting at week 14),Approved with MTX,,RA
+13,ixifi:infliximab:qbtx,inflix,inflix,ixifi (infliximab-qbtx),Pfizer,ixifi,-qbtx,1,Remicade,N/A for RA,3,mg/kg,every 8 weeks (starting at week 14),Approved with MTX,,RA
+14,renflexis:infliximab:adba,inflix,inflix,renflexis (infliximab-adba),Organon,renflexis,-adba,1,Remicade,N/A for RA,3,mg/kg,every 8 weeks (starting at week 14),Approved with MTX,,RA
+15,inflectra:infliximab:dyyb,inflix,inflix,inflectra (infliximab-dyyb),Pfizer,inflectra,-dyyb,1,Remicade,N/A for RA,3,mg/kg,every 8 weeks (starting at week 14),Approved with MTX,,RA
+16,enbrel:etanercept,etaner,etaner,enbrel (etanercept),"Immunex, Amgen ",enbrel,,0,,N/A for RA,50,MG,once weekly,"Approved as monotherapy, Approved with MTX",,RA
+17,eticovo:etanercept:ykro,etaner,etaner,eticovo (etanercept-ykro),Samsung,eticovo,-ykro,1,Enbrel,N/A for RA,50,MG,once weekly,"Approved as monotherapy, Approved with MTX",,RA
+18,erelzi:etanercept:szzs,etaner,etaner,erelzi (etanercept-szzs),"Sandoz, Novartis",erelzi,-szzs,1,Enbrel,N/A for RA,50,MG,once weekly,"Approved as monotherapy, Approved with MTX",,RA
+19,rituxan:rituximab,rituximab,rituximab,rituxan (rituximab),Genentech,rituxan,,0,,N/A for RA,2 1000,MG,seperated by 2 weeks every 24 weeks (and not sooner than every 16 weeks),Approved with MTX,,RA
+20,truxima:rituximab:abbs,rituximab,rituximab,truxima (rituximab-abbs),Celltrion,truxima,-abbs,1,Rituxan,N/A for RA,2 1000,MG,seperated by 2 weeks every 24 weeks (and not sooner than every 16 weeks),Approved with MTX,,RA
+21,ruxience:rituximab:pvvr,rituximab,rituximab,ruxience (rituximab-pvvr),Samsung,ruxience,-pvvr,1,Rituxan,N/A for RA,2 1000,MG,seperated by 2 weeks every 24 weeks (and not sooner than every 16 weeks),Approved with MTX,,RA
+22,riabni:rituximab:arrx,rituximab,rituximab,riabni (rituximab-arrx),Amgen ,riabni,-arrx,1,Rituxan,N/A for RA,2 1000,MG,seperated by 2 weeks every 24 weeks (and not sooner than every 16 weeks),Approved with MTX,,RA
+23,actemra:tocilizumab,tocil,tocil,actemra (tocilizumab),Genentech,actemra,,0,,N/A for RA,8,mg/kg,every 4 weeks until clinical response,Approved as monotherapy,,RA
+24,tyenne:tocilizumab:aazg,tocil,tocil,tyenne (tocilizumab-aazg),Fresenius Kabi,tyenne,-aazg,1,Actemra,N/A for RA,8,mg/kg,every 4 weeks until clinical response,Approved as monotherapy,,RA
+25,tofidence:tocilizumab:bavi,tocil,tocil,tofidence (tocilizumab-bavi),Biogen,tofidence,-bavi,1,Actemra,N/A for RA,8,mg/kg,every 4 weeks until clinical response,Approved as monotherapy,,RA
+26,orencia:abatacept,abata,abata,orencia (abatacept),BMS,orencia,,0,,N/A for RA,SC: 125,MG,weekly,Approved as monotherapy,,RA
+27,kineret:anakinra,anakin,anakin,kineret (anakinra),Biovitrum AB,kineret,,0,,N/A for RA,IV: Every 4 weeks dose by weight,,,Approved as monotherapy,,RA
+28,olumiant:baricitinib,baricit,baricit,olumiant (baricitinib),Lilly,olumiant,,0,,N/A for RA,<60 kg 500m,mg,,Approved as monotherapy,,RA
+29,cimzia:certolizumab pegol,certolizumab,certolizumab,cimzia (certolizumab pegol),UCB,cimzia,,0,,N/A for RA,60-100kg 750,mg,,Approved as monotherapy,,RA
+30,methotrexate:methotrexate,mtx,mtx,methotrexate (methotrexate),,methotrexate,,0,,N/A for RA,>100kg 1000,mg,,Approved as monotherapy,,RA
+31,arava:leflunomide,leflun,leflun,arava (leflunomide),Sanofi,arava,,0,,N/A for RA,100,mg,per day,Approved as monotherapy,,RA
+32,azulfidine:sulfasalazine,sulfasal,sulfasal,azulfidine (sulfasalazine),Pfizer,azulfidine,,0,,N/A for RA,2,mg,per day,Approved as monotherapy,,RA
+33,plaquenil:hydroxychloriquine,hydroxychlor,hydroxychlor,plaquenil (hydroxychloriquine),Concordia,plaquenil,,0,,N/A for RA,400,mg,"at weeks 0, 2, and 4",Approved as monotherapy,,RA
+34,simponi aria:golimumab,golimumab,golimumab,simponi aria (golimumab),Janssen,simponi aria,,0,,N/A for RA,7.5-25,mg,per week,Approved with MTX,,RA
+35,simponi :golimumab,golimumab,golimumab,simponi  (golimumab),Janssen,simponi ,,0,,N/A for RA,20,mg,daily for 3 days,Approved with MTX,,RA
+36,kevzara:sarilumab,sarilum,sarilum,kevzara (sarilumab),Sanofi,kevzara,,0,,N/A for RA,2000-3000,mg,per day for one week,Approved as monotherapy,,RA
+37,xeljanz:tofacitinib,tofa,tofa,xeljanz (tofacitinib),Pfizer,xeljanz,,0,,N/A for RA,200-400,mg,per day,Approved as monotherapy,,RA
+38,rinvoq:upadacitnib,upadacit,upadacit,rinvoq (upadacitnib),AbbVie,rinvoq,,0,,N/A for RA,100,mg,every 4 weeks,Approved as monotherapy,,RA
+39,"neoral, sandimmune:cyclosporine",cyclospor,cyclospor,"neoral, sandimmune (cyclosporine)",Novartis,"neoral, sandimmune",,0,,N/A for RA,,, 2 weeks later,Approved as monotherapy,,RA
+40,imuran:azathioprine,azathio,azathio,imuran (azathioprine),Prometheus Labs,imuran,,0,,N/A for RA,50 mg once a month,,once per month,Approved as monotherapy,,RA

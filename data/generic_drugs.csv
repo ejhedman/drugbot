@@ -1,0 +1,20 @@
+﻿row,generic_key,drug_discon_date,mech_of_action,class,rheum_pharm_type,load_dose,load_measure,load_reg,maintain_dose,maintain_measure,maintain_reg,montherapy,half_life,registry
+1,adalim,N/A for RA,TNF Blocker,Biologic,TNFi,40,mg,every other week,40,mg,every other week,Approved as monotherapy,,RA
+11,inflix,N/A for RA,TNF Blocker,Biologic,TNFi,3,mg/kg,"at 0, 2, and 6 weeks",3,mg/kg,every 8 weeks (starting at week 14),Approved with MTX,,RA
+16,etaner,N/A for RA,TNF Blocker,Biologic,TNFi,50,MG,once weekly,50,MG,once weekly,"Approved as monotherapy, Approved with MTX",,RA
+19,rituximab,N/A for RA,CD20 Blocker,Biologic,CD20i,2 1000,MG,seperated by 2 weeks every 24 weeks (and not sooner than every 16 weeks),2 1000,MG,seperated by 2 weeks every 24 weeks (and not sooner than every 16 weeks),Approved with MTX,,RA
+23,tocil,N/A for RA,IL-6,Biologic,IL-6i,4,mg/kg,every 4 weeks,8,mg/kg,every 4 weeks until clinical response,Approved as monotherapy,,RA
+26,abata,N/A for RA,"T cell costimulation modulator, CD80/86-CD28 Genes",Biologic,CTLA4-i,SC Use: Optional loading dose of 1 IV infusion,,weekly,SC: 125,MG,weekly,Approved as monotherapy,,RA
+27,anakin,N/A for RA,IL-1,Biologic,IL-1i,"IV: Administer at 0, 2, and 4 weeks by weight.",,weekly,IV: Every 4 weeks dose by weight,,,Approved as monotherapy,,RA
+28,baricit,N/A for RA,JAK inhibitor,Non-biologic,JAKi,<60 kg 500,mg,,<60 kg 500m,mg,,Approved as monotherapy,,RA
+29,certolizumab,N/A for RA,TNF Blocker,Biologic,TNFi,60-100kg 750,mg,,60-100kg 750,mg,,Approved as monotherapy,,RA
+30,mtx,N/A for RA,Unknown,Non-biologic,csDMARD,>100kg 1000,mg,,>100kg 1000,mg,,Approved as monotherapy,,RA
+31,leflun,N/A for RA,Pyrimidine synthesis inhibitor,Non-biologic,csDMARD,100,mg,per day,100,mg,per day,Approved as monotherapy,,RA
+32,sulfasal,N/A for RA,Unknown,Non-biologic,DMARD,2,mg,per day,2,mg,per day,Approved as monotherapy,,RA
+33,hydroxychlor,N/A for RA,"4-aminoquinoline, Inhibits activity of lysosomal enzymes",Non-biologic,csDMARD,400,mg,every 4 weeks,400,mg,"at weeks 0, 2, and 4",Approved as monotherapy,,RA
+34,golimumab,N/A for RA,TNF Blocker,Biologic,TNFi,7.5-25,mg,per week,7.5-25,mg,per week,Approved with MTX,,RA
+36,sarilum,N/A for RA,IL-6,Biologic,IL-6i,500-1000,mg,per day for one week,2000-3000,mg,per day for one week,Approved as monotherapy,,RA
+37,tofa,N/A for RA,JAK inhibitor,Non-biologic,JAKi,400-600,mg,per day,200-400,mg,per day,Approved as monotherapy,,RA
+38,upadacit,N/A for RA,JAK inhibitor,Non-biologic,JAKi,2 100,mg,1 day,100,mg,every 4 weeks,Approved as monotherapy,,RA
+39,cyclospor,N/A for RA,Calcineurin inhibitor,Non-biologic,csDMARD,100mg injection 2 weeks later,,,,, 2 weeks later,Approved as monotherapy,,RA
+40,actemra,N/A for RA,"Inhibits purine synthesis, T cells, and B cells",Non-biologic,csDMARD,50 mg once a month,,once per month,50 mg once a month,,once per month,Approved as monotherapy,,RA
