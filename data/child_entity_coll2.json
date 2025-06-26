@@ -1,0 +1,17 @@
+[
+  {
+    "child_entity_key": "child_001",
+    "coll2_property1": "Extra1A",
+    "coll2_property2": true
+  },
+  {
+    "child_entity_key": "child_002",
+    "coll2_property1": "Extra2A",
+    "coll2_property2": false
+  },
+  {
+    "child_entity_key": "child_004",
+    "coll2_property1": "Extra4A",
+    "coll2_property2": true
+  }
+] 

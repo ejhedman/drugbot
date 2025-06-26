@@ -1,0 +1,27 @@
+[
+  {
+    "entity_key": "entity_001",
+    "entity_name": "Acetaminophen",
+    "entity_property1": "Pain reliever and fever reducer"
+  },
+  {
+    "entity_key": "entity_002",
+    "entity_name": "Ibuprofen",
+    "entity_property1": "Non-steroidal anti-inflammatory drug"
+  },
+  {
+    "entity_key": "entity_003",
+    "entity_name": "Aspirin",
+    "entity_property1": "Salicylate drug used for pain and inflammation"
+  },
+  {
+    "entity_key": "entity_004",
+    "entity_name": "Lisinopril",
+    "entity_property1": "ACE inhibitor for blood pressure control"
+  },
+  {
+    "entity_key": "entity_005",
+    "entity_name": "Metformin",
+    "entity_property1": "Biguanide antidiabetic medication"
+  }
+] 

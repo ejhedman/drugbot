@@ -1,0 +1,44 @@
+[
+  {
+    "child_entity_key": "child_001",
+    "entity_key": "entity_001",
+    "child_entity_name": "Tylenol",
+    "child_entity_property1": "Brand name for acetaminophen"
+  },
+  {
+    "child_entity_key": "child_002",
+    "entity_key": "entity_001",
+    "child_entity_name": "Panadol",
+    "child_entity_property1": "International brand name for acetaminophen"
+  },
+  {
+    "child_entity_key": "child_003",
+    "entity_key": "entity_002",
+    "child_entity_name": "Advil",
+    "child_entity_property1": "Brand name for ibuprofen"
+  },
+  {
+    "child_entity_key": "child_004",
+    "entity_key": "entity_002",
+    "child_entity_name": "Motrin",
+    "child_entity_property1": "Another brand name for ibuprofen"
+  },
+  {
+    "child_entity_key": "child_005",
+    "entity_key": "entity_003",
+    "child_entity_name": "Bayer Aspirin",
+    "child_entity_property1": "Original brand name for aspirin"
+  },
+  {
+    "child_entity_key": "child_006",
+    "entity_key": "entity_004",
+    "child_entity_name": "Zestril",
+    "child_entity_property1": "Brand name for lisinopril"
+  },
+  {
+    "child_entity_key": "child_007",
+    "entity_key": "entity_005",
+    "child_entity_name": "Glucophage",
+    "child_entity_property1": "Original brand name for metformin"
+  }
+] 
