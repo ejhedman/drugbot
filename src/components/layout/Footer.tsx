@@ -2,24 +2,41 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 
-export function Footer() {
+interface FooterProps {
+  onVersionClick?: () => void;
+  onHelpFeedbackClick?: () => void;
+}
+
+export function Footer({ onVersionClick, onHelpFeedbackClick }: FooterProps) {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
-    // Authenticated footer - show system status and build info
+    // Authenticated footer - 3 sections: Version, Copyright, Help/Feedback
     return (
       <footer className="bg-slate-200 px-6 py-4 flex items-center justify-between border-t border-slate-200 shadow-sm">
-        <div className="flex items-center gap-4">
+        {/* Left - Version Link */}
+        <div className="flex items-center">
+          <button
+            onClick={onVersionClick}
+            className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline transition-colors"
+          >
+            Version 1.0
+          </button>
+        </div>
+
+        {/* Center - Copyright */}
+        <div className="flex items-center">
           <p className="text-sm text-slate-600">© 2024 Entity Manager</p>
         </div>
-        <div className="flex items-center gap-6">
-          <span className="text-sm text-slate-500">
-            Built with modern design principles
-          </span>
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></div>
-            <span className="text-sm text-slate-500">System Online</span>
-          </div>
+
+        {/* Right - Help/Feedback Link */}
+        <div className="flex items-center">
+          <button
+            onClick={onHelpFeedbackClick}
+            className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline transition-colors"
+          >
+            Help/Feedback
+          </button>
         </div>
       </footer>
     );
