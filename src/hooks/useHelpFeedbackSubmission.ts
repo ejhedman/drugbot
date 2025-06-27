@@ -21,9 +21,12 @@ export function useHelpFeedbackSubmission(
   const [success, setSuccess] = useState(false);
 
   const defaultSubmitHandler = async (data: HelpFeedbackFormData) => {
-    // Prepare the request payload
+    // Prepare the request payload with user information
     const requestPayload = {
       message: data.message,
+      userId: data.userId,
+      userEmail: data.userEmail,
+      userName: data.userName,
       timestamp: new Date().toISOString(),
     };
 

@@ -5,9 +5,13 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface HelpFeedbackFormData {
   message: string;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
 }
 
 interface HelpFeedbackPageProps {
@@ -16,6 +20,7 @@ interface HelpFeedbackPageProps {
 }
 
 export function HelpFeedbackPage({ onSubmit, onCancel }: HelpFeedbackPageProps) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<HelpFeedbackFormData>({
     message: '',
   });
@@ -46,11 +51,19 @@ export function HelpFeedbackPage({ onSubmit, onCancel }: HelpFeedbackPageProps) 
     setSubmitSuccess(false);
     
     try {
+      // Include user information in the submission
+      const submissionData: HelpFeedbackFormData = {
+        message: formData.message,
+        userId: user?.email, // Using email as user ID since that's what we have
+        userEmail: user?.email,
+        userName: user?.name,
+      };
+
       // Call the provided callback or default to console.log
       if (onSubmit) {
-        await onSubmit(formData);
+        await onSubmit(submissionData);
       } else {
-        console.log('Help/Feedback Form submitted:', formData);
+        console.log('Help/Feedback Form submitted:', submissionData);
       }
       
       setSubmitSuccess(true);
@@ -101,6 +114,17 @@ export function HelpFeedbackPage({ onSubmit, onCancel }: HelpFeedbackPageProps) 
                 <p className="text-slate-600 mt-2">
                   Your feedback helps us improve the system for everyone
                 </p>
+                {user ? (
+                  <div className="text-sm text-slate-500 mt-1 space-y-1">
+                    <p>Submitting as: <strong>{user.name}</strong> ({user.email})</p>
+                    <p className="text-xs">User ID: {user.email}</p>
+                  </div>
+                ) : (
+                  <div className="text-sm text-red-500 mt-1">
+                    <p>⚠️ No user information available</p>
+                    <p className="text-xs">This may indicate an authentication issue</p>
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent>

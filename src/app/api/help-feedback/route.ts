@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export interface HelpFeedbackRequest {
   message: string;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
   timestamp: string;
 }
 
@@ -22,18 +25,21 @@ export async function POST(request: NextRequest) {
     // a logging service, database, email system, or ticketing system
     console.log('=== HELP/FEEDBACK REQUEST RECEIVED ===');
     console.log('Timestamp:', new Date().toISOString());
+    console.log('User ID:', body.userId || 'Not provided');
+    console.log('User Email:', body.userEmail || 'Not provided');
+    console.log('User Name:', body.userName || 'Not provided');
+    console.log('Message Length:', body.message.length);
     console.log('Request Data:', JSON.stringify(body, null, 2));
     console.log('Client IP:', request.headers.get('x-forwarded-for') || 'unknown');
     console.log('User Agent:', request.headers.get('user-agent') || 'unknown');
-    console.log('Message Length:', body.message.length);
     console.log('=======================================');
     
     // In a real implementation, you might:
-    // - Save to database
-    // - Send email notification to support team
-    // - Create support ticket
-    // - Log to external service like Slack, Discord, etc.
-    // - Store in customer feedback system
+    // - Save to database with user association
+    // - Send email notification to support team with user context
+    // - Create support ticket linked to user account
+    // - Log to external service like Slack, Discord, etc. with user info
+    // - Store in customer feedback system with user attribution
     
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -42,6 +48,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Feedback received successfully',
       requestId: `feedback-${Date.now()}`, // In real app, use proper UUID
+      userId: body.userId,
       timestamp: new Date().toISOString()
     }, { status: 200 });
     
