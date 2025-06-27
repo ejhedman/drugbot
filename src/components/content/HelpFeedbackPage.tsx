@@ -56,7 +56,7 @@ export function HelpFeedbackPage({ onSubmit, onCancel }: HelpFeedbackPageProps) 
         message: formData.message,
         userId: user?.email, // Using email as user ID since that's what we have
         userEmail: user?.email,
-        userName: user?.name,
+        userName: user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email,
       };
 
       // Call the provided callback or default to console.log
@@ -116,7 +116,7 @@ export function HelpFeedbackPage({ onSubmit, onCancel }: HelpFeedbackPageProps) 
                 </p>
                 {user ? (
                   <div className="text-sm text-slate-500 mt-1 space-y-1">
-                    <p>Submitting as: <strong>{user.name}</strong> ({user.email})</p>
+                    <p>Submitting as: <strong>{user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email}</strong> ({user.email})</p>
                     <p className="text-xs">User ID: {user.email}</p>
                   </div>
                 ) : (

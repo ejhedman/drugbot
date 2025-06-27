@@ -13,6 +13,10 @@ interface HeaderProps {
 export function Header({ onLogin, onLogout }: HeaderProps) { // eslint-disable-line @typescript-eslint/no-unused-vars
   const { user } = useAuth();
   
+  // Get display name and avatar from GitHub user data
+  const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || 'User';
+  const avatarUrl = user?.user_metadata?.avatar_url;
+  
   return (
     <header className="bg-slate-200 px-6 flex justify-between items-center border-b border-slate-200 shadow-sm" style={{ minHeight: '100px' }}>
       <div className="flex items-center">
@@ -31,7 +35,18 @@ export function Header({ onLogin, onLogout }: HeaderProps) { // eslint-disable-l
       <div className="flex items-center gap-4">
         {user ? (
           <>
-            <span className="label text-slate-700">Welcome, {user.email}</span>
+            <div className="flex items-center gap-3">
+              {avatarUrl && (
+                <Image
+                  src={avatarUrl}
+                  alt="User avatar"
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+              )}
+              <span className="label text-slate-700">Welcome, {displayName}</span>
+            </div>
             <Button
               onClick={onLogout}
               size="sm"

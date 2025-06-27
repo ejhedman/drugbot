@@ -287,7 +287,7 @@ export function EntityDetailPage({
 
   return (
     <div className="h-full flex flex-col bg-white rounded-xl shadow-accent-md m-4">
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 flex flex-col">
         <DetailCard
           title={child ? child.child_entity_name : entity?.entity_name || ''}
           subtitle={child ? 'Child Entity Detail' : 'Entity Detail'}
@@ -298,11 +298,13 @@ export function EntityDetailPage({
         />
 
         {tabConfigs.length > 0 && (
-          <CollectionTabSet
-            tabs={tabConfigs}
-            loading={collectionsLoading}
-            callbacks={tabCallbacks}
-          />
+          <div className="flex-1 min-h-0">
+            <CollectionTabSet
+              tabs={tabConfigs}
+              loading={collectionsLoading}
+              callbacks={tabCallbacks}
+            />
+          </div>
         )}
       </div>
     </div>

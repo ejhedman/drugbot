@@ -14,7 +14,7 @@ import { useLoginHelpSubmission } from '@/hooks/useLoginHelpSubmission';
 import { useHelpFeedbackSubmission } from '@/hooks/useHelpFeedbackSubmission';
 
 export function Layout() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, signOut, isLoading } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [showLoginHelp, setShowLoginHelp] = useState(false);
   const [showReleaseNotes, setShowReleaseNotes] = useState(false);
@@ -40,12 +40,16 @@ export function Layout() {
     setShowHelpFeedback(false);
   };
 
-  const handleLogout = () => {
-    logout();
-    setShowLogin(false);
-    setShowLoginHelp(false);
-    setShowReleaseNotes(false);
-    setShowHelpFeedback(false);
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setShowLogin(false);
+      setShowLoginHelp(false);
+      setShowReleaseNotes(false);
+      setShowHelpFeedback(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const handleLoginHelpClick = () => {
@@ -79,6 +83,17 @@ export function Layout() {
 
   // Determine what content to show
   const getMainContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      );
+    }
+
     if (!isAuthenticated) {
       if (showLogin) {
         return <LoginForm onSuccess={handleLoginSuccess} />;
@@ -120,7 +135,7 @@ export function Layout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col">
       {/* Header */}
       <Header 
         onLogin={handleLoginClick}
@@ -128,7 +143,7 @@ export function Layout() {
       />
 
       {/* Body Content */}
-      <main className="flex-1 flex flex-col min-h-0">
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {getMainContent()}
       </main>
 

@@ -87,9 +87,9 @@ export function DetailViewRefactored({
 
   return (
     <div className="h-full flex flex-col bg-white rounded-xl shadow-accent-md m-4">
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0">
         {!entityKey && !childKey && !isAddingEntity && !isAddingChild ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="h-full flex items-center justify-center">
             <div className="text-center label">
               Select an entity or child to view details
             </div>
