@@ -2,9 +2,10 @@ import { LoginForm } from '@/components/auth/LoginForm';
 
 interface UnauthenticatedContentProps {
   onLogin: () => void;
+  onLoginHelp: () => void;
 }
 
-export function UnauthenticatedContent({ onLogin }: UnauthenticatedContentProps) {
+export function UnauthenticatedContent({ onLogin, onLoginHelp }: UnauthenticatedContentProps) {
   return (
     <div className="flex items-center justify-center flex-1 bg-gradient-to-br from-indigo-50 via-white to-indigo-100 p-4">
       <div className="w-full max-w-6xl">
@@ -36,7 +37,15 @@ export function UnauthenticatedContent({ onLogin }: UnauthenticatedContentProps)
             </div>
           </div>
           <div className="flex justify-center">
-            <LoginForm onSuccess={onLogin} />
+            <div className="flex flex-col items-center space-y-4">
+              <LoginForm onSuccess={onLogin} />
+              <button
+                onClick={onLoginHelp}
+                className="text-sm text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
+              >
+                I need help logging in
+              </button>
+            </div>
           </div>
         </div>
       </div>

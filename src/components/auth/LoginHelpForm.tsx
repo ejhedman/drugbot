@@ -23,7 +23,7 @@ interface LoginHelpFormProps {
 const helpOptions = [
   { value: 'login-issue', label: 'I am registered and I cannot log in' },
   { value: 'request-access', label: 'I am requesting access to the site' },
-  { value: 'lost-credentials', label: "I've lost my credentials" }, // eslint-disable-line react/no-unescaped-entities
+  { value: 'lost-credentials', label: "I've lost my credentials" },
   { value: 'other', label: 'Other' },
 ];
 
@@ -86,8 +86,8 @@ export function LoginHelpForm({ onSubmit, onCancel }: LoginHelpFormProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <Card>
+    <div className="max-w-2xl w-full mx-auto p-6">
+      <Card className="w-full">
         <CardHeader>
           <div className="text-center">
             <h2 className="text-2xl font-bold text-slate-700">Login Help</h2>
@@ -95,7 +95,7 @@ export function LoginHelpForm({ onSubmit, onCancel }: LoginHelpFormProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 w-full">
             {/* How Can I Help You Dropdown */}
             <div className="space-y-2">
               <Label htmlFor="helpType">How Can I Help You?</Label>
@@ -104,7 +104,7 @@ export function LoginHelpForm({ onSubmit, onCancel }: LoginHelpFormProps) {
                 onValueChange={(value) => handleInputChange('helpType', value)}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Please select an option..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -126,6 +126,7 @@ export function LoginHelpForm({ onSubmit, onCancel }: LoginHelpFormProps) {
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Enter your full name"
+                className="w-full"
                 required
               />
             </div>
@@ -139,6 +140,7 @@ export function LoginHelpForm({ onSubmit, onCancel }: LoginHelpFormProps) {
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="Enter your email address"
+                className="w-full"
                 required
               />
             </div>
@@ -151,8 +153,8 @@ export function LoginHelpForm({ onSubmit, onCancel }: LoginHelpFormProps) {
                 value={formData.additionalInfo}
                 onChange={(e) => handleInputChange('additionalInfo', e.target.value)}
                 placeholder="Please provide any additional information that might help us assist you..."
-                rows={4}
-                className="resize-none"
+                rows={6}
+                className="resize-none w-full min-w-0"
               />
             </div>
 

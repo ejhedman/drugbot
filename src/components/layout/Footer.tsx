@@ -2,11 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 
-interface FooterProps {
-  onLoginHelpClick?: () => void;
-}
-
-export function Footer({ onLoginHelpClick }: FooterProps) {
+export function Footer() {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
@@ -29,26 +25,11 @@ export function Footer({ onLoginHelpClick }: FooterProps) {
     );
   }
 
-  // Unauthenticated footer - show copyright center and login help right
+  // Unauthenticated footer - show copyright center
   return (
-    <footer className="bg-slate-200 px-6 py-4 flex items-center justify-between border-t border-slate-200 shadow-sm">
-      {/* Left side - empty for spacing */}
-      <div className="flex-1"></div>
-      
+    <footer className="bg-slate-200 px-6 py-4 flex items-center justify-center border-t border-slate-200 shadow-sm">
       {/* Center - Copyright notice */}
-      <div className="flex-1 flex justify-center">
-        <p className="text-sm text-slate-600">© 2024 Entity Manager</p>
-      </div>
-      
-      {/* Right side - Login Help link */}
-      <div className="flex-1 flex justify-end">
-        <button
-          onClick={onLoginHelpClick}
-          className="text-sm text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
-        >
-          Login Help
-        </button>
-      </div>
+      <p className="text-sm text-slate-600">© 2024 Entity Manager</p>
     </footer>
   );
 } 

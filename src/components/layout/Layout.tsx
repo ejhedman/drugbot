@@ -63,12 +63,15 @@ export function Layout() {
             onCancel={handleLoginHelpCancel}
           />
         ) : (
-          <UnauthenticatedContent onLogin={handleLoginSuccess} />
+          <UnauthenticatedContent 
+            onLogin={handleLoginSuccess} 
+            onLoginHelp={handleLoginHelpClick}
+          />
         )}
       </main>
 
       {/* Footer */}
-      <Footer onLoginHelpClick={handleLoginHelpClick} />
+      <Footer />
     </div>
   );
 } 
