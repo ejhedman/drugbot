@@ -145,8 +145,8 @@ export function EntityDetailPage({
 
   // Create callback maps for tabs
   const createTabCallbacks = (collectionType: string, parentKey: string): TabCallbacks => ({
-    onUpdate: async (data: any) => {
-      await operations.updateCollection(collectionType, parentKey, data);
+    onUpdate: async (index: number, data: any) => {
+      await operations.updateCollection(collectionType, parentKey, index, data);
       // Refresh collections after update
       if (child) {
         await fetchChildCollections(child.child_entity_key);
@@ -177,7 +177,12 @@ export function EntityDetailPage({
   // Handle entity operations
   const handleEntityUpdate = async (updatedData: Record<string, any>) => {
     if (!entity) return;
-    const updatedEntity = await operations.updateEntity(entity.entity_key, updatedData);
+    // Filter data to only include fields that can be updated
+    const updateData = {
+      entity_name: updatedData.entity_name,
+      entity_property1: updatedData.entity_property1,
+    };
+    const updatedEntity = await operations.updateEntity(entity.entity_key, updateData);
     setEntity(updatedEntity);
     onEntityUpdated?.(updatedEntity);
   };
@@ -190,7 +195,12 @@ export function EntityDetailPage({
 
   const handleChildUpdate = async (updatedData: Record<string, any>) => {
     if (!child) return;
-    const updatedChild = await operations.updateChild(child.child_entity_key, updatedData);
+    // Filter data to only include fields that can be updated
+    const updateData = {
+      child_entity_name: updatedData.child_entity_name,
+      child_entity_property1: updatedData.child_entity_property1,
+    };
+    const updatedChild = await operations.updateChild(child.child_entity_key, updateData);
     setChild(updatedChild);
     onChildUpdated?.(updatedChild);
   };

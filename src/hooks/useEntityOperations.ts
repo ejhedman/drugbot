@@ -10,7 +10,7 @@ interface UseEntityOperationsReturn {
   createChild: (child: Partial<ChildEntity>) => Promise<ChildEntity>;
   updateChild: (key: string, child: Partial<ChildEntity>) => Promise<ChildEntity>;
   deleteChild: (key: string) => Promise<void>;
-  updateCollection: (type: string, parentKey: string, data: any) => Promise<any>;
+  updateCollection: (type: string, parentKey: string, index: number, data: any) => Promise<any>;
   deleteFromCollection: (type: string, parentKey: string, id: string | number) => Promise<void>;
   createInCollection: (type: string, parentKey: string, data: any) => Promise<any>;
 }
@@ -49,7 +49,7 @@ export function useEntityOperations(): UseEntityOperationsReturn {
   const updateEntity = async (key: string, entity: Partial<Entity>): Promise<Entity> => {
     return handleApiCall(async () => {
       const response = await fetch(`/api/entities/${encodeURIComponent(key)}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(entity),
       });
@@ -82,7 +82,7 @@ export function useEntityOperations(): UseEntityOperationsReturn {
   const updateChild = async (key: string, child: Partial<ChildEntity>): Promise<ChildEntity> => {
     return handleApiCall(async () => {
       const response = await fetch(`/api/children/${encodeURIComponent(key)}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(child),
       });
@@ -100,10 +100,10 @@ export function useEntityOperations(): UseEntityOperationsReturn {
     });
   };
 
-  const updateCollection = async (type: string, parentKey: string, data: any): Promise<any> => {
+  const updateCollection = async (type: string, parentKey: string, index: number, data: any): Promise<any> => {
     return handleApiCall(async () => {
-      const response = await fetch(`/api/${type}/${encodeURIComponent(parentKey)}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/${type}/${encodeURIComponent(parentKey)}/${index}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });

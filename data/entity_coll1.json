@@ -1,12 +1,6 @@
 [
   {
     "entity_key": "entity_001",
-    "coll1_property1": "Value 1A",
-    "coll1_property2": "Value 1B",
-    "coll1_property3": 123
-  },
-  {
-    "entity_key": "entity_001",
     "coll1_property1": "Value 1c",
     "coll1_property2": "Value 1d",
     "coll1_property3": 123
@@ -29,4 +23,4 @@
     "coll1_property2": "Value 3B",
     "coll1_property3": 789
   }
-] 
+]

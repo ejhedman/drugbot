@@ -11,7 +11,7 @@ interface TabTableProps {
   icon?: React.ReactNode;
   emptyMessage?: string;
   loading?: boolean;
-  onUpdate?: (data: any) => Promise<void>;
+  onUpdate?: (index: number, data: any) => Promise<void>;
   onDelete?: (id: string | number) => Promise<void>;
   onCreate?: (data: any) => Promise<void>;
 }
@@ -36,7 +36,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
   const handleSave = async (index: number) => {
     try {
       if (onUpdate) {
-        await onUpdate(editedData);
+        await onUpdate(index, editedData);
       }
       const newData = [...tableData];
       newData[index] = editedData;
@@ -257,10 +257,12 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                       {editingRow === idx ? (
                         <input
                           type="text"
-                          defaultValue={row[key]?.toString() || ''}
-                          onBlur={(e) => {
-                            // TODO: Handle field edit
-                            console.log(`Edit ${key}:`, e.target.value);
+                          value={editedData[key]?.toString() || ''}
+                          onChange={(e) => {
+                            setEditedData((prev: any) => ({
+                              ...prev,
+                              [key]: e.target.value
+                            }));
                           }}
                           className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
                         />

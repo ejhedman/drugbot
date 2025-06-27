@@ -11,7 +11,7 @@ interface TabPropertiesProps {
   icon?: React.ReactNode;
   emptyMessage?: string;
   loading?: boolean;
-  onUpdate?: (data: any) => Promise<void>;
+  onUpdate?: (index: number, data: any) => Promise<void>;
 }
 
 export function TabProperties({ data, title, emptyMessage, loading = false, onUpdate }: TabPropertiesProps) {
@@ -31,7 +31,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
   const handleSave = async () => {
     try {
       if (onUpdate) {
-        await onUpdate(editedData);
+        await onUpdate(0, editedData);
       }
       setIsEditing(false);
       setEditedData({});
