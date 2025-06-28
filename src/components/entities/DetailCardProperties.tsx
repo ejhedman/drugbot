@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, X, Check, Trash2 } from 'lucide-react';
-import { UIEntity, UIProperty } from '@/types';
+import { UIEntity, UIProperty } from '@/model_defs';
+import { ConfirmDialog, useConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export interface DetailField {
   key: string;
@@ -37,17 +38,18 @@ export function DetailCardProperties({
 }: DetailCardPropertiesProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProperties, setEditedProperties] = useState<UIProperty[]>([]);
+  const confirmDialog = useConfirmDialog();
 
   // Use entity name as title if not provided
-  const displayTitle = title || entity.display_name;
+  const displayTitle = title || entity.displayName;
 
   // Filter visible properties for display
-  const visibleProperties = entity.properties.filter((prop: UIProperty) => prop.is_visible);
+  const visibleProperties = (entity.properties || []).filter((prop: UIProperty) => prop.is_visible);
 
   const handleEdit = () => {
     setIsEditing(true);
     // Initialize edited properties with current property values
-    setEditedProperties([...entity.properties]);
+    setEditedProperties([...(entity.properties || [])]);
   };
 
   const handleCancel = () => {
@@ -67,14 +69,12 @@ export function DetailCardProperties({
     }
   };
 
-  const handleDelete = async () => {
-    try {
+  const handleDelete = () => {
+    confirmDialog.openDialog(async () => {
       if (onDelete) {
         await onDelete(entity);
       }
-    } catch (error) {
-      console.error('Error deleting data:', error);
-    }
+    });
   };
 
   const handlePropertyChange = (propertyName: string, value: any) => {
@@ -185,18 +185,25 @@ export function DetailCardProperties({
           </div>
         </div>
         
-        {entity.sub_collections.length > 0 && (
+        {entity.aggregates && entity.aggregates.length > 0 && (
           <div>
             <h4 className="section-title mb-2">Collections</h4>
             <div className="text-sm text-gray-600">
-              {entity.sub_collections
+              {entity.aggregates
                 .sort((a, b) => a.ordinal - b.ordinal)
-                .map(collection => collection.display_name)
+                .map(collection => collection.displayName)
                 .join(', ')}
             </div>
           </div>
         )}
       </CardContent>
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={confirmDialog.closeDialog}
+        onConfirm={confirmDialog.handleConfirm}
+        isLoading={confirmDialog.isLoading}
+      />
     </Card>
   );
 } 

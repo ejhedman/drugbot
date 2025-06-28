@@ -188,7 +188,7 @@
 
 // export function getFieldMetadata(entityName: string, fieldName: string) {
 //   const entity = getEntityMetadata(entityName);
-//   return entity?.fields[fieldName as keyof typeof entity.fields];
+//   return entity?.properties[fieldName as keyof typeof entity.properties];
 // }
 
 // export function getEntityTabs(entityName: string) {

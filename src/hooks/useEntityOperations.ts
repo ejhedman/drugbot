@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LegacyEntity, LegacyChildEntity } from '@/types';
+import { LegacyEntity, LegacyChildEntity } from '@/model_defs';
 
 interface UseEntityOperationsReturn {
   loading: boolean;

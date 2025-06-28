@@ -1,64 +1,14 @@
 // Drug Database Schema - Refined from DDL
 // This file defines the complete metadata for the drug database
 
-export interface EntityField {
-  name: string;
-  type: 'string' | 'number' | 'boolean' | 'date' | 'enum' | 'json';
-  sqlType?: string;
-  isId?: boolean;
-  isKey?: boolean;
-  isRequired?: boolean;
-  enumValues?: string[];
-  
-  ui: {
-    visibility: 'visible' | 'hidden' | 'readonly';
-    displayName: string;
-    controlType: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox';
-    placeholder?: string;
-    validation?: {
-      min?: number;
-      max?: number;
-      pattern?: string;
-      custom?: string;
-    };
-  };
-}
+import { UIProperty, UIAggregate, UIEntity } from '../model_defs/UIModel';
 
-export interface EntityRelationship {
-  type: '1-n' | 'm-n';
-  targetEntity: string;
-  foreignKey?: string;
-  junctionTable?: string;
-  displayName: string;
-  isCollection: boolean;
-}
-
-export interface EntitySubCollection {
-  id: string;
-  displayName: string;
-  type: 'properties' | 'collection' | 'custom';
-  collectionEntity?: string;
-  fields?: string[];
-  customComponent?: string;
-}
-
-export interface EntitySchema {
-  name: string;
-  tableName: string;
-  displayName: string;
-  pluralName: string;
-  comment?: string;
-  fields: EntityField[];
-  relationships: EntityRelationship[];
-  subCollections: EntitySubCollection[];
-  hierarchical?: {
-    parentField: string;
-    maxDepth?: number;
-  };
-}
+// ============================================================================
+// SUB-COLLECTION SCHEMAS (for tabs/aggregates)
+// ============================================================================
 
 // Sub-collection schemas (separate from main entities)
-export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
+export const ENTITY_SUB_COLLECTIONS: Record<string, UIEntity> = {
   generic_aliases: {
     name: 'generic_aliases',
     tableName: 'generic_aliases',
@@ -67,7 +17,11 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
     comment: 'Alternative names and aliases for generic drugs',
     fields: [
       {
-        name: 'uid',
+        property_name: 'uid',
+        ordinal: 1,
+        is_editable: false,
+        is_visible: false,
+        is_key: true,
         type: 'string',
         sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
         isId: true,
@@ -77,9 +31,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           displayName: 'ID',
           controlType: 'text'
         }
-      },
-      {
-        name: 'generic_uid',
+      },{
+        property_name: 'generic_uid',
+        ordinal: 2,
+        is_editable: false,
+        is_visible: false,
+        is_key: false,
         type: 'string',
         sqlType: 'UUID',
         isRequired: true,
@@ -88,9 +45,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           displayName: 'Generic Drug ID',
           controlType: 'text'
         }
-      },
-      {
-        name: 'generic_key',
+      },{
+        property_name: 'generic_key',
+        ordinal: 3,
+        is_editable: true,
+        is_visible: false,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
@@ -98,9 +58,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           displayName: 'Generic Key',
           controlType: 'text'
         }
-      },
-      {
-        name: 'alias',
+      },{
+        property_name: 'alias',
+        ordinal: 3,
+        is_editable: false,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         isRequired: true,
@@ -121,12 +84,13 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
         isCollection: false
       }
     ],
-    subCollections: [
+    aggregates: [
       {
         id: 'details',
         displayName: 'Details',
         type: 'properties',
-        fields: ['alias']
+        fields: ['alias'],
+        ordinal: 1
       }
     ]
   },
@@ -139,7 +103,11 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
     comment: 'Drug administration routes and dosing information',
     fields: [
       {
-        name: 'uid',
+        property_name: 'uid',
+        ordinal: 1,
+        is_editable: false,
+        is_visible: true,
+        is_key: true,
         type: 'string',
         sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
         isId: true,
@@ -149,20 +117,25 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           displayName: 'ID',
           controlType: 'text'
         }
-      },
-      {
-        name: 'route_key',
+      },{
+        property_name: 'route_key',
+        ordinal: 2,
+        is_editable: false,
+        is_visible: false,
+        is_key: true,
         type: 'string',
         sqlType: 'VARCHAR(255)',
-        isKey: true,
         ui: {
           visibility: 'readonly',
           displayName: 'Route Key',
           controlType: 'text'
         }
-      },
-      {
-        name: 'generic_uid',
+      },{
+        property_name: 'generic_uid',
+        ordinal: 7,
+        is_editable: false,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'UUID',
         isRequired: true,
@@ -171,9 +144,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           displayName: 'Generic Drug ID',
           controlType: 'text'
         }
-      },
-      {
-        name: 'route_type',
+      },{
+        property_name: 'route_type',
+        ordinal: 2,
+        is_editable: true,
+        is_visible: false,
+        is_key: false,
         type: 'enum',
         sqlType: 'VARCHAR(255)',
         enumValues: ['Subcutaneous', 'Intravenous', 'Oral'],
@@ -183,9 +159,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           controlType: 'select',
           placeholder: 'Select administration route'
         }
-      },
-      {
-        name: 'load_dose',
+      },{
+        property_name: 'load_dose',
+        ordinal: 9,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
@@ -194,9 +173,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Enter loading dose'
         }
-      },
-      {
-        name: 'load_measure',
+      },{
+        property_name: 'load_measure',
+        ordinal: 9,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
@@ -205,9 +187,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Enter dose unit (mg, ml, etc.)'
         }
-      },
-      {
-        name: 'maintain_dose',
+      },{
+        property_name: 'maintain_dose',
+        ordinal: 11,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
@@ -216,9 +201,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Enter maintenance dose'
         }
-      },
-      {
-        name: 'maintain_measure',
+      },{
+        property_name: 'maintain_measure',
+        ordinal: 11,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
@@ -227,16 +215,33 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Enter dose unit'
         }
-      },
-      {
-        name: 'half_life',
+      },{
+        property_name: 'montherapy',
+        ordinal: 13,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
+        type: 'string',
+        sqlType: 'VARCHAR(255)',
+        ui: {
+          visibility: 'visible',
+          displayName: 'Monotherapy Status',
+          controlType: 'text',
+          placeholder: 'Enter monotherapy approval status'
+        }
+      },{
+        property_name: 'half_life',
+        ordinal: 13,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'TEXT',
         ui: {
           visibility: 'visible',
           displayName: 'Half Life',
           controlType: 'textarea',
-          placeholder: 'Enter half-life information'
+          placeholder: 'Enter drug half-life information'
         }
       }
     ],
@@ -249,12 +254,13 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
         isCollection: false
       }
     ],
-    subCollections: [
+    aggregates: [
       {
         id: 'details',
         displayName: 'Details',
         type: 'properties',
-        fields: ['route_type', 'load_dose', 'load_measure', 'maintain_dose', 'maintain_measure', 'half_life']
+        fields: ['route_type', 'load_dose', 'load_measure', 'maintain_dose', 'maintain_measure', 'montherapy', 'half_life'],
+        ordinal: 1
       }
     ]
   },
@@ -267,7 +273,11 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
     comment: 'Drug approval information by country and route',
     fields: [
       {
-        name: 'uid',
+        property_name: 'uid',
+        ordinal: 1,
+        is_editable: true,
+        is_visible: false,
+        is_key: false,
         type: 'string',
         sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
         isId: true,
@@ -277,9 +287,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           displayName: 'ID',
           controlType: 'text'
         }
-      },
-      {
-        name: 'generic_uid',
+      },{
+        property_name: 'generic_uid',
+        ordinal: 2,
+        is_editable: false,
+        is_visible: false,
+        is_key: false,
         type: 'string',
         sqlType: 'UUID',
         isRequired: true,
@@ -288,9 +301,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           displayName: 'Generic Drug ID',
           controlType: 'text'
         }
-      },
-      {
-        name: 'country',
+      },{
+        property_name: 'country',
+        ordinal: 17,
+        is_editable: true,
+        is_visible: false,
+        is_key: false,
         type: 'enum',
         sqlType: 'VARCHAR(255)',
         enumValues: ['USA', 'CAN', 'FRA', 'UK'],
@@ -300,9 +316,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           controlType: 'select',
           placeholder: 'Select country'
         }
-      },
-      {
-        name: 'indication',
+      },{
+        property_name: 'indication',
+        ordinal: 17,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'TEXT',
         ui: {
@@ -311,9 +330,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           controlType: 'textarea',
           placeholder: 'Enter medical indication'
         }
-      },
-      {
-        name: 'approval_date',
+      },{
+        property_name: 'approval_date',
+        ordinal: 19,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'date',
         sqlType: 'DATE',
         ui: {
@@ -322,9 +344,12 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
           controlType: 'date',
           placeholder: 'Select approval date'
         }
-      },
-      {
-        name: 'box_warning',
+      },{
+        property_name: 'box_warning',
+        ordinal: 19,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'TEXT',
         ui: {
@@ -344,19 +369,20 @@ export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
         isCollection: false
       }
     ],
-    subCollections: [
+    aggregates: [
       {
         id: 'details',
         displayName: 'Details',
         type: 'properties',
-        fields: ['country', 'indication', 'approval_date', 'box_warning']
+        fields: ['country', 'indication', 'approval_date', 'box_warning'],
+        ordinal: 1
       }
     ]
   }
 };
 
 // Main entity schemas (only contains the actual entities, not sub-collections)
-export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
+export const ENTITY_SCHEMAS: Record<string, UIEntity> = {
   generic_drugs: {
     name: 'generic_drugs',
     tableName: 'generic_drugs',
@@ -365,7 +391,11 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
     comment: 'Generic drug information including mechanism of action and classification',
     fields: [
       {
-        name: 'uid',
+        property_name: 'uid',
+        ordinal: 1,
+        is_editable: false,
+        is_visible: true,
+        is_key: true,
         type: 'string',
         sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
         isId: true,
@@ -375,12 +405,14 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           displayName: 'ID',
           controlType: 'text'
         }
-      },
-      {
-        name: 'generic_key',
+      },{
+        property_name: 'generic_key',
+        ordinal: 2,
+        is_editable: false,
+        is_visible: false,
+        is_key: true,
         type: 'string',
         sqlType: 'VARCHAR(255)',
-        isKey: true,
         isRequired: true,
         ui: {
           visibility: 'readonly',
@@ -388,9 +420,12 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Auto-generated key'
         }
-      },
-      {
-        name: 'generic_name',
+      },{
+        property_name: 'generic_name',
+        ordinal: 23,
+        is_editable: false,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         isRequired: true,
@@ -400,9 +435,12 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Enter generic drug name'
         }
-      },
-      {
-        name: 'biologic',
+      },{
+        property_name: 'biologic',
+        ordinal: 23,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'TEXT',
         ui: {
@@ -411,9 +449,12 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           controlType: 'textarea',
           placeholder: 'Enter biologic information'
         }
-      },
-      {
-        name: 'mech_of_action',
+      },{
+        property_name: 'mech_of_action',
+        ordinal: 25,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
@@ -422,9 +463,12 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Enter mechanism of action'
         }
-      },
-      {
-        name: 'class_or_type',
+      },{
+        property_name: 'class_or_type',
+        ordinal: 25,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
@@ -433,9 +477,12 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Enter drug class or type'
         }
-      },
-      {
-        name: 'target',
+      },{
+        property_name: 'target',
+        ordinal: 27,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
@@ -476,36 +523,41 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
         isCollection: true
       }
     ],
-    subCollections: [
+    aggregates: [
       {
         id: 'details',
         displayName: 'Details',
         type: 'properties',
-        fields: ['generic_name', 'biologic', 'mech_of_action', 'class_or_type', 'target']
+        fields: ['generic_name', 'biologic', 'mech_of_action', 'class_or_type', 'target'],
+        ordinal: 1
       },
       {
         id: 'aliases',
         displayName: 'Aliases',
         type: 'collection',
-        collectionEntity: 'generic_aliases'
+        collectionEntity: 'generic_aliases',
+        ordinal: 2
       },
       {
         id: 'routes',
         displayName: 'Routes & Dosing',
         type: 'collection',
-        collectionEntity: 'generic_routes'
+        collectionEntity: 'generic_routes',
+        ordinal: 3
       },
       {
         id: 'approvals',
         displayName: 'Approvals',
         type: 'collection',
-        collectionEntity: 'generic_approvals'
+        collectionEntity: 'generic_approvals',
+        ordinal: 4
       },
       {
         id: 'products',
         displayName: 'Manufactured Products',
         type: 'collection',
-        collectionEntity: 'manu_drugs'
+        collectionEntity: 'manu_drugs',
+        ordinal: 5
       }
     ]
   },
@@ -518,7 +570,11 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
     comment: 'Manufactured drug products including brand names and biosimilar information',
     fields: [
       {
-        name: 'uid',
+        property_name: 'uid',
+        ordinal: 27,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
         isId: true,
@@ -528,20 +584,25 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           displayName: 'ID',
           controlType: 'text'
         }
-      },
-      {
-        name: 'manu_drug_key',
+      },{
+        property_name: 'manu_drug_key',
+        ordinal: 2,
+        is_editable: false,
+        is_visible: false,
+        is_key: true,
         type: 'string',
         sqlType: 'VARCHAR(255)',
-        isKey: true,
         ui: {
           visibility: 'readonly',
           displayName: 'Product Key',
           controlType: 'text'
         }
-      },
-      {
-        name: 'generic_uid',
+      },{
+        property_name: 'generic_uid',
+        ordinal: 30,
+        is_editable: false,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'UUID',
         isRequired: true,
@@ -550,9 +611,12 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           displayName: 'Generic Drug ID',
           controlType: 'text'
         }
-      },
-      {
-        name: 'drug_name',
+      },{
+        property_name: 'drug_name',
+        ordinal: 2,
+        is_editable: true,
+        is_visible: false,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         isRequired: true,
@@ -562,9 +626,12 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Enter brand name'
         }
-      },
-      {
-        name: 'manufacturer',
+      },{
+        property_name: 'manufacturer',
+        ordinal: 32,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
@@ -573,9 +640,12 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Enter manufacturer name'
         }
-      },
-      {
-        name: 'biosimilar',
+      },{
+        property_name: 'biosimilar',
+        ordinal: 32,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'boolean',
         sqlType: 'INTEGER',
         ui: {
@@ -583,9 +653,12 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           displayName: 'Biosimilar',
           controlType: 'checkbox'
         }
-      },
-      {
-        name: 'biosimilar_suffix',
+      },{
+        property_name: 'biosimilar_suffix',
+        ordinal: 34,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
@@ -594,14 +667,17 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
           controlType: 'text',
           placeholder: 'Enter FDA suffix (e.g., -aacf)'
         }
-      },
-      {
-        name: 'biosimilar_originator',
+      },{
+        property_name: 'biosimilar_originator',
+        ordinal: 34,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
         type: 'string',
         sqlType: 'VARCHAR(255)',
         ui: {
           visibility: 'visible',
-          displayName: 'Original Brand',
+          displayName: 'Biosimilar Originator',
           controlType: 'text',
           placeholder: 'Enter original brand name'
         }
@@ -616,37 +692,42 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
         isCollection: false
       }
     ],
-    subCollections: [
+    aggregates: [
       {
         id: 'details',
         displayName: 'Details',
         type: 'properties',
-        fields: ['drug_name', 'manufacturer', 'biosimilar', 'biosimilar_suffix', 'biosimilar_originator']
+        fields: ['drug_name', 'manufacturer', 'biosimilar', 'biosimilar_suffix', 'biosimilar_originator'],
+        ordinal: 1
       }
     ]
   }
 };
 
-// Helper function to get schema by table name
-export function getSchemaByTableName(tableName: string): EntitySchema | undefined {
-  return Object.values(ENTITY_SCHEMAS).find(schema => schema.tableName === tableName);
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Get schema by table name
+ */
+export function getSchemaByTableName(tableName: string): UIEntity | undefined {
+  return Object.values(ENTITY_SCHEMAS).find(schema => schema.tableName === tableName) || 
+         Object.values(ENTITY_SUB_COLLECTIONS).find(schema => schema.tableName === tableName);
 }
 
-// Helper function to get field by name
-export function getFieldByName(schema: EntitySchema, fieldName: string): EntityField | undefined {
-  return schema.fields.find(field => field.name === fieldName);
+/**
+ * Get field by name from schema
+ */
+export function getFieldByName(uiEntity: UIEntity, fieldName: string): UIProperty | undefined {
+  return (uiEntity.properties || []).find(field => field.property_name === fieldName);
 }
 
-// Generate TypeScript types from schema
-export type EntityData<T extends keyof typeof ENTITY_SCHEMAS> = {
-  [K in typeof ENTITY_SCHEMAS[T]['fields'][number]['name']]: 
-    (typeof ENTITY_SCHEMAS[T]['fields'][number] & { name: K })['type'] extends 'string'
-      ? string
-      : (typeof ENTITY_SCHEMAS[T]['fields'][number] & { name: K })['type'] extends 'number'
-      ? number
-      : (typeof ENTITY_SCHEMAS[T]['fields'][number] & { name: K })['type'] extends 'boolean'
-      ? boolean
-      : (typeof ENTITY_SCHEMAS[T]['fields'][number] & { name: K })['type'] extends 'date'
-      ? Date
-      : string;
-}; 
+// ============================================================================
+// BACKWARD COMPATIBILITY (deprecated, use UIModel types instead)
+// ============================================================================
+
+/**
+ * @deprecated Use UIAggregate from UIModel instead
+ */
+export type EntityAggregate = UIAggregate; 

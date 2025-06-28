@@ -1,6 +1,7 @@
 import { DetailField } from '@/components/entities/DetailCardProperties';
 import { MetadataRepository } from './metadata-repository';
-import { EntityField, EntitySchema } from './schema';
+import { UIProperty } from '../model_defs/UIModel';
+import { UIEntity } from '../model_defs/UIModel';
 
 const metadataRepo = new MetadataRepository();
 
@@ -51,11 +52,11 @@ export function generateEntityFields(
     const value = getFieldValue(entityData, field, entityType);
     if (value !== undefined) {
       detailFields.push({
-        key: field.name,
-        label: field.ui.displayName,
+        key: field.property_name,
+        label: field.ui?.displayName || field.property_name,
         value: value,
         type: mapFieldTypeToDetailType(field),
-        editable: field.ui.visibility !== 'readonly' && !field.isId
+        editable: field.ui?.visibility !== 'readonly' && !field.isId
       });
     }
   }
@@ -69,12 +70,12 @@ export function generateEntityFields(
  */
 function getFieldValue(
   entityData: Record<string, any>,
-  field: EntityField,
+  field: UIProperty,
   entityType: 'entity' | 'child'
 ): any {
   // Handle mapping between schema field names and actual API field names
   if (entityType === 'entity') {
-    switch (field.name) {
+    switch (field.property_name) {
       case 'generic_key':
         return entityData.entity_key;
       case 'generic_name':
@@ -88,10 +89,10 @@ function getFieldValue(
         // Return empty string for now, but could be extended
         return '';
       default:
-        return entityData[field.name];
+        return entityData[field.property_name];
     }
   } else if (entityType === 'child') {
-    switch (field.name) {
+    switch (field.property_name) {
       case 'manu_drug_key':
         return entityData.child_entity_key;
       case 'drug_name':
@@ -101,18 +102,18 @@ function getFieldValue(
       case 'manufacturer':
         return entityData.child_entity_property1 || '';
       default:
-        return entityData[field.name];
+        return entityData[field.property_name];
     }
   }
 
-  return entityData[field.name];
+  return entityData[field.property_name];
 }
 
 /**
  * Maps schema field types to DetailField types
  */
-function mapFieldTypeToDetailType(field: EntityField): DetailField['type'] {
-  if (field.isId || field.ui.visibility === 'readonly') {
+function mapFieldTypeToDetailType(field: UIProperty): DetailField['type'] {
+  if (field.isId || field.ui?.visibility === 'readonly') {
     return 'readonly';
   }
   
@@ -213,7 +214,7 @@ export function generateCollectionProperties(
 /**
  * Gets schema metadata for a given entity type
  */
-export function getEntitySchema(entityType: 'entity' | 'child'): EntitySchema | undefined {
+export function getEntitySchema(entityType: 'entity' | 'child'): UIEntity | undefined {
   const tableName = ENTITY_TYPE_TO_TABLE_MAP[entityType];
   const schemaEntityName = TABLE_TO_SCHEMA_MAP[tableName];
   

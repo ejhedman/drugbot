@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataRepository } from '@/lib/repository';
-import { CreateLegacyChildEntityColl2Request } from '@/types';
+import { CreateLegacyChildEntityColl2Request } from '@/model_defs';
 
 export async function GET(request: NextRequest) {
   try {

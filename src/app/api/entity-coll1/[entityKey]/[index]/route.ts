@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataRepository } from '@/lib/repository';
-import { UpdateLegacyEntityColl1Request } from '@/types';
+import { UpdateLegacyEntityColl1Request } from '@/model_defs';
 
 export async function PATCH(
   request: NextRequest,

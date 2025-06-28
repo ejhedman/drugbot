@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LegacyEntity, LegacyChildEntity } from '@/types';
+import { LegacyEntity, LegacyChildEntity } from '@/model_defs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SquarePlus, Search, Pill, Tag, ChevronRight, ChevronDown } from 'lucide-react';

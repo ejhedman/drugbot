@@ -8,11 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EntityField } from '@/lib/schema';
+import { UIProperty } from '@/model_instances';
 
 interface MetadataFormProps {
   entityName: string;
-  fields: EntityField[];
+  fields: UIProperty[];
   data?: Record<string, any>;
   onSubmit: (data: Record<string, any>) => void;
   onCancel?: () => void;
@@ -43,22 +43,27 @@ export function MetadataForm({
     return undefined;
   };
 
-  const renderField = (field: EntityField) => {
-    const fieldValue = watch(field.name);
+  const renderField = (field: UIProperty) => {
+    // Skip fields without UI metadata
+    if (!field.ui) {
+      return null;
+    }
+    
+    const fieldValue = watch(field.property_name);
     
     if (field.ui.visibility === 'hidden') {
       return null;
     }
 
-    const fieldId = `${entityName}-${field.name}`;
+    const fieldId = `${entityName}-${field.property_name}`;
     const isReadonly = field.ui.visibility === 'readonly';
     const isRequired = field.isRequired;
-    const errorMessage = getErrorMessage(field.name);
+    const errorMessage = getErrorMessage(field.property_name);
 
     const commonProps = {
       id: fieldId,
       disabled: isReadonly || isLoading,
-      ...register(field.name, {
+      ...register(field.property_name, {
         required: isRequired ? `${field.ui.displayName} is required` : false,
         pattern: field.ui.validation?.pattern ? {
           value: new RegExp(field.ui.validation.pattern),
@@ -70,7 +75,7 @@ export function MetadataForm({
     switch (field.ui.controlType) {
       case 'textarea':
         return (
-          <div key={field.name} className="space-y-2">
+          <div key={field.property_name} className="space-y-2">
             <Label htmlFor={fieldId}>
               {field.ui.displayName}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
@@ -88,14 +93,14 @@ export function MetadataForm({
 
       case 'select':
         return (
-          <div key={field.name} className="space-y-2">
+          <div key={field.property_name} className="space-y-2">
             <Label htmlFor={fieldId}>
               {field.ui.displayName}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
             </Label>
             <Select
               value={fieldValue || ''}
-              onValueChange={(value) => setValue(field.name, value)}
+              onValueChange={(value) => setValue(field.property_name, value)}
               disabled={isReadonly || isLoading}
             >
               <SelectTrigger>
@@ -117,7 +122,7 @@ export function MetadataForm({
 
       case 'checkbox':
         return (
-          <div key={field.name} className="space-y-2">
+          <div key={field.property_name} className="space-y-2">
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -138,7 +143,7 @@ export function MetadataForm({
 
       case 'date':
         return (
-          <div key={field.name} className="space-y-2">
+          <div key={field.property_name} className="space-y-2">
             <Label htmlFor={fieldId}>
               {field.ui.displayName}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
@@ -156,7 +161,7 @@ export function MetadataForm({
 
       case 'number':
         return (
-          <div key={field.name} className="space-y-2">
+          <div key={field.property_name} className="space-y-2">
             <Label htmlFor={fieldId}>
               {field.ui.displayName}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
@@ -177,7 +182,7 @@ export function MetadataForm({
       case 'text':
       default:
         return (
-          <div key={field.name} className="space-y-2">
+          <div key={field.property_name} className="space-y-2">
             <Label htmlFor={fieldId}>
               {field.ui.displayName}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
@@ -204,7 +209,7 @@ export function MetadataForm({
       )}
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {fields.filter(f => f.ui.visibility !== 'hidden').map(renderField)}
+          {fields.filter(f => f.ui && f.ui.visibility !== 'hidden').map(renderField)}
           
           <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={isLoading}>

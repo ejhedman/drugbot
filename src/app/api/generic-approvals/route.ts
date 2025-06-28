@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { GenericApproval } from '@/types';
+import { GenericApproval } from '@/model_defs';
 
 export async function GET(request: NextRequest) {
   try {

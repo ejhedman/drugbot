@@ -4,7 +4,7 @@ import {
   UIEntity, 
   convertLegacyEntityToUIEntity,
   convertLegacyChildEntityToUIEntity
-} from '@/types';
+} from '@/model_defs';
 import { EntityDetailPage } from './EntityDetailPage';
 import { FormCard, FormField } from './FormCard';
 import { useEntityOperations } from '@/hooks/useEntityOperations';

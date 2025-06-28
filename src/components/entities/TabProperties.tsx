@@ -5,7 +5,8 @@ import { Edit, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TabContentSkeleton } from '@/components/ui/skeleton';
 import { MetadataRepository } from '@/lib/metadata-repository';
-import { ENTITY_SUB_COLLECTIONS } from '@/lib/schema';
+import { ENTITY_SUB_COLLECTIONS } from '@/model_instances/theuimodel';
+import { UIProperty } from '@/model_defs/UIModel';
 
 interface TabPropertiesProps {
   data: Record<string, any>;
@@ -42,8 +43,8 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
       return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
     
-    const field = schema.fields.find(f => f.name === fieldName);
-    return field?.ui.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const field = (schema.properties || []).find((f: UIProperty) => (f as any).name === fieldName || f.property_name === fieldName);
+    return field?.ui?.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const handleEdit = () => {

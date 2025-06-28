@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataRepository } from '@/lib/repository';
-import { CreateEntityRequest } from '@/types';
+import { CreateEntityRequest } from '@/model_defs';
 
 export async function GET(request: NextRequest) {
   try {

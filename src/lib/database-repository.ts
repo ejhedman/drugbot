@@ -15,7 +15,7 @@ import {
   UpdateLegacyChildEntityColl1Request,
   CreateLegacyChildEntityColl2Request,
   UpdateLegacyChildEntityColl2Request
-} from '@/types';
+} from '@/model_defs';
 
 class DatabaseRepository {
   

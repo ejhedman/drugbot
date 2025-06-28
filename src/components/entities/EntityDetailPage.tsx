@@ -16,7 +16,7 @@ import {
   convertLegacyEntityColl1ToUIEntity,
   convertGenericAliasToUIEntity,
   convertGenericApprovalToUIEntity
-} from '@/types';
+} from '@/model_defs';
 import { Settings, Database, Pill, Tag } from 'lucide-react';
 import { DetailCardProperties } from './DetailCardProperties';
 import { CollectionTabSet, TabConfig, TabCallbacks } from './CollectionTabSet';
@@ -235,7 +235,7 @@ export function EntityDetailPage({
   const handleDelete = async (entity: UIEntity) => {
     try {
       // Check if this is a child entity by looking for child_entity_key property
-      const childKeyProp = entity.properties.find((p: UIProperty) => p.property_name === 'child_entity_key');
+      const childKeyProp = entity.properties?.find((p: UIProperty) => p.property_name === 'child_entity_key');
       
       if (childKeyProp) {
         // Handle child entity delete
@@ -243,8 +243,10 @@ export function EntityDetailPage({
         onChildDeleted?.(childKeyProp.property_value);
       } else {
         // Handle main entity delete
-        await operations.deleteEntity(entity.entity_key);
-        onEntityDeleted?.(entity.entity_key);
+        if (entity.entity_key) {
+          await operations.deleteEntity(entity.entity_key);
+          onEntityDeleted?.(entity.entity_key);
+        }
       }
     } catch (error) {
       console.error('Error deleting entity:', error);
@@ -271,7 +273,7 @@ export function EntityDetailPage({
   const convertUIEntityToTabData = (uiEntities: UIEntity[]): any[] => {
     return uiEntities.map(uiEntity => {
       const obj: Record<string, any> = {};
-      uiEntity.properties.forEach(prop => {
+      uiEntity.properties?.forEach(prop => {
         obj[prop.property_name] = prop.property_value;
       });
       return obj;
@@ -279,26 +281,26 @@ export function EntityDetailPage({
   };
 
   // Get entity key for legacy API compatibility
-  const entityKeyForAPI = entity ? entity.entity_key : '';
+  const entityKeyForAPI = entity?.entity_key || '';
   
-  // Prepare tab configurations - use sub_collections from the unified entity if available
+  // Prepare tab configurations - use aggregates from the unified entity if available
   const tabConfigs: TabConfig[] = child
     ? [] // Child entities have no collections/tabs
-    : entity && entity.sub_collections.length > 0
-    ? entity.sub_collections
+    : entity && entity.aggregates && entity.aggregates.length > 0
+    ? entity.aggregates
         .sort((a, b) => a.ordinal - b.ordinal)
         .map(collection => ({
-          key: collection.display_name.toLowerCase().replace(/\s+/g, '-'),
-          label: collection.display_name,
+          key: collection.displayName.toLowerCase().replace(/\s+/g, '-'),
+          label: collection.displayName,
           icon: <Database className="w-4 h-4" />,
-          data: collection.properties,
-          emptyMessage: `No ${collection.display_name.toLowerCase()} for this entity.`,
+          data: collection.properties || [],
+          emptyMessage: `No ${collection.displayName.toLowerCase()} for this entity.`,
           type: 'auto' as const,
-          schemaEntityName: collection.display_name.toLowerCase().replace(/\s+/g, '_'),
+          schemaEntityName: collection.displayName.toLowerCase().replace(/\s+/g, '_'),
         }))
     : entity
     ? [
-        // Fallback to legacy tab structure if no sub_collections defined
+        // Fallback to legacy tab structure if no aggregates defined
         {
           key: 'aliases',
           label: 'Aliases',

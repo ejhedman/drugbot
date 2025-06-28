@@ -5,7 +5,9 @@ import { Trash2, Edit, X, Check, SquarePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TableSkeleton } from '@/components/ui/skeleton';
 import { MetadataRepository } from '@/lib/metadata-repository';
-import { ENTITY_SUB_COLLECTIONS } from '@/lib/schema';
+import { ENTITY_SUB_COLLECTIONS } from '@/model_instances/theuimodel';
+import { UIProperty } from '@/model_defs/UIModel';
+import { ConfirmDialog, useConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface TabTableProps {
   data: any[];
@@ -27,6 +29,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
   const [newItemData, setNewItemData] = useState<any>({});
 
   const metadataRepo = new MetadataRepository();
+  const confirmDialog = useConfirmDialog();
 
   // Update local state when data prop changes
   useEffect(() => {
@@ -38,7 +41,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     return data.length > 0 && 
            data[0].properties && 
            Array.isArray(data[0].properties) &&
-           data[0].display_name !== undefined;
+           data[0].displayName !== undefined;
   };
 
   // Transform UIEntity data to flat row format for table display
@@ -47,7 +50,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     
     return data.map(entity => {
       const flatRow: any = {
-        display_name: entity.display_name
+        displayName: entity.displayName
       };
       
       // Add each property as a separate column
@@ -104,8 +107,8 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
     
-    const field = schema.fields.find(f => f.name === fieldName);
-    return field?.ui.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const field = (schema.properties || []).find((f: UIProperty) => (f as any).name === fieldName || f.property_name === fieldName);
+    return field?.ui?.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const handleEdit = (index: number) => {
@@ -130,7 +133,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
         // Preserve the original entity structure but update the editable fields
         if (newData[index] && newData[index].properties) {
           const updatedEntity = { ...newData[index] };
-          updatedEntity.display_name = editedData.display_name;
+          updatedEntity.displayName = editedData.displayName;
           
           // Update property values
           updatedEntity.properties = updatedEntity.properties.map((prop: any) => {
@@ -157,8 +160,8 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     }
   };
 
-  const handleDelete = async (index: number) => {
-    try {
+  const handleDelete = (index: number) => {
+    confirmDialog.openDialog(async () => {
       if (onDelete) {
         // Use the appropriate id field based on data type
         const idToDelete = isUsingUIEntityData 
@@ -168,9 +171,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       }
       const newData = tableData.filter((_, i) => i !== index);
       setTableData(newData);
-    } catch (error) {
-      console.error('Error deleting row:', error);
-    }
+    });
   };
 
   // const handleInputChange = (key: string, value: string) => {
@@ -188,8 +189,8 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       const emptyItem: any = {};
       
       if (isUsingUIEntityData) {
-        // For UIEntity data, create empty values for display_name and properties
-        emptyItem.display_name = '';
+        // For UIEntity data, create empty values for displayName and properties
+        emptyItem.displayName = '';
         propertyColumns.forEach(propName => {
           emptyItem[propName] = '';
         });
@@ -228,7 +229,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
         const newEntity = {
           entity_id: crypto.randomUUID(),
           entity_key: 'new-item',
-          display_name: newItemData.display_name,
+          displayName: newItemData.displayName,
           properties: propertyColumns.map((propName, index) => ({
             property_name: propName,
             property_value: newItemData[propName] || '',
@@ -237,7 +238,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
             is_visible: true,
             is_key: false
           })),
-          sub_collections: []
+          aggregates: []
         };
         const newData = [...tableData, newEntity];
         setTableData(newData);
@@ -295,8 +296,8 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                       <label className="label">Display Name</label>
                       <input
                         type="text"
-                        value={newItemData.display_name || ''}
-                        onChange={(e) => handleNewItemInputChange('display_name', e.target.value)}
+                        value={newItemData.displayName || ''}
+                        onChange={(e) => handleNewItemInputChange('displayName', e.target.value)}
                         className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
                         placeholder="Enter Display Name"
                       />
@@ -383,8 +384,8 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                     <label className="label">Display Name</label>
                     <input
                       type="text"
-                      value={newItemData.display_name || ''}
-                      onChange={(e) => handleNewItemInputChange('display_name', e.target.value)}
+                      value={newItemData.displayName || ''}
+                      onChange={(e) => handleNewItemInputChange('displayName', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
                       placeholder="Enter Display Name"
                     />
@@ -478,17 +479,17 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                           {editingRow === idx ? (
                             <input
                               type="text"
-                              value={editedData?.display_name?.toString() || ''}
+                              value={editedData?.displayName?.toString() || ''}
                               onChange={(e) => {
                                 setEditedData((prev: any) => ({
                                   ...prev,
-                                  display_name: e.target.value
+                                  displayName: e.target.value
                                 }));
                               }}
                               className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                             />
                           ) : (
-                            row.display_name?.toString() || ''
+                            row.displayName?.toString() || ''
                           )}
                         </td>
                       )}
@@ -590,6 +591,13 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
           </div>
         </div>
       )}
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={confirmDialog.closeDialog}
+        onConfirm={confirmDialog.handleConfirm}
+        isLoading={confirmDialog.isLoading}
+      />
     </div>
   );
 } 

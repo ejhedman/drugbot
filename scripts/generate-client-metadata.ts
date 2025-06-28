@@ -156,7 +156,7 @@
 
 // export function getFieldMetadata(entityName: string, fieldName: string) {
 //   const entity = getEntityMetadata(entityName);
-//   return entity?.fields[fieldName];
+//   return entity?.properties[fieldName];
 // }
 
 // export function getEntityTabs(entityName: string) {

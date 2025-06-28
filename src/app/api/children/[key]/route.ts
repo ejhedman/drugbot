@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataRepository } from '@/lib/repository';
-import { UpdateChildEntityRequest } from '@/types';
+import { UpdateChildEntityRequest } from '@/model_defs';
 
 export async function GET(
   request: NextRequest,

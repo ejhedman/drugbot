@@ -4,11 +4,12 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { EntityField } from '@/lib/schema';
+import { UIProperty } from '@/model_instances';
+import { ConfirmDialog, useConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface MetadataTableProps {
   entityName: string;
-  fields: EntityField[];
+  fields: UIProperty[];
   data: Record<string, any>[];
   title?: string;
   onRowClick?: (row: Record<string, any>) => void;
@@ -31,12 +32,22 @@ export function MetadataTable({
   isLoading = false,
   emptyMessage = 'No data available'
 }: MetadataTableProps) {
+  const confirmDialog = useConfirmDialog();
+  
   // Only show visible fields in the table
   const visibleFields = fields.filter(field => 
-    field.ui.visibility === 'visible' || field.ui.visibility === 'readonly'
+    field.ui && (field.ui.visibility === 'visible' || field.ui.visibility === 'readonly')
   );
 
-  const formatCellValue = (value: any, field: EntityField): React.ReactNode => {
+  const handleDelete = (row: Record<string, any>) => {
+    confirmDialog.openDialog(async () => {
+      if (onDelete) {
+        onDelete(row);
+      }
+    });
+  };
+
+  const formatCellValue = (value: any, field: UIProperty): React.ReactNode => {
     if (value === null || value === undefined || value === '') {
       return <span className="text-gray-400">-</span>;
     }
@@ -113,10 +124,10 @@ export function MetadataTable({
                 <tr className="border-b">
                   {visibleFields.map((field) => (
                     <th
-                      key={field.name}
+                      key={field.property_name}
                       className="text-left py-3 px-4 font-medium text-gray-600"
                     >
-                      {field.ui.displayName}
+                      {field.ui?.displayName}
                     </th>
                   ))}
                   {(onEdit || onDelete) && (
@@ -136,8 +147,8 @@ export function MetadataTable({
                     onClick={() => onRowClick?.(row)}
                   >
                     {visibleFields.map((field) => (
-                      <td key={field.name} className="py-3 px-4">
-                        {formatCellValue(row[field.name], field)}
+                      <td key={field.property_name} className="py-3 px-4">
+                        {formatCellValue(row[field.property_name], field)}
                       </td>
                     ))}
                     {(onEdit || onDelete) && (
@@ -161,7 +172,7 @@ export function MetadataTable({
                               variant="destructive"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onDelete(row);
+                                handleDelete(row);
                               }}
                             >
                               Delete
@@ -177,6 +188,13 @@ export function MetadataTable({
           </div>
         )}
       </CardContent>
+      
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={confirmDialog.closeDialog}
+        onConfirm={confirmDialog.handleConfirm}
+        isLoading={confirmDialog.isLoading}
+      />
     </Card>
   );
 } 
