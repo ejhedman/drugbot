@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataRepository } from '@/lib/repository';
-import { UpdateEntityColl1Request } from '@/types';
+import { UpdateLegacyEntityColl1Request } from '@/types';
 
 export async function PATCH(
   request: NextRequest,
@@ -8,7 +8,7 @@ export async function PATCH(
 ) {
   try {
     const { entityKey, index } = await params;
-    const body: UpdateEntityColl1Request = await request.json();
+    const body: UpdateLegacyEntityColl1Request = await request.json();
     const indexNum = parseInt(index, 10);
     
     if (isNaN(indexNum) || indexNum < 0) {

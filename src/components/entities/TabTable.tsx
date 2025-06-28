@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Trash2, Edit, X, Check, SquarePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TableSkeleton } from '@/components/ui/skeleton';
+import { MetadataRepository } from '@/lib/metadata-repository';
+import { ENTITY_SUB_COLLECTIONS } from '@/lib/schema';
 
 interface TabTableProps {
   data: any[];
@@ -14,14 +16,40 @@ interface TabTableProps {
   onUpdate?: (index: number, data: any) => Promise<void>;
   onDelete?: (id: string | number) => Promise<void>;
   onCreate?: (data: any) => Promise<void>;
+  schemaEntityName?: string; // Schema entity name for metadata lookup
 }
 
-export function TabTable({ data, title, icon, emptyMessage, loading = false, onUpdate, onDelete, onCreate }: TabTableProps) {
+export function TabTable({ data, title, icon, emptyMessage, loading = false, onUpdate, onDelete, onCreate, schemaEntityName }: TabTableProps) {
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [editedData, setEditedData] = useState<any>(null);
   const [tableData, setTableData] = useState(data);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newItemData, setNewItemData] = useState<any>({});
+
+  const metadataRepo = new MetadataRepository();
+  
+  // Get display name for a field using schema metadata
+  const getFieldDisplayName = (fieldName: string): string => {
+    if (!schemaEntityName) {
+      // Fallback to formatting the field name
+      return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+    
+    // First try to find in main entity schemas
+    let schema = metadataRepo.getEntitySchema(schemaEntityName);
+    
+    // If not found in main schemas, try sub-collections
+    if (!schema) {
+      schema = ENTITY_SUB_COLLECTIONS[schemaEntityName];
+    }
+    
+    if (!schema) {
+      return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+    
+    const field = schema.fields.find(f => f.name === fieldName);
+    return field?.ui.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
 
   const handleEdit = (index: number) => {
     setEditingRow(index);
@@ -144,13 +172,13 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.keys(newItemData).map((key) => (
                   <div key={key} className="space-y-2">
-                    <label className="label">{key}</label>
+                    <label className="label">{getFieldDisplayName(key)}</label>
                     <input
                       type="text"
                       value={newItemData[key] || ''}
                       onChange={(e) => handleNewItemInputChange(key, e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                      placeholder={`Enter ${key}`}
+                      placeholder={`Enter ${getFieldDisplayName(key)}`}
                     />
                   </div>
                 ))}
@@ -205,13 +233,13 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.keys(newItemData).map((key) => (
                 <div key={key} className="space-y-2">
-                  <label className="label">{key}</label>
+                  <label className="label">{getFieldDisplayName(key)}</label>
                   <input
                     type="text"
                     value={newItemData[key] || ''}
                     onChange={(e) => handleNewItemInputChange(key, e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                    placeholder={`Enter ${key}`}
+                    placeholder={`Enter ${getFieldDisplayName(key)}`}
                   />
                 </div>
               ))}
@@ -235,93 +263,104 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
           </form>
         </div>
       ) : (
-        <div className="overflow-x-auto px-4">
-          <table className="min-w-full border text-sm rounded-lg overflow-hidden">
-            <thead>
-              <tr>
-                {Object.keys(tableData[0]).map((key) => (
-                  <th key={key} className="px-4 py-3 border-b bg-slate-600 text-left font-semibold text-white first:rounded-tl-lg">
-                    {key}
-                  </th>
-                ))}
-                <th className="px-4 py-3 border-b bg-slate-600 text-left font-semibold text-white w-24 rounded-tr-lg">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableData.map((row, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
-                  {Object.keys(row).map((key) => (
-                    <td key={key} className="px-4 py-3 border-b text-gray-900">
-                      {editingRow === idx ? (
-                        <input
-                          type="text"
-                          value={editedData[key]?.toString() || ''}
-                          onChange={(e) => {
-                            setEditedData((prev: any) => ({
-                              ...prev,
-                              [key]: e.target.value
-                            }));
-                          }}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                        />
-                      ) : (
-                        row[key]?.toString() || ''
-                      )}
-                    </td>
+        <div className="px-4">
+          <div className="border rounded-lg overflow-hidden">
+            {/* Fixed Header */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr>
+                    {Object.keys(tableData[0]).map((key) => (
+                      <th key={key} className="px-4 py-3 bg-slate-600 text-left font-semibold text-white first:rounded-tl-lg">
+                        {getFieldDisplayName(key)}
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 bg-slate-600 text-left font-semibold text-white w-24 rounded-tr-lg">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+            
+            {/* Scrollable Body */}
+            <div className="overflow-auto max-h-96">
+              <table className="min-w-full text-sm">
+                <tbody>
+                  {tableData.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 border-b last:border-b-0">
+                      {Object.keys(row).map((key) => (
+                        <td key={key} className="px-4 py-3 text-gray-900">
+                          {editingRow === idx ? (
+                            <input
+                              type="text"
+                              value={editedData[key]?.toString() || ''}
+                              onChange={(e) => {
+                                setEditedData((prev: any) => ({
+                                  ...prev,
+                                  [key]: e.target.value
+                                }));
+                              }}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
+                            />
+                          ) : (
+                            row[key]?.toString() || ''
+                          )}
+                        </td>
+                      ))}
+                      <td className="px-4 py-3 text-gray-900 w-24">
+                        <div className="flex items-center gap-2">
+                          {editingRow === idx ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSave(idx)}
+                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl"
+                                title="Save"
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleCancel}
+                                className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-xl"
+                                title="Cancel"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(idx)}
+                                className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(idx)}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
                   ))}
-                  <td className="px-4 py-3 border-b text-gray-900">
-                    <div className="flex items-center gap-2">
-                      {editingRow === idx ? (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleSave(idx)}
-                            className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl"
-                            title="Save"
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleCancel}
-                            className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-xl"
-                            title="Cancel"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(idx)}
-                            className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(idx)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

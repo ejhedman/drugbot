@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Entity, ChildEntity } from '@/types';
+import { LegacyEntity, LegacyChildEntity } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SquarePlus, Search, Pill, Tag, ChevronRight, ChevronDown } from 'lucide-react';
@@ -25,8 +25,8 @@ export function EntityTreeList({
   onAddEntity, 
   onAddChild 
 }: EntityTreeListProps) {
-  const [entities, setEntities] = useState<Entity[]>([]);
-  const [childrenMap, setChildrenMap] = useState<Record<string, ChildEntity[]>>({});
+  const [entities, setEntities] = useState<LegacyEntity[]>([]);
+  const [childrenMap, setChildrenMap] = useState<Record<string, LegacyChildEntity[]>>({});
   const [expandedEntities, setExpandedEntities] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);

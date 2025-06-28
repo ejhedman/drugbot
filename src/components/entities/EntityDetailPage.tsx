@@ -1,9 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Entity, ChildEntity } from '@/types';
-import { Table, Settings, Database, Pill, Tag } from 'lucide-react';
-import { DetailCard, DetailField } from './DetailCard';
+import { 
+  UIEntity, 
+  UIProperty, 
+  LegacyEntity, 
+  LegacyChildEntity,
+  LegacyEntityColl1,
+  GenericAlias,
+  GenericApproval,
+  convertLegacyEntityToUIEntity,
+  convertLegacyChildEntityToUIEntity,
+  convertUIEntityToLegacyEntity,
+  convertUIEntityToLegacyChildEntity,
+  convertLegacyEntityColl1ToUIEntity,
+  convertGenericAliasToUIEntity,
+  convertGenericApprovalToUIEntity
+} from '@/types';
+import { Settings, Database, Pill, Tag } from 'lucide-react';
+import { DetailCardProperties } from './DetailCardProperties';
 import { CollectionTabSet, TabConfig, TabCallbacks } from './CollectionTabSet';
 import { useEntityOperations } from '@/hooks/useEntityOperations';
 import { EntityDetailSkeleton } from '@/components/ui/skeleton';
@@ -11,8 +26,8 @@ import { EntityDetailSkeleton } from '@/components/ui/skeleton';
 interface EntityDetailPageProps {
   entityKey: string | null;
   childKey: string | null;
-  onEntityUpdated?: (entity: Entity) => void;
-  onChildUpdated?: (child: ChildEntity) => void;
+  onEntityUpdated?: (entity: UIEntity) => void;
+  onChildUpdated?: (child: UIEntity) => void;
   onEntityDeleted?: (entityKey: string) => void;
   onChildDeleted?: (childKey: string) => void;
 }
@@ -25,33 +40,31 @@ export function EntityDetailPage({
   onEntityDeleted,
   onChildDeleted,
 }: EntityDetailPageProps) {
-  const [entity, setEntity] = useState<Entity | null>(null);
-  const [child, setChild] = useState<ChildEntity | null>(null);
+  const [entity, setEntity] = useState<UIEntity | null>(null);
+  const [child, setChild] = useState<UIEntity | null>(null);
   const [loading, setLoading] = useState(false);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
   
-  // Collection data
-  const [entityColl1List, setEntityColl1List] = useState<any[]>([]);
-  const [childColl1List, setChildColl1List] = useState<any[]>([]);
-  const [childColl2List, setChildColl2List] = useState<any[]>([]);
+  // Collection data for entity (generic_drugs)
+  const [aliasesList, setAliasesList] = useState<any[]>([]);
+  const [routesList, setRoutesList] = useState<any[]>([]);
+  const [approvalsList, setApprovalsList] = useState<any[]>([]);
 
   const operations = useEntityOperations();
 
   useEffect(() => {
     if (childKey) {
       fetchChild();
-      fetchChildCollections(childKey);
+      // Child entities (manu_drugs) have no collections, so no fetching needed
     } else if (entityKey) {
       fetchEntity();
       fetchEntityCollections(entityKey);
-      setChildColl1List([]);
-      setChildColl2List([]);
     } else {
       setEntity(null);
       setChild(null);
-      setEntityColl1List([]);
-      setChildColl1List([]);
-      setChildColl2List([]);
+      setAliasesList([]);
+      setRoutesList([]);
+      setApprovalsList([]);
     }
   }, [entityKey, childKey]);
 
@@ -61,8 +74,9 @@ export function EntityDetailPage({
       setLoading(true);
       const response = await fetch(`/api/entities/${encodeURIComponent(entityKey)}`);
       if (response.ok) {
-        const data = await response.json();
-        setEntity(data);
+        const legacyData: LegacyEntity = await response.json();
+        const unifiedEntity = convertLegacyEntityToUIEntity(legacyData);
+        setEntity(unifiedEntity);
         setChild(null);
       }
     } catch (error) {
@@ -78,14 +92,17 @@ export function EntityDetailPage({
       setLoading(true);
       const response = await fetch(`/api/children/${encodeURIComponent(childKey)}`);
       if (response.ok) {
-        const data = await response.json();
-        setChild(data);
+        const legacyChildData: LegacyChildEntity = await response.json();
+        const unifiedChild = convertLegacyChildEntityToUIEntity(legacyChildData);
+        setChild(unifiedChild);
+        
         // Also fetch the parent entity
-        if (data.entity_key) {
-          const entityResponse = await fetch(`/api/entities/${encodeURIComponent(data.entity_key)}`);
+        if (legacyChildData.entity_key) {
+          const entityResponse = await fetch(`/api/entities/${encodeURIComponent(legacyChildData.entity_key)}`);
           if (entityResponse.ok) {
-            const entityData = await entityResponse.json();
-            setEntity(entityData);
+            const legacyEntityData: LegacyEntity = await entityResponse.json();
+            const unifiedEntity = convertLegacyEntityToUIEntity(legacyEntityData);
+            setEntity(unifiedEntity);
           }
         }
       }
@@ -96,48 +113,48 @@ export function EntityDetailPage({
     }
   };
 
-  const fetchChildCollections = async (childKey: string) => {
-    try {
-      setCollectionsLoading(true);
-      const [all1Res, all2Res] = await Promise.all([
-        fetch('/api/child-entity-coll1'),
-        fetch('/api/child-entity-coll2')
-      ]);
-
-      if (all1Res.ok) {
-        const all1 = await all1Res.json();
-        setChildColl1List(all1.filter((item: any) => item.child_entity_key === childKey));
-      } else {
-        setChildColl1List([]);
-      }
-
-      if (all2Res.ok) {
-        const all2 = await all2Res.json();
-        setChildColl2List(all2.filter((item: any) => item.child_entity_key === childKey));
-      } else {
-        setChildColl2List([]);
-      }
-    } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
-      setChildColl1List([]);
-      setChildColl2List([]);
-    } finally {
-      setCollectionsLoading(false);
-    }
-  };
-
   const fetchEntityCollections = async (entityKey: string) => {
     try {
       setCollectionsLoading(true);
-      const allRes = await fetch('/api/entity-coll1');
+      // Fetch all three collections for the entity
+      const [routesRes, aliasesRes, approvalsRes] = await Promise.all([
+        fetch('/api/entity-coll1'), // routes and dosing (generic_routes)
+        fetch(`/api/generic-aliases?entityKey=${encodeURIComponent(entityKey)}`), // aliases (generic_aliases)
+        fetch(`/api/generic-approvals?entityKey=${encodeURIComponent(entityKey)}`) // approvals (generic_approvals)
+      ]);
 
-      if (allRes.ok) {
-        const all = await allRes.json();
-        setEntityColl1List(all.filter((item: any) => item.entity_key === entityKey));
+      // Fetch and convert aliases
+      if (aliasesRes.ok) {
+        const aliases: GenericAlias[] = await aliasesRes.json();
+        const convertedAliases = aliases.map(alias => convertGenericAliasToUIEntity(alias));
+        setAliasesList(convertedAliases);
       } else {
-        setEntityColl1List([]);
+        setAliasesList([]);
+      }
+
+      // Fetch and convert routes
+      if (routesRes.ok) {
+        const routes: LegacyEntityColl1[] = await routesRes.json();
+        const filteredRoutes = routes.filter((item: LegacyEntityColl1) => item.entity_key === entityKey);
+        // Convert legacy collection data to UIEntity format with proper schema field names
+        const convertedRoutes = filteredRoutes.map(route => convertLegacyEntityColl1ToUIEntity(route));
+        setRoutesList(convertedRoutes);
+      } else {
+        setRoutesList([]);
+      }
+
+      // Fetch and convert approvals
+      if (approvalsRes.ok) {
+        const approvals: GenericApproval[] = await approvalsRes.json();
+        const convertedApprovals = approvals.map(approval => convertGenericApprovalToUIEntity(approval));
+        setApprovalsList(convertedApprovals);
+      } else {
+        setApprovalsList([]);
       }
     } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
-      setEntityColl1List([]);
+      setAliasesList([]);
+      setRoutesList([]);
+      setApprovalsList([]);
     } finally {
       setCollectionsLoading(false);
     }
@@ -147,68 +164,91 @@ export function EntityDetailPage({
   const createTabCallbacks = (collectionType: string, parentKey: string): TabCallbacks => ({
     onUpdate: async (index: number, data: any) => {
       await operations.updateCollection(collectionType, parentKey, index, data);
-      // Refresh collections after update
-      if (child) {
-        await fetchChildCollections(child.child_entity_key);
-      } else if (entity) {
-        await fetchEntityCollections(entity.entity_key);
+      // Refresh collections after update (only for entities, not child entities)  
+      if (entity && !child) {
+        await fetchEntityCollections(parentKey);
       }
     },
     onDelete: async (id: string | number) => {
       await operations.deleteFromCollection(collectionType, parentKey, id);
-      // Refresh collections after delete
-      if (child) {
-        await fetchChildCollections(child.child_entity_key);
-      } else if (entity) {
-        await fetchEntityCollections(entity.entity_key);
+      // Refresh collections after delete (only for entities, not child entities)
+      if (entity && !child) {
+        await fetchEntityCollections(parentKey);
       }
     },
     onCreate: async (data: any) => {
       await operations.createInCollection(collectionType, parentKey, data);
-      // Refresh collections after create
-      if (child) {
-        await fetchChildCollections(child.child_entity_key);
-      } else if (entity) {
-        await fetchEntityCollections(entity.entity_key);
+      // Refresh collections after create (only for entities, not child entities)
+      if (entity && !child) {
+        await fetchEntityCollections(parentKey);
       }
     },
   });
 
-  // Handle entity operations
-  const handleEntityUpdate = async (updatedData: Record<string, any>) => {
-    if (!entity) return;
-    // Filter data to only include fields that can be updated
-    const updateData = {
-      entity_name: updatedData.entity_name,
-      entity_property1: updatedData.entity_property1,
-    };
-    const updatedEntity = await operations.updateEntity(entity.entity_key, updateData);
-    setEntity(updatedEntity);
-    onEntityUpdated?.(updatedEntity);
+  // Generic handler for both entity and child updates
+  const handleUpdate = async (entity: UIEntity, updatedProperties: UIProperty[]) => {
+    try {
+      // Check if this is a child entity by looking for child_entity_key property
+      const childKeyProp = updatedProperties.find((p: UIProperty) => p.property_name === 'child_entity_key');
+      
+      if (childKeyProp) {
+        // Handle child entity update - convert to legacy format for API
+        const legacyChildEntity = convertUIEntityToLegacyChildEntity({
+          ...entity,
+          properties: updatedProperties
+        });
+        
+        const updatedChild = await operations.updateChild(legacyChildEntity.child_entity_key, {
+          child_entity_name: legacyChildEntity.child_entity_name,
+          child_entity_property1: legacyChildEntity.child_entity_property1
+        });
+        
+        // Convert back to unified UIEntity type
+        const unifiedChild = convertLegacyChildEntityToUIEntity(updatedChild);
+        setChild(unifiedChild);
+        onChildUpdated?.(unifiedChild);
+      } else {
+        // Handle main entity update - convert to legacy format for API
+        const legacyEntity = convertUIEntityToLegacyEntity({
+          ...entity,
+          properties: updatedProperties
+        });
+        
+        // Use legacy format for API call
+        const updateData: Partial<LegacyEntity> = {
+          entity_name: legacyEntity.entity_name,
+          entity_property1: legacyEntity.entity_property1,
+        };
+        const updatedEntity = await operations.updateEntity(legacyEntity.entity_key, updateData);
+        
+        // Convert back to unified UIEntity type (API still returns legacy format)
+        const unifiedEntity = convertLegacyEntityToUIEntity(updatedEntity as any);
+        setEntity(unifiedEntity);
+        onEntityUpdated?.(unifiedEntity);
+      }
+    } catch (error) {
+      console.error('Error updating entity:', error);
+    }
   };
 
-  const handleEntityDelete = async () => {
-    if (!entity) return;
-    await operations.deleteEntity(entity.entity_key);
-    onEntityDeleted?.(entity.entity_key);
-  };
-
-  const handleChildUpdate = async (updatedData: Record<string, any>) => {
-    if (!child) return;
-    // Filter data to only include fields that can be updated
-    const updateData = {
-      child_entity_name: updatedData.child_entity_name,
-      child_entity_property1: updatedData.child_entity_property1,
-    };
-    const updatedChild = await operations.updateChild(child.child_entity_key, updateData);
-    setChild(updatedChild);
-    onChildUpdated?.(updatedChild);
-  };
-
-  const handleChildDelete = async () => {
-    if (!child) return;
-    await operations.deleteChild(child.child_entity_key);
-    onChildDeleted?.(child.child_entity_key);
+  // Generic handler for both entity and child deletes
+  const handleDelete = async (entity: UIEntity) => {
+    try {
+      // Check if this is a child entity by looking for child_entity_key property
+      const childKeyProp = entity.properties.find((p: UIProperty) => p.property_name === 'child_entity_key');
+      
+      if (childKeyProp) {
+        // Handle child entity delete
+        await operations.deleteChild(childKeyProp.property_value);
+        onChildDeleted?.(childKeyProp.property_value);
+      } else {
+        // Handle main entity delete
+        await operations.deleteEntity(entity.entity_key);
+        onEntityDeleted?.(entity.entity_key);
+      }
+    } catch (error) {
+      console.error('Error deleting entity:', error);
+    }
   };
 
   if (loading) {
@@ -227,74 +267,85 @@ export function EntityDetailPage({
     );
   }
 
-  // Prepare detail fields based on whether we're showing child or entity
-  const detailFields: DetailField[] = child
-    ? [
-        { key: 'child_entity_key', label: 'Child Entity Key', value: child.child_entity_key, type: 'readonly' },
-        { key: 'child_entity_name', label: 'Child Entity Name', value: child.child_entity_name },
-        { key: 'child_entity_property1', label: 'Child Entity Property 1', value: child.child_entity_property1 },
-        { key: 'entity_key', label: 'Parent Entity Key', value: child.entity_key, type: 'readonly' },
-      ]
-    : entity
-    ? [
-        { key: 'entity_key', label: 'Entity Key', value: entity.entity_key, type: 'readonly' },
-        { key: 'entity_name', label: 'Entity Name', value: entity.entity_name },
-        { key: 'entity_property1', label: 'Entity Property 1', value: entity.entity_property1 },
-      ]
-    : [];
+  // Helper function to convert UIEntity properties array to simple object for TabProperties
+  const convertUIEntityToTabData = (uiEntities: UIEntity[]): any[] => {
+    return uiEntities.map(uiEntity => {
+      const obj: Record<string, any> = {};
+      uiEntity.properties.forEach(prop => {
+        obj[prop.property_name] = prop.property_value;
+      });
+      return obj;
+    });
+  };
 
-  // Prepare tab configurations
+  // Get entity key for legacy API compatibility
+  const entityKeyForAPI = entity ? entity.entity_key : '';
+  
+  // Prepare tab configurations - use sub_collections from the unified entity if available
   const tabConfigs: TabConfig[] = child
-    ? [
-        {
-          key: 'coll1',
-          label: 'Collection One',
-          icon: <Table className="w-4 h-4" />,
-          data: childColl1List,
-          emptyMessage: 'No data in Collection One for this child entity.',
-          type: 'auto',
-        },
-        {
-          key: 'coll2',
-          label: 'Collection Two',
-          icon: <Settings className="w-4 h-4" />,
-          data: childColl2List,
-          emptyMessage: 'No data in Collection Two for this child entity.',
-          type: 'auto',
-        },
-      ]
+    ? [] // Child entities have no collections/tabs
+    : entity && entity.sub_collections.length > 0
+    ? entity.sub_collections
+        .sort((a, b) => a.ordinal - b.ordinal)
+        .map(collection => ({
+          key: collection.display_name.toLowerCase().replace(/\s+/g, '-'),
+          label: collection.display_name,
+          icon: <Database className="w-4 h-4" />,
+          data: collection.properties,
+          emptyMessage: `No ${collection.display_name.toLowerCase()} for this entity.`,
+          type: 'auto' as const,
+          schemaEntityName: collection.display_name.toLowerCase().replace(/\s+/g, '_'),
+        }))
     : entity
     ? [
+        // Fallback to legacy tab structure if no sub_collections defined
         {
-          key: 'coll1',
-          label: 'Entity Collection',
+          key: 'aliases',
+          label: 'Aliases',
+          icon: <Tag className="w-4 h-4" />,
+          data: convertUIEntityToTabData(aliasesList),
+          emptyMessage: 'No aliases for this generic drug.',
+          type: 'auto' as const,
+          schemaEntityName: 'generic_aliases',
+        },
+        {
+          key: 'routes',
+          label: 'Routes & Dosing',
           icon: <Database className="w-4 h-4" />,
-          data: entityColl1List,
-          emptyMessage: 'No data in Entity Collection for this entity.',
-          type: 'auto',
+          data: convertUIEntityToTabData(routesList),
+          emptyMessage: 'No routes & dosing information for this generic drug.',
+          type: 'auto' as const,
+          schemaEntityName: 'generic_routes',
+        },
+        {
+          key: 'approvals',
+          label: 'Approvals',
+          icon: <Settings className="w-4 h-4" />,
+          data: approvalsList,
+          emptyMessage: 'No approval information for this generic drug.',
+          type: 'auto' as const,
+          schemaEntityName: 'generic_approvals',
         },
       ]
     : [];
 
   // Create callback map for tabs
   const tabCallbacks: Record<string, TabCallbacks> = {};
-  if (child) {
-    tabCallbacks['coll1'] = createTabCallbacks('child-entity-coll1', child.child_entity_key);
-    tabCallbacks['coll2'] = createTabCallbacks('child-entity-coll2', child.child_entity_key);
-  } else if (entity) {
-    tabCallbacks['coll1'] = createTabCallbacks('entity-coll1', entity.entity_key);
+  if (entity && !child) { // Only entity has collections, child entities have no tabs
+    tabCallbacks['aliases'] = createTabCallbacks('generic-aliases', entityKeyForAPI);
+    tabCallbacks['routes'] = createTabCallbacks('generic-routes', entityKeyForAPI);
+    tabCallbacks['approvals'] = createTabCallbacks('generic-approvals', entityKeyForAPI);
   }
 
   return (
     <div className="h-full flex flex-col bg-white rounded-xl shadow-accent-md m-4">
       <div className="flex-1 min-h-0 flex flex-col">
-        <DetailCard
-          title={child ? child.child_entity_name : entity?.entity_name || ''}
+        <DetailCardProperties
           subtitle={child ? 'Child Entity Detail' : 'Entity Detail'}
           icon={child ? <Tag className="w-4 h-4 text-emerald-500" /> : <Pill className="w-4 h-4 text-indigo-600" />}
-          fields={detailFields}
-          onUpdate={child ? handleChildUpdate : handleEntityUpdate}
-          onDelete={child ? handleChildDelete : handleEntityDelete}
+          entity={child || entity!}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
         />
 
         {tabConfigs.length > 0 && (

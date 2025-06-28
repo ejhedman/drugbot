@@ -1,20 +1,20 @@
 import { createServerSupabaseClient } from './supabase-server';
-import {
-  Entity,
-  ChildEntity,
-  EntityColl1,
-  ChildEntityColl1,
-  ChildEntityColl2,
+import { 
+  LegacyEntity, 
+  LegacyChildEntity,
+  LegacyEntityColl1,
+  LegacyChildEntityColl1,
+  LegacyChildEntityColl2,
   CreateEntityRequest,
   UpdateEntityRequest,
   CreateChildEntityRequest,
   UpdateChildEntityRequest,
-  CreateEntityColl1Request,
-  UpdateEntityColl1Request,
-  CreateChildEntityColl1Request,
-  UpdateChildEntityColl1Request,
-  CreateChildEntityColl2Request,
-  UpdateChildEntityColl2Request
+  CreateLegacyEntityColl1Request,
+  UpdateLegacyEntityColl1Request,
+  CreateLegacyChildEntityColl1Request,
+  UpdateLegacyChildEntityColl1Request,
+  CreateLegacyChildEntityColl2Request,
+  UpdateLegacyChildEntityColl2Request
 } from '@/types';
 
 class DatabaseRepository {
@@ -44,7 +44,7 @@ class DatabaseRepository {
   // ENTITY OPERATIONS (mapped to generic_drugs table)
   // ============================================================================
 
-  async getAllEntities(): Promise<Entity[]> {
+  async getAllEntities(): Promise<LegacyEntity[]> {
     this.log('GET_ALL', 'ENTITIES');
     const supabase = await createServerSupabaseClient();
     
@@ -58,7 +58,7 @@ class DatabaseRepository {
       throw new Error(`Failed to fetch entities: ${error.message}`);
     }
 
-    const entities: Entity[] = data.map(row => ({
+    const entities: LegacyEntity[] = data.map(row => ({
       entity_key: row.generic_key,
       entity_name: row.generic_name,
       entity_property1: row.mech_of_action || ''
@@ -68,7 +68,7 @@ class DatabaseRepository {
     return entities;
   }
 
-  async getEntityByKey(entityKey: string): Promise<Entity | null> {
+  async getEntityByKey(entityKey: string): Promise<LegacyEntity | null> {
     this.log('GET_BY_KEY', 'ENTITIES', { entityKey });
     const supabase = await createServerSupabaseClient();
     
@@ -87,7 +87,7 @@ class DatabaseRepository {
       throw new Error(`Failed to fetch entity: ${error.message}`);
     }
 
-    const entity: Entity = {
+    const entity: LegacyEntity = {
       entity_key: data.generic_key,
       entity_name: data.generic_name,
       entity_property1: data.mech_of_action || ''
@@ -97,7 +97,7 @@ class DatabaseRepository {
     return entity;
   }
 
-  async searchEntities(searchTerm: string): Promise<Entity[]> {
+  async searchEntities(searchTerm: string): Promise<LegacyEntity[]> {
     this.log('SEARCH', 'ENTITIES', { searchTerm });
     const supabase = await createServerSupabaseClient();
     
@@ -117,7 +117,7 @@ class DatabaseRepository {
       throw new Error(`Failed to search entities: ${error.message}`);
     }
 
-    const entities: Entity[] = data.map(row => ({
+    const entities: LegacyEntity[] = data.map(row => ({
       entity_key: row.generic_key,
       entity_name: row.generic_name,
       entity_property1: row.mech_of_action || ''
@@ -130,7 +130,7 @@ class DatabaseRepository {
     return entities;
   }
 
-  async createEntity(data: CreateEntityRequest): Promise<Entity> {
+  async createEntity(data: CreateEntityRequest): Promise<LegacyEntity> {
     this.log('CREATE', 'ENTITIES', { data });
     const supabase = await createServerSupabaseClient();
     
@@ -151,7 +151,7 @@ class DatabaseRepository {
       throw new Error(`Failed to create entity: ${error.message}`);
     }
 
-    const entity: Entity = {
+    const entity: LegacyEntity = {
       entity_key: inserted.generic_key,
       entity_name: inserted.generic_name,
       entity_property1: inserted.mech_of_action || ''
@@ -161,7 +161,7 @@ class DatabaseRepository {
     return entity;
   }
 
-  async updateEntity(entityKey: string, data: UpdateEntityRequest): Promise<Entity | null> {
+  async updateEntity(entityKey: string, data: UpdateEntityRequest): Promise<LegacyEntity | null> {
     this.log('UPDATE', 'ENTITIES', { entityKey, data });
     const supabase = await createServerSupabaseClient();
     
@@ -185,7 +185,7 @@ class DatabaseRepository {
       throw new Error(`Failed to update entity: ${error.message}`);
     }
 
-    const entity: Entity = {
+    const entity: LegacyEntity = {
       entity_key: updated.generic_key,
       entity_name: updated.generic_name,
       entity_property1: updated.mech_of_action || ''
@@ -214,54 +214,66 @@ class DatabaseRepository {
   }
 
   // ============================================================================
-  // CHILD ENTITY OPERATIONS (mapped to generic_aliases table)
+  // CHILD ENTITY OPERATIONS (mapped to manu_drugs table)
   // ============================================================================
 
-  async getAllChildren(): Promise<ChildEntity[]> {
+  async getAllChildren(): Promise<LegacyChildEntity[]> {
     this.log('GET_ALL', 'CHILD_ENTITIES');
     const supabase = await createServerSupabaseClient();
     
     const { data, error } = await supabase
-      .from('generic_aliases')
+      .from('manu_drugs')
       .select('*')
-      .order('alias');
+      .order('drug_name');
 
     if (error) {
       this.log('GET_ALL_ERROR', 'CHILD_ENTITIES', { error: error.message });
       throw new Error(`Failed to fetch child entities: ${error.message}`);
     }
 
-    const children: ChildEntity[] = data.map(row => ({
-      child_entity_key: `alias_${row.uid}`,
-      entity_key: row.generic_key,
-      child_entity_name: row.alias,
-      child_entity_property1: 'Alias'
+    const children: LegacyChildEntity[] = data.map(row => ({
+      child_entity_key: row.manu_drug_key,
+      entity_key: row.generic_key || '', // This might need to be derived from generic_uid
+      child_entity_name: row.drug_name,
+      child_entity_property1: row.manufacturer || ''
     }));
 
     this.log('GET_ALL_SUCCESS', 'CHILD_ENTITIES', { recordCount: children.length });
     return children;
   }
 
-  async getChildrenByEntityKey(entityKey: string): Promise<ChildEntity[]> {
+  async getChildrenByEntityKey(entityKey: string): Promise<LegacyChildEntity[]> {
     this.log('GET_BY_ENTITY_KEY', 'CHILD_ENTITIES', { entityKey });
     const supabase = await createServerSupabaseClient();
     
-    const { data, error } = await supabase
-      .from('generic_aliases')
-      .select('*')
+    // First get the generic_uid from the entity_key
+    const { data: genericDrug, error: genericError } = await supabase
+      .from('generic_drugs')
+      .select('uid')
       .eq('generic_key', entityKey)
-      .order('alias');
+      .single();
+
+    if (genericError) {
+      this.log('GET_BY_ENTITY_KEY_ERROR', 'CHILD_ENTITIES', { entityKey, error: 'Entity not found' });
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from('manu_drugs')
+      .select('*')
+      .eq('generic_uid', genericDrug.uid)
+      .order('drug_name');
 
     if (error) {
       this.log('GET_BY_ENTITY_KEY_ERROR', 'CHILD_ENTITIES', { entityKey, error: error.message });
       throw new Error(`Failed to fetch child entities: ${error.message}`);
     }
 
-    const children: ChildEntity[] = data.map(row => ({
-      child_entity_key: `alias_${row.uid}`,
-      entity_key: row.generic_key,
-      child_entity_name: row.alias,
-      child_entity_property1: 'Alias'
+    const children: LegacyChildEntity[] = data.map(row => ({
+      child_entity_key: row.manu_drug_key,
+      entity_key: entityKey,
+      child_entity_name: row.drug_name,
+      child_entity_property1: row.manufacturer || ''
     }));
 
     this.log('GET_BY_ENTITY_KEY_SUCCESS', 'CHILD_ENTITIES', { 
@@ -271,17 +283,15 @@ class DatabaseRepository {
     return children;
   }
 
-  async getChildByKey(childKey: string): Promise<ChildEntity | null> {
+  async getChildByKey(childKey: string): Promise<LegacyChildEntity | null> {
     this.log('GET_BY_KEY', 'CHILD_ENTITIES', { childKey });
     
-    // Extract UID from child key (format: alias_uuid)
-    const uid = childKey.replace('alias_', '');
     const supabase = await createServerSupabaseClient();
     
     const { data, error } = await supabase
-      .from('generic_aliases')
-      .select('*')
-      .eq('uid', uid)
+      .from('manu_drugs')
+      .select('*, generic_drugs!inner(generic_key)')
+      .eq('manu_drug_key', childKey)
       .single();
 
     if (error) {
@@ -293,28 +303,28 @@ class DatabaseRepository {
       throw new Error(`Failed to fetch child entity: ${error.message}`);
     }
 
-    const child: ChildEntity = {
-      child_entity_key: `alias_${data.uid}`,
-      entity_key: data.generic_key,
-      child_entity_name: data.alias,
-      child_entity_property1: 'Alias'
+    const child: LegacyChildEntity = {
+      child_entity_key: data.manu_drug_key,
+      entity_key: data.generic_drugs.generic_key,
+      child_entity_name: data.drug_name,
+      child_entity_property1: data.manufacturer || ''
     };
 
     this.log('GET_BY_KEY_SUCCESS', 'CHILD_ENTITIES', { childKey, childName: child.child_entity_name });
     return child;
   }
 
-  async searchChildren(searchTerm: string): Promise<ChildEntity[]> {
+  async searchChildren(searchTerm: string): Promise<LegacyChildEntity[]> {
     this.log('SEARCH', 'CHILD_ENTITIES', { searchTerm });
     const supabase = await createServerSupabaseClient();
     
     let query = supabase
-      .from('generic_aliases')
-      .select('*')
-      .order('alias');
+      .from('manu_drugs')
+      .select('*, generic_drugs!inner(generic_key)')
+      .order('drug_name');
 
     if (searchTerm) {
-      query = query.ilike('alias', `%${searchTerm}%`);
+      query = query.or(`drug_name.ilike.%${searchTerm}%,manufacturer.ilike.%${searchTerm}%`);
     }
 
     const { data, error } = await query;
@@ -324,11 +334,11 @@ class DatabaseRepository {
       throw new Error(`Failed to search child entities: ${error.message}`);
     }
 
-    const children: ChildEntity[] = data.map(row => ({
-      child_entity_key: `alias_${row.uid}`,
-      entity_key: row.generic_key,
-      child_entity_name: row.alias,
-      child_entity_property1: 'Alias'
+    const children: LegacyChildEntity[] = data.map(row => ({
+      child_entity_key: row.manu_drug_key,
+      entity_key: row.generic_drugs.generic_key,
+      child_entity_name: row.drug_name,
+      child_entity_property1: row.manufacturer || ''
     }));
 
     this.log('SEARCH_SUCCESS', 'CHILD_ENTITIES', { 
@@ -338,7 +348,7 @@ class DatabaseRepository {
     return children;
   }
 
-  async createChildEntity(data: CreateChildEntityRequest): Promise<ChildEntity> {
+  async createChildEntity(data: CreateChildEntityRequest): Promise<LegacyChildEntity> {
     this.log('CREATE', 'CHILD_ENTITIES', { data });
     const supabase = await createServerSupabaseClient();
     
@@ -355,13 +365,14 @@ class DatabaseRepository {
     }
 
     const newChild = {
-      generic_key: data.entity_key,
-      alias: data.child_entity_name,
+      manu_drug_key: this.generateKey('manu'),
+      drug_name: data.child_entity_name,
+      manufacturer: data.child_entity_property1 || '',
       generic_uid: genericDrug.uid
     };
 
     const { data: inserted, error } = await supabase
-      .from('generic_aliases')
+      .from('manu_drugs')
       .insert(newChild)
       .select()
       .single();
@@ -371,32 +382,31 @@ class DatabaseRepository {
       throw new Error(`Failed to create child entity: ${error.message}`);
     }
 
-    const child: ChildEntity = {
-      child_entity_key: `alias_${inserted.uid}`,
-      entity_key: inserted.generic_key,
-      child_entity_name: inserted.alias,
-      child_entity_property1: 'Alias'
+    const child: LegacyChildEntity = {
+      child_entity_key: inserted.manu_drug_key,
+      entity_key: data.entity_key,
+      child_entity_name: inserted.drug_name,
+      child_entity_property1: inserted.manufacturer || ''
     };
 
     this.log('CREATE_SUCCESS', 'CHILD_ENTITIES', { newChild: child });
     return child;
   }
 
-  async updateChildEntity(childKey: string, data: UpdateChildEntityRequest): Promise<ChildEntity | null> {
+  async updateChildEntity(childKey: string, data: UpdateChildEntityRequest): Promise<LegacyChildEntity | null> {
     this.log('UPDATE', 'CHILD_ENTITIES', { childKey, data });
     
-    // Extract UID from child key
-    const uid = childKey.replace('alias_', '');
     const supabase = await createServerSupabaseClient();
     
     const updateData: any = {};
-    if (data.child_entity_name !== undefined) updateData.alias = data.child_entity_name;
+    if (data.child_entity_name !== undefined) updateData.drug_name = data.child_entity_name;
+    if (data.child_entity_property1 !== undefined) updateData.manufacturer = data.child_entity_property1;
 
     const { data: updated, error } = await supabase
-      .from('generic_aliases')
+      .from('manu_drugs')
       .update(updateData)
-      .eq('uid', uid)
-      .select()
+      .eq('manu_drug_key', childKey)
+      .select('*, generic_drugs!inner(generic_key)')
       .single();
 
     if (error) {
@@ -408,11 +418,11 @@ class DatabaseRepository {
       throw new Error(`Failed to update child entity: ${error.message}`);
     }
 
-    const child: ChildEntity = {
-      child_entity_key: `alias_${updated.uid}`,
-      entity_key: updated.generic_key,
-      child_entity_name: updated.alias,
-      child_entity_property1: 'Alias'
+    const child: LegacyChildEntity = {
+      child_entity_key: updated.manu_drug_key,
+      entity_key: updated.generic_drugs.generic_key,
+      child_entity_name: updated.drug_name,
+      child_entity_property1: updated.manufacturer || ''
     };
 
     this.log('UPDATE_SUCCESS', 'CHILD_ENTITIES', { childKey, updatedChild: child });
@@ -422,14 +432,12 @@ class DatabaseRepository {
   async deleteChildEntity(childKey: string): Promise<boolean> {
     this.log('DELETE', 'CHILD_ENTITIES', { childKey });
     
-    // Extract UID from child key
-    const uid = childKey.replace('alias_', '');
     const supabase = await createServerSupabaseClient();
     
     const { error } = await supabase
-      .from('generic_aliases')
+      .from('manu_drugs')
       .delete()
-      .eq('uid', uid);
+      .eq('manu_drug_key', childKey);
 
     if (error) {
       this.log('DELETE_ERROR', 'CHILD_ENTITIES', { childKey, error: error.message });
@@ -444,7 +452,7 @@ class DatabaseRepository {
   // ENTITY COLL1 OPERATIONS (mapped to generic_routes table)
   // ============================================================================
 
-  async getAllEntityColl1(): Promise<EntityColl1[]> {
+  async getAllEntityColl1(): Promise<LegacyEntityColl1[]> {
     this.log('GET_ALL', 'ENTITY_COLL1');
     const supabase = await createServerSupabaseClient();
     
@@ -458,7 +466,7 @@ class DatabaseRepository {
       throw new Error(`Failed to fetch entity coll1: ${error.message}`);
     }
 
-    const routes: EntityColl1[] = data.map(row => ({
+    const routes: LegacyEntityColl1[] = data.map(row => ({
       entity_key: row.generic_key,
       coll1_property1: row.route_type || '',
       coll1_property2: row.load_dose || '',
@@ -469,7 +477,7 @@ class DatabaseRepository {
     return routes;
   }
 
-  async getEntityColl1ByEntityKey(entityKey: string): Promise<EntityColl1[]> {
+  async getEntityColl1ByEntityKey(entityKey: string): Promise<LegacyEntityColl1[]> {
     this.log('GET_BY_ENTITY_KEY', 'ENTITY_COLL1', { entityKey });
     const supabase = await createServerSupabaseClient();
     
@@ -484,7 +492,7 @@ class DatabaseRepository {
       throw new Error(`Failed to fetch entity coll1: ${error.message}`);
     }
 
-    const routes: EntityColl1[] = data.map(row => ({
+    const routes: LegacyEntityColl1[] = data.map(row => ({
       entity_key: row.generic_key,
       coll1_property1: row.route_type || '',
       coll1_property2: row.load_dose || '',
@@ -501,12 +509,12 @@ class DatabaseRepository {
   // Implementation continues for other EntityColl1, ChildEntityColl1, and ChildEntityColl2 operations...
   // Placeholder methods to maintain interface compatibility
 
-  async createEntityColl1(data: CreateEntityColl1Request): Promise<EntityColl1> {
+  async createEntityColl1(data: CreateLegacyEntityColl1Request): Promise<LegacyEntityColl1> {
     // TODO: Implement create entity coll1
     throw new Error('Not yet implemented');
   }
 
-  async updateEntityColl1(entityKey: string, index: number, data: UpdateEntityColl1Request): Promise<EntityColl1 | null> {
+  async updateEntityColl1(entityKey: string, index: number, data: UpdateLegacyEntityColl1Request): Promise<LegacyEntityColl1 | null> {
     // TODO: Implement update entity coll1
     throw new Error('Not yet implemented');
   }
@@ -516,22 +524,22 @@ class DatabaseRepository {
     throw new Error('Not yet implemented');
   }
 
-  async getAllChildEntityColl1(): Promise<ChildEntityColl1[]> {
+  async getAllChildEntityColl1(): Promise<LegacyChildEntityColl1[]> {
     // TODO: Implement get all child entity coll1
     throw new Error('Not yet implemented');
   }
 
-  async getChildEntityColl1ByChildKey(childKey: string): Promise<ChildEntityColl1[]> {
+  async getChildEntityColl1ByChildKey(childKey: string): Promise<LegacyChildEntityColl1[]> {
     // TODO: Implement get child entity coll1 by child key
     throw new Error('Not yet implemented');
   }
 
-  async createChildEntityColl1(data: CreateChildEntityColl1Request): Promise<ChildEntityColl1> {
+  async createChildEntityColl1(data: CreateLegacyChildEntityColl1Request): Promise<LegacyChildEntityColl1> {
     // TODO: Implement create child entity coll1
     throw new Error('Not yet implemented');
   }
 
-  async updateChildEntityColl1(childKey: string, index: number, data: UpdateChildEntityColl1Request): Promise<ChildEntityColl1 | null> {
+  async updateChildEntityColl1(childKey: string, index: number, data: UpdateLegacyChildEntityColl1Request): Promise<LegacyChildEntityColl1 | null> {
     // TODO: Implement update child entity coll1
     throw new Error('Not yet implemented');
   }
@@ -541,22 +549,22 @@ class DatabaseRepository {
     throw new Error('Not yet implemented');
   }
 
-  async getAllChildEntityColl2(): Promise<ChildEntityColl2[]> {
+  async getAllChildEntityColl2(): Promise<LegacyChildEntityColl2[]> {
     // TODO: Implement get all child entity coll2
     throw new Error('Not yet implemented');
   }
 
-  async getChildEntityColl2ByChildKey(childKey: string): Promise<ChildEntityColl2[]> {
+  async getChildEntityColl2ByChildKey(childKey: string): Promise<LegacyChildEntityColl2[]> {
     // TODO: Implement get child entity coll2 by child key
     throw new Error('Not yet implemented');
   }
 
-  async createChildEntityColl2(data: CreateChildEntityColl2Request): Promise<ChildEntityColl2> {
+  async createChildEntityColl2(data: CreateLegacyChildEntityColl2Request): Promise<LegacyChildEntityColl2> {
     // TODO: Implement create child entity coll2
     throw new Error('Not yet implemented');
   }
 
-  async updateChildEntityColl2(childKey: string, index: number, data: UpdateChildEntityColl2Request): Promise<ChildEntityColl2 | null> {
+  async updateChildEntityColl2(childKey: string, index: number, data: UpdateLegacyChildEntityColl2Request): Promise<LegacyChildEntityColl2 | null> {
     // TODO: Implement update child entity coll2
     throw new Error('Not yet implemented');
   }

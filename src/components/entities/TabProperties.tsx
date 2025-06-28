@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Edit, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TabContentSkeleton } from '@/components/ui/skeleton';
+import { MetadataRepository } from '@/lib/metadata-repository';
+import { ENTITY_SUB_COLLECTIONS } from '@/lib/schema';
 
 interface TabPropertiesProps {
   data: Record<string, any>;
@@ -12,11 +14,37 @@ interface TabPropertiesProps {
   emptyMessage?: string;
   loading?: boolean;
   onUpdate?: (index: number, data: any) => Promise<void>;
+  schemaEntityName?: string; // Optional schema entity name for metadata lookup
 }
 
-export function TabProperties({ data, title, emptyMessage, loading = false, onUpdate }: TabPropertiesProps) {
+export function TabProperties({ data, title, emptyMessage, loading = false, onUpdate, schemaEntityName }: TabPropertiesProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Record<string, any>>({});
+  
+  const metadataRepo = new MetadataRepository();
+  
+  // Get display name for a field using schema metadata
+  const getFieldDisplayName = (fieldName: string): string => {
+    if (!schemaEntityName) {
+      // Fallback to formatting the field name
+      return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+    
+    // First try to find in main entity schemas
+    let schema = metadataRepo.getEntitySchema(schemaEntityName);
+    
+    // If not found in main schemas, try sub-collections
+    if (!schema) {
+      schema = ENTITY_SUB_COLLECTIONS[schemaEntityName];
+    }
+    
+    if (!schema) {
+      return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+    
+    const field = schema.fields.find(f => f.name === fieldName);
+    return field?.ui.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -109,10 +137,10 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
       <div className="grid grid-cols-2 gap-x-8 gap-y-4 px-4">
         {properties.map(([key, value]) => (
           <div key={key} className="flex items-center gap-3">
-            <span className="label font-medium min-w-32">{key}:</span>
+            <span className="label font-medium min-w-32">{getFieldDisplayName(key)}:</span>
             <div className="flex-1">
               {isEditing ? (
-                key.endsWith('_key') ? (
+                key.endsWith('_key') || key.endsWith('_uid') || key === 'uid' ? (
                   <span className="label">{value}</span>
                 ) : (
                   <input

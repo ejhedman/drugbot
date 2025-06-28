@@ -241,13 +241,13 @@ class MetadataRepository {
     const schema = this.getEntitySchema(entityName);
     if (!schema) return [];
 
-    const tab = schema.tabs.find(t => t.id === tabId);
-    if (!tab || tab.type !== 'properties') return [];
+    const subCollection = schema.subCollections.find(sc => sc.id === tabId);
+    if (!subCollection || subCollection.type !== 'properties') return [];
 
-    if (!tab.fields) return this.getVisibleFields(entityName);
+    if (!subCollection.fields) return this.getVisibleFields(entityName);
 
     return schema.fields.filter(field => 
-      tab.fields!.includes(field.name) && field.ui.visibility === 'visible'
+      subCollection.fields!.includes(field.name) && field.ui.visibility === 'visible'
     );
   }
 
@@ -260,16 +260,16 @@ class MetadataRepository {
     const schema = this.getEntitySchema(entityName);
     if (!schema) return [];
 
-    return schema.tabs
-      .filter(tab => tab.type === 'collection')
-      .map(tab => {
+    return schema.subCollections
+      .filter(subCollection => subCollection.type === 'collection')
+      .map(subCollection => {
         const relationship = schema.relationships.find(rel => 
-          rel.targetEntity === tab.collectionEntity
+          rel.targetEntity === subCollection.collectionEntity
         );
         return {
-          id: tab.id,
-          displayName: tab.displayName,
-          entityName: tab.collectionEntity!,
+          id: subCollection.id,
+          displayName: subCollection.displayName,
+          entityName: subCollection.collectionEntity!,
           relationship
         };
       });
@@ -300,7 +300,7 @@ class MetadataRepository {
           };
           return acc;
         }, {} as Record<string, any>),
-        tabs: schema.tabs,
+        subCollections: schema.subCollections,
         relationships: schema.relationships
       };
     }

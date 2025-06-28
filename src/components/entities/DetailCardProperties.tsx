@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, X, Check, Trash2 } from 'lucide-react';
+import { UIEntity, UIProperty } from '@/types';
 
 export interface DetailField {
   key: string;
@@ -13,52 +14,54 @@ export interface DetailField {
   type?: 'text' | 'number' | 'email' | 'readonly';
 }
 
-interface DetailCardProps {
-  title: string;
+interface DetailCardPropertiesProps {
+  title?: string;
   subtitle?: string;
   icon?: React.ReactNode;
-  fields: DetailField[];
-  onUpdate?: (updatedData: Record<string, any>) => Promise<void>;
-  onDelete?: () => Promise<void>;
+  entity: UIEntity;
+  onUpdate?: (entity: UIEntity, updatedProperties: UIProperty[]) => Promise<void>;
+  onDelete?: (entity: UIEntity) => Promise<void>;
   className?: string;
   showActions?: boolean;
 }
 
-export function DetailCard({ 
+export function DetailCardProperties({ 
   title, 
   subtitle, 
   icon, 
-  fields, 
+  entity,
   onUpdate, 
   onDelete, 
   className = "rounded-t-xl rounded-b-none",
   showActions = true
-}: DetailCardProps) {
+}: DetailCardPropertiesProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState<Record<string, any>>({});
+  const [editedProperties, setEditedProperties] = useState<UIProperty[]>([]);
+
+  // Use entity name as title if not provided
+  const displayTitle = title || entity.display_name;
+
+  // Filter visible properties for display
+  const visibleProperties = entity.properties.filter((prop: UIProperty) => prop.is_visible);
 
   const handleEdit = () => {
     setIsEditing(true);
-    // Initialize edited data with current field values
-    const initialData = fields.reduce((acc, field) => {
-      acc[field.key] = field.value;
-      return acc;
-    }, {} as Record<string, any>);
-    setEditedData(initialData);
+    // Initialize edited properties with current property values
+    setEditedProperties([...entity.properties]);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setEditedData({});
+    setEditedProperties([]);
   };
 
   const handleSave = async () => {
     try {
       if (onUpdate) {
-        await onUpdate(editedData);
+        await onUpdate(entity, editedProperties);
       }
       setIsEditing(false);
-      setEditedData({});
+      setEditedProperties([]);
     } catch (error) {
       console.error('Error updating data:', error);
     }
@@ -67,37 +70,42 @@ export function DetailCard({
   const handleDelete = async () => {
     try {
       if (onDelete) {
-        await onDelete();
+        await onDelete(entity);
       }
     } catch (error) {
       console.error('Error deleting data:', error);
     }
   };
 
-  const handleInputChange = (key: string, value: any) => {
-    setEditedData((prev) => ({
-      ...prev,
-      [key]: value
-    }));
+  const handlePropertyChange = (propertyName: string, value: any) => {
+    setEditedProperties((prev: UIProperty[]) => 
+      prev.map(prop => 
+        prop.property_name === propertyName 
+          ? { ...prop, property_value: value }
+          : prop
+      )
+    );
   };
 
-  const renderField = (field: DetailField) => {
-    const isFieldEditable = field.editable !== false && field.type !== 'readonly';
+  const renderProperty = (property: UIProperty) => {
+    const currentProperty = isEditing 
+      ? editedProperties.find(p => p.property_name === property.property_name) || property
+      : property;
     
     return (
-      <div key={field.key} className="flex items-center gap-2">
-        <span className="label min-w-32">{field.label}:</span>
+      <div key={property.property_name} className="flex items-center gap-2">
+        <span className="label min-w-32">{property.property_name}:</span>
         <div className="flex-1">
-          {isEditing && isFieldEditable ? (
+          {isEditing && property.is_editable ? (
             <input
-              type={field.type || 'text'}
-              value={editedData[field.key] || ''}
-              onChange={(e) => handleInputChange(field.key, e.target.value)}
+              type="text"
+              value={currentProperty.property_value || ''}
+              onChange={(e) => handlePropertyChange(property.property_name, e.target.value)}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
             />
           ) : (
-            <span className={field.type === 'readonly' ? 'label' : 'value'}>
-              {field.value || ''}
+            <span className={!property.is_editable ? 'label' : 'value'}>
+              {currentProperty.property_value || ''}
             </span>
           )}
         </div>
@@ -111,7 +119,7 @@ export function DetailCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {icon}
-            <span className="section-title text-slate-700">{title}</span>
+            <span className="section-title text-slate-700">{displayTitle}</span>
           </div>
           {subtitle && (
             <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
@@ -173,9 +181,21 @@ export function DetailCard({
         <div>
           <h4 className="section-title mb-2">Properties</h4>
           <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-            {fields.map(renderField)}
+            {visibleProperties.map(renderProperty)}
           </div>
         </div>
+        
+        {entity.sub_collections.length > 0 && (
+          <div>
+            <h4 className="section-title mb-2">Collections</h4>
+            <div className="text-sm text-gray-600">
+              {entity.sub_collections
+                .sort((a, b) => a.ordinal - b.ordinal)
+                .map(collection => collection.display_name)
+                .join(', ')}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

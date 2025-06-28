@@ -10,38 +10,78 @@
 // ============================================================================
 
 /**
- * Entity - The primary entity type representing main business objects
+ * UIProperty - A flexible property for UI rendering that can represent any data field
  * 
  * Properties:
- * - entity_key: Unique identifier for the entity (primary key)
- * - entity_name: Human-readable name for the entity
- * - entity_property1: Additional property for entity metadata
- * 
- * Relationships:
- * - Has many ChildEntity (one-to-many)
- * - Has many EntityColl1 (one-to-many)
+ * - property_name: The name/label of the property
+ * - property_value: The actual value (can be any type)
+ * - ordinal: Sort order for displaying property order
+ * - is_editable: Whether this property can be edited in the UI
+ * - is_visible: Whether this property should be displayed in the UI
+ * - is_key: Whether this property serves as a key/identifier
  */
-export interface Entity {
+export interface UIProperty {
+  property_name: string;
+  property_value: any;
+  ordinal: number;
+  is_editable: boolean;
+  is_visible: boolean;
+  is_key: boolean;
+}
+
+/**
+ * UISubCollection - A collection of related properties that appear as tabs in the UI
+ * 
+ * Properties:
+ * - collection_key: Unique identifier for this collection
+ * - display_name: The name to display in the tab
+ * - ordinal: Sort order for displaying tabs
+ * - properties: Array of properties in this sub-collection
+ */
+export interface UISubCollection {
+  collection_key: string;
+  display_name: string;
+  ordinal: number;
+  properties: UIProperty[];
+}
+
+/**
+ * UIEntity - The unified UI entity type that can represent any business object for rendering
+ * 
+ * Properties:
+ * - id: Unique GUID identifier
+ * - key: String key identifier (for URLs, references, etc.)
+ * - name: Human-readable name for the entity
+ * - properties: Array of flexible properties specific to this entity type
+ * - sub_collections: Array of sub-collections that appear as tabs
+ */
+export interface UIEntity {
+  entity_id: string;
+  entity_key: string;
+  display_name: string;
+  properties: UIProperty[];
+  sub_collections: UISubCollection[];
+}
+
+// ============================================================================
+// LEGACY TYPES (for backward compatibility during migration)
+// ============================================================================
+
+/**
+ * @deprecated Use the new unified Entity type instead
+ * Legacy Entity type - kept for backward compatibility
+ */
+export interface LegacyEntity {
   entity_key: string;
   entity_name: string;
   entity_property1: string;
 }
 
 /**
- * ChildEntity - Child entities that belong to a parent Entity
- * 
- * Properties:
- * - child_entity_key: Unique identifier for the child entity (primary key)
- * - entity_key: Foreign key reference to parent Entity
- * - child_entity_name: Human-readable name for the child entity
- * - child_entity_property1: Additional property for child entity metadata
- * 
- * Relationships:
- * - Belongs to Entity (many-to-one)
- * - Has many ChildEntityColl1 (one-to-many)
- * - Has many ChildEntityColl2 (one-to-many)
+ * @deprecated Use the new unified Entity type instead
+ * Legacy ChildEntity type - kept for backward compatibility
  */
-export interface ChildEntity {
+export interface LegacyChildEntity {
   child_entity_key: string;
   entity_key: string;
   child_entity_name: string;
@@ -53,7 +93,8 @@ export interface ChildEntity {
 // ============================================================================
 
 /**
- * EntityColl1 - Collection data associated with Entity
+ * @deprecated 
+ * LegacyEntityColl1 - Collection data associated with Entity
  * 
  * Properties:
  * - entity_key: Foreign key reference to parent Entity
@@ -64,7 +105,7 @@ export interface ChildEntity {
  * Relationships:
  * - Belongs to Entity (many-to-one)
  */
-export interface EntityColl1 {
+export interface LegacyEntityColl1 {
   entity_key: string;
   coll1_property1: string;
   coll1_property2: string;
@@ -72,7 +113,8 @@ export interface EntityColl1 {
 }
 
 /**
- * ChildEntityColl1 - Collection data associated with ChildEntity
+ * @deprecated 
+ * LegacyChildEntityColl1 - Collection data associated with ChildEntity
  * 
  * Properties:
  * - child_entity_key: Foreign key reference to parent ChildEntity
@@ -82,14 +124,15 @@ export interface EntityColl1 {
  * Relationships:
  * - Belongs to ChildEntity (many-to-one)
  */
-export interface ChildEntityColl1 {
+export interface LegacyChildEntityColl1 {
   child_entity_key: string;
   coll1_property1: string;
   coll1_property2: number;
 }
 
 /**
- * ChildEntityColl2 - Additional collection data associated with ChildEntity
+ * @deprecated 
+ * LegacyChildEntityColl2 - Additional collection data associated with ChildEntity
  * 
  * Properties:
  * - child_entity_key: Foreign key reference to parent ChildEntity
@@ -99,7 +142,7 @@ export interface ChildEntityColl1 {
  * Relationships:
  * - Belongs to ChildEntity (many-to-one)
  */
-export interface ChildEntityColl2 {
+export interface LegacyChildEntityColl2 {
   child_entity_key: string;
   coll2_property1: string;
   coll2_property2: boolean;
@@ -179,9 +222,9 @@ export interface UpdateChildEntityRequest {
 }
 
 /**
- * Data required to create a new EntityColl1
+ * Data required to create a new LegacyEntityColl1
  */
-export interface CreateEntityColl1Request {
+export interface CreateLegacyEntityColl1Request {
   entity_key: string;
   coll1_property1: string;
   coll1_property2: string;
@@ -189,44 +232,44 @@ export interface CreateEntityColl1Request {
 }
 
 /**
- * Data required to update an existing EntityColl1
+ * Data required to update an existing LegacyEntityColl1
  */
-export interface UpdateEntityColl1Request {
+export interface UpdateLegacyEntityColl1Request {
   coll1_property1?: string;
   coll1_property2?: string;
   coll1_property3?: number;
 }
 
 /**
- * Data required to create a new ChildEntityColl1
+ * Data required to create a new LegacyChildEntityColl1
  */
-export interface CreateChildEntityColl1Request {
+export interface CreateLegacyChildEntityColl1Request {
   child_entity_key: string;
   coll1_property1: string;
   coll1_property2: number;
 }
 
 /**
- * Data required to update an existing ChildEntityColl1
+ * Data required to update an existing LegacyChildEntityColl1
  */
-export interface UpdateChildEntityColl1Request {
+export interface UpdateLegacyChildEntityColl1Request {
   coll1_property1?: string;
   coll1_property2?: number;
 }
 
 /**
- * Data required to create a new ChildEntityColl2
+ * Data required to create a new LegacyChildEntityColl2
  */
-export interface CreateChildEntityColl2Request {
+export interface CreateLegacyChildEntityColl2Request {
   child_entity_key: string;
   coll2_property1: string;
   coll2_property2: boolean;
 }
 
 /**
- * Data required to update an existing ChildEntityColl2
+ * Data required to update an existing LegacyChildEntityColl2
  */
-export interface UpdateChildEntityColl2Request {
+export interface UpdateLegacyChildEntityColl2Request {
   coll2_property1?: string;
   coll2_property2?: boolean;
 }
@@ -236,9 +279,43 @@ export interface UpdateChildEntityColl2Request {
 // ============================================================================
 
 /**
- * Type guard to check if an object is an Entity
+ * Type guard to check if an object is a UIProperty
  */
-export function isEntity(obj: any): obj is Entity {
+export function isUIProperty(obj: any): obj is UIProperty {
+  return obj && 
+         typeof obj.property_name === 'string' &&
+         obj.property_value !== undefined &&
+         typeof obj.is_editable === 'boolean' &&
+         typeof obj.is_visible === 'boolean';
+}
+
+/**
+ * Type guard to check if an object is a UISubCollection
+ */
+export function isUISubCollection(obj: any): obj is UISubCollection {
+  return obj && 
+         typeof obj.collection_key === 'string' &&
+         typeof obj.display_name === 'string' &&
+         typeof obj.ordinal === 'number' &&
+         Array.isArray(obj.properties);
+}
+
+/**
+ * Type guard to check if an object is a UIEntity (unified UI type)
+ */
+export function isUIEntity(obj: any): obj is UIEntity {
+  return obj && 
+         typeof obj.id === 'string' &&
+         typeof obj.key === 'string' &&
+         typeof obj.name === 'string' &&
+         Array.isArray(obj.properties) &&
+         Array.isArray(obj.sub_collections);
+}
+
+/**
+ * Type guard to check if an object is a Legacy Entity
+ */
+export function isLegacyEntity(obj: any): obj is LegacyEntity {
   return obj && 
          typeof obj.entity_key === 'string' &&
          typeof obj.entity_name === 'string' &&
@@ -246,9 +323,9 @@ export function isEntity(obj: any): obj is Entity {
 }
 
 /**
- * Type guard to check if an object is a ChildEntity
+ * Type guard to check if an object is a Legacy ChildEntity
  */
-export function isChildEntity(obj: any): obj is ChildEntity {
+export function isLegacyChildEntity(obj: any): obj is LegacyChildEntity {
   return obj && 
          typeof obj.child_entity_key === 'string' &&
          typeof obj.entity_key === 'string' &&
@@ -256,10 +333,261 @@ export function isChildEntity(obj: any): obj is ChildEntity {
          typeof obj.child_entity_property1 === 'string';
 }
 
+// ============================================================================
+// MIGRATION UTILITIES
+// ============================================================================
+
 /**
- * Type guard to check if an object is an EntityColl1
+ * Convert a legacy Entity to the new unified UIEntity type
  */
-export function isEntityColl1(obj: any): obj is EntityColl1 {
+export function convertLegacyEntityToUIEntity(legacyEntity: LegacyEntity): UIEntity {
+  return {
+    entity_id: crypto.randomUUID(), // Generate new GUID
+    entity_key: legacyEntity.entity_key,
+    display_name: legacyEntity.entity_name,
+    properties: [
+      {
+        property_name: 'entity_key',
+        property_value: legacyEntity.entity_key,
+        ordinal: 1,
+        is_editable: false,
+        is_visible: true,
+        is_key: true
+      },
+      {
+        property_name: 'entity_name',
+        property_value: legacyEntity.entity_name,
+        ordinal: 2,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      },
+      {
+        property_name: 'entity_property1',
+        property_value: legacyEntity.entity_property1,
+        ordinal: 3,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      }
+    ],
+    sub_collections: []
+  };
+}
+
+/**
+ * Convert a legacy ChildEntity to the new unified UIEntity type
+ */
+export function convertLegacyChildEntityToUIEntity(legacyChildEntity: LegacyChildEntity): UIEntity {
+  return {
+    entity_id: crypto.randomUUID(), // Generate new GUID
+    entity_key: legacyChildEntity.child_entity_key,
+    display_name: legacyChildEntity.child_entity_name,
+    properties: [
+      {
+        property_name: 'child_entity_key',
+        property_value: legacyChildEntity.child_entity_key,
+        ordinal: 1,
+        is_editable: false,
+        is_visible: true,
+        is_key: true
+      },
+      {
+        property_name: 'entity_key',
+        property_value: legacyChildEntity.entity_key,
+        ordinal: 2,
+        is_editable: false,
+        is_visible: true,
+        is_key: false
+      },
+      {
+        property_name: 'child_entity_name',
+        property_value: legacyChildEntity.child_entity_name,
+        ordinal: 3,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      },
+      {
+        property_name: 'child_entity_property1',
+        property_value: legacyChildEntity.child_entity_property1,
+        ordinal: 4,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      }
+    ],
+    sub_collections: []
+  };
+}
+
+/**
+ * Convert a unified UIEntity back to legacy Entity format (for API compatibility)
+ */
+export function convertUIEntityToLegacyEntity(entity: UIEntity): LegacyEntity {
+  const entityKeyProp = entity.properties.find((p: UIProperty) => p.property_name === 'entity_key');
+  const entityNameProp = entity.properties.find((p: UIProperty) => p.property_name === 'entity_name');
+  const entityProperty1Prop = entity.properties.find((p: UIProperty) => p.property_name === 'entity_property1');
+  
+  return {
+    entity_key: entityKeyProp?.property_value || entity.entity_key,
+    entity_name: entityNameProp?.property_value || entity.display_name,
+    entity_property1: entityProperty1Prop?.property_value || ''
+  };
+}
+
+/**
+ * Convert a unified UIEntity back to legacy ChildEntity format (for API compatibility)
+ */
+export function convertUIEntityToLegacyChildEntity(entity: UIEntity): LegacyChildEntity {
+  const childKeyProp = entity.properties.find((p: UIProperty) => p.property_name === 'child_entity_key');
+  const entityKeyProp = entity.properties.find((p: UIProperty) => p.property_name === 'entity_key');
+  const childNameProp = entity.properties.find((p: UIProperty) => p.property_name === 'child_entity_name');
+  const childProperty1Prop = entity.properties.find((p: UIProperty) => p.property_name === 'child_entity_property1');
+  
+  return {
+    child_entity_key: childKeyProp?.property_value || entity.entity_key,
+    entity_key: entityKeyProp?.property_value || '',
+    child_entity_name: childNameProp?.property_value || entity.display_name,
+    child_entity_property1: childProperty1Prop?.property_value || ''
+  };
+}
+
+/**
+ * Convert a LegacyEntityColl1 (generic_routes) to UIEntity with proper schema field names
+ */
+export function convertLegacyEntityColl1ToUIEntity(legacyColl: LegacyEntityColl1): UIEntity {
+  return {
+    entity_id: crypto.randomUUID(),
+    entity_key: legacyColl.entity_key,
+    display_name: `Route ${legacyColl.coll1_property1}`, // Use route_type as display name
+    properties: [
+      {
+        property_name: 'route_type',
+        property_value: legacyColl.coll1_property1,
+        ordinal: 1,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      },
+      {
+        property_name: 'load_dose',
+        property_value: legacyColl.coll1_property2,
+        ordinal: 2,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      },
+      {
+        property_name: 'maintain_dose',
+        property_value: legacyColl.coll1_property3.toString(),
+        ordinal: 3,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      }
+    ],
+    sub_collections: []
+  };
+}
+
+/**
+ * Convert a LegacyChildEntityColl1 to UIEntity with proper schema field names
+ */
+export function convertLegacyChildEntityColl1ToUIEntity(legacyColl: LegacyChildEntityColl1): UIEntity {
+  return {
+    entity_id: crypto.randomUUID(),
+    entity_key: legacyColl.child_entity_key,
+    display_name: `Collection Item ${legacyColl.coll1_property1}`,
+    properties: [
+      {
+        property_name: 'coll1_property1',
+        property_value: legacyColl.coll1_property1,
+        ordinal: 1,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      },
+      {
+        property_name: 'coll1_property2',
+        property_value: legacyColl.coll1_property2.toString(),
+        ordinal: 2,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      }
+    ],
+    sub_collections: []
+  };
+}
+
+/**
+ * Convert a LegacyChildEntityColl2 to UIEntity with proper schema field names
+ */
+export function convertLegacyChildEntityColl2ToUIEntity(legacyColl: LegacyChildEntityColl2): UIEntity {
+  return {
+    entity_id: crypto.randomUUID(),
+    entity_key: legacyColl.child_entity_key,
+    display_name: `Collection Item ${legacyColl.coll2_property1}`,
+    properties: [
+      {
+        property_name: 'coll2_property1',
+        property_value: legacyColl.coll2_property1,
+        ordinal: 1,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      },
+      {
+        property_name: 'coll2_property2',
+        property_value: legacyColl.coll2_property2.toString(),
+        ordinal: 2,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      }
+    ],
+    sub_collections: []
+  };
+}
+
+/**
+ * Interface for generic aliases data from database
+ */
+export interface GenericAlias {
+  uid: string;
+  row: number;
+  generic_key: string;
+  generic_uid: string | null;
+  alias: string;
+}
+
+/**
+ * Convert a GenericAlias to UIEntity with proper schema field names
+ */
+export function convertGenericAliasToUIEntity(aliasData: GenericAlias): UIEntity {
+  return {
+    entity_id: crypto.randomUUID(),
+    entity_key: aliasData.generic_key,
+    display_name: aliasData.alias,
+    properties: [
+      {
+        property_name: 'alias',
+        property_value: aliasData.alias,
+        ordinal: 1,
+        is_editable: true,
+        is_visible: true,
+        is_key: false
+      }
+    ],
+    sub_collections: []
+  };
+}
+
+/**
+ * Type guard to check if an object is a LegacyEntityColl1
+ */
+export function isLegacyEntityColl1(obj: any): obj is LegacyEntityColl1 {
   return obj && 
          typeof obj.entity_key === 'string' &&
          typeof obj.coll1_property1 === 'string' &&
@@ -268,9 +596,9 @@ export function isEntityColl1(obj: any): obj is EntityColl1 {
 }
 
 /**
- * Type guard to check if an object is a ChildEntityColl1
+ * Type guard to check if an object is a LegacyChildEntityColl1
  */
-export function isChildEntityColl1(obj: any): obj is ChildEntityColl1 {
+export function isLegacyChildEntityColl1(obj: any): obj is LegacyChildEntityColl1 {
   return obj && 
          typeof obj.child_entity_key === 'string' &&
          typeof obj.coll1_property1 === 'string' &&
@@ -278,11 +606,109 @@ export function isChildEntityColl1(obj: any): obj is ChildEntityColl1 {
 }
 
 /**
- * Type guard to check if an object is a ChildEntityColl2
+ * Type guard to check if an object is a LegacyChildEntityColl2
  */
-export function isChildEntityColl2(obj: any): obj is ChildEntityColl2 {
+export function isLegacyChildEntityColl2(obj: any): obj is LegacyChildEntityColl2 {
   return obj && 
          typeof obj.child_entity_key === 'string' &&
          typeof obj.coll2_property1 === 'string' &&
          typeof obj.coll2_property2 === 'boolean';
-} 
+}
+
+export interface GenericApproval {
+  uid: string;
+  row: number;
+  generic_key: string;
+  generic_uid: string | null;
+  route_type: string;
+  country: string;
+  indication: string | null;
+  populations: string | null;
+  approval_date: string | null;
+  discon_date: string | null;
+  box_warning: string | null;
+  box_warning_date: string | null;
+}
+
+export const convertGenericApprovalToUIEntity = (approval: GenericApproval): UIEntity => {
+  return {
+    entity_id: approval.uid,
+    entity_key: approval.generic_key,
+    display_name: `${approval.country} - ${approval.route_type} (${approval.approval_date || 'N/A'})`,
+    properties: [
+      {
+        property_name: 'generic_key',
+        property_value: approval.generic_key,
+        is_editable: false,
+        is_visible: true,
+        is_key: true,
+        ordinal: 1
+      },
+      {
+        property_name: 'route_type',
+        property_value: approval.route_type,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
+        ordinal: 2
+      },
+      {
+        property_name: 'country',
+        property_value: approval.country,
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
+        ordinal: 3
+      },
+      {
+        property_name: 'indication',
+        property_value: approval.indication || '',
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
+        ordinal: 4
+      },
+      {
+        property_name: 'populations',
+        property_value: approval.populations || '',
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
+        ordinal: 5
+      },
+      {
+        property_name: 'approval_date',
+        property_value: approval.approval_date || '',
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
+        ordinal: 6
+      },
+      {
+        property_name: 'discon_date',
+        property_value: approval.discon_date || '',
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
+        ordinal: 7
+      },
+      {
+        property_name: 'box_warning',
+        property_value: approval.box_warning || '',
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
+        ordinal: 8
+      },
+      {
+        property_name: 'box_warning_date',
+        property_value: approval.box_warning_date || '',
+        is_editable: true,
+        is_visible: true,
+        is_key: false,
+        ordinal: 9
+      }
+    ],
+    sub_collections: []
+  };
+}; 

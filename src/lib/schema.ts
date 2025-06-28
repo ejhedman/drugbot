@@ -33,7 +33,7 @@ export interface EntityRelationship {
   isCollection: boolean;
 }
 
-export interface EntityTab {
+export interface EntitySubCollection {
   id: string;
   displayName: string;
   type: 'properties' | 'collection' | 'custom';
@@ -50,167 +50,15 @@ export interface EntitySchema {
   comment?: string;
   fields: EntityField[];
   relationships: EntityRelationship[];
-  tabs: EntityTab[];
+  subCollections: EntitySubCollection[];
   hierarchical?: {
     parentField: string;
     maxDepth?: number;
   };
 }
 
-export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
-  generic_drugs: {
-    name: 'generic_drugs',
-    tableName: 'generic_drugs',
-    displayName: 'Generic Drug',
-    pluralName: 'Generic Drugs',
-    comment: 'Generic drug information including mechanism of action and classification',
-    fields: [
-      {
-        name: 'uid',
-        type: 'string',
-        sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
-        isId: true,
-        isRequired: true,
-        ui: {
-          visibility: 'hidden',
-          displayName: 'ID',
-          controlType: 'text'
-        }
-      },
-      {
-        name: 'generic_key',
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        isKey: true,
-        isRequired: true,
-        ui: {
-          visibility: 'readonly',
-          displayName: 'Generic Key',
-          controlType: 'text',
-          placeholder: 'Auto-generated key'
-        }
-      },
-      {
-        name: 'generic_name',
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        isRequired: true,
-        ui: {
-          visibility: 'visible',
-          displayName: 'Generic Name',
-          controlType: 'text',
-          placeholder: 'Enter generic drug name'
-        }
-      },
-      {
-        name: 'biologic',
-        type: 'string',
-        sqlType: 'TEXT',
-        ui: {
-          visibility: 'visible',
-          displayName: 'Biologic Classification',
-          controlType: 'textarea',
-          placeholder: 'Enter biologic information'
-        }
-      },
-      {
-        name: 'mech_of_action',
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        ui: {
-          visibility: 'visible',
-          displayName: 'Mechanism of Action',
-          controlType: 'text',
-          placeholder: 'Enter mechanism of action'
-        }
-      },
-      {
-        name: 'class_or_type',
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        ui: {
-          visibility: 'visible',
-          displayName: 'Drug Class/Type',
-          controlType: 'text',
-          placeholder: 'Enter drug class or type'
-        }
-      },
-      {
-        name: 'target',
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        ui: {
-          visibility: 'visible',
-          displayName: 'Target',
-          controlType: 'text',
-          placeholder: 'Enter drug target (e.g., TNFi)'
-        }
-      }
-    ],
-    relationships: [
-      {
-        type: '1-n',
-        targetEntity: 'generic_aliases',
-        foreignKey: 'generic_uid',
-        displayName: 'Aliases',
-        isCollection: true
-      },
-      {
-        type: '1-n',
-        targetEntity: 'generic_routes',
-        foreignKey: 'generic_uid',
-        displayName: 'Routes & Dosing',
-        isCollection: true
-      },
-      {
-        type: '1-n',
-        targetEntity: 'generic_approvals',
-        foreignKey: 'generic_uid',
-        displayName: 'Approvals',
-        isCollection: true
-      },
-      {
-        type: '1-n',
-        targetEntity: 'manu_drugs',
-        foreignKey: 'generic_uid',
-        displayName: 'Manufactured Products',
-        isCollection: true
-      }
-    ],
-    tabs: [
-      {
-        id: 'details',
-        displayName: 'Details',
-        type: 'properties',
-        fields: ['generic_name', 'biologic', 'mech_of_action', 'class_or_type', 'target']
-      },
-      {
-        id: 'aliases',
-        displayName: 'Aliases',
-        type: 'collection',
-        collectionEntity: 'generic_aliases'
-      },
-      {
-        id: 'routes',
-        displayName: 'Routes & Dosing',
-        type: 'collection',
-        collectionEntity: 'generic_routes'
-      },
-      {
-        id: 'approvals',
-        displayName: 'Approvals',
-        type: 'collection',
-        collectionEntity: 'generic_approvals'
-      },
-      {
-        id: 'products',
-        displayName: 'Manufactured Products',
-        type: 'collection',
-        collectionEntity: 'manu_drugs'
-      }
-    ]
-  },
-
+// Sub-collection schemas (separate from main entities)
+export const ENTITY_SUB_COLLECTIONS: Record<string, EntitySchema> = {
   generic_aliases: {
     name: 'generic_aliases',
     tableName: 'generic_aliases',
@@ -273,7 +121,7 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
         isCollection: false
       }
     ],
-    tabs: [
+    subCollections: [
       {
         id: 'details',
         displayName: 'Details',
@@ -401,7 +249,7 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
         isCollection: false
       }
     ],
-    tabs: [
+    subCollections: [
       {
         id: 'details',
         displayName: 'Details',
@@ -496,12 +344,168 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
         isCollection: false
       }
     ],
-    tabs: [
+    subCollections: [
       {
         id: 'details',
         displayName: 'Details',
         type: 'properties',
         fields: ['country', 'indication', 'approval_date', 'box_warning']
+      }
+    ]
+  }
+};
+
+// Main entity schemas (only contains the actual entities, not sub-collections)
+export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
+  generic_drugs: {
+    name: 'generic_drugs',
+    tableName: 'generic_drugs',
+    displayName: 'Generic Drug',
+    pluralName: 'Generic Drugs',
+    comment: 'Generic drug information including mechanism of action and classification',
+    fields: [
+      {
+        name: 'uid',
+        type: 'string',
+        sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
+        isId: true,
+        isRequired: true,
+        ui: {
+          visibility: 'hidden',
+          displayName: 'ID',
+          controlType: 'text'
+        }
+      },
+      {
+        name: 'generic_key',
+        type: 'string',
+        sqlType: 'VARCHAR(255)',
+        isKey: true,
+        isRequired: true,
+        ui: {
+          visibility: 'readonly',
+          displayName: 'Generic Key',
+          controlType: 'text',
+          placeholder: 'Auto-generated key'
+        }
+      },
+      {
+        name: 'generic_name',
+        type: 'string',
+        sqlType: 'VARCHAR(255)',
+        isRequired: true,
+        ui: {
+          visibility: 'visible',
+          displayName: 'Generic Name',
+          controlType: 'text',
+          placeholder: 'Enter generic drug name'
+        }
+      },
+      {
+        name: 'biologic',
+        type: 'string',
+        sqlType: 'TEXT',
+        ui: {
+          visibility: 'visible',
+          displayName: 'Biologic Classification',
+          controlType: 'textarea',
+          placeholder: 'Enter biologic information'
+        }
+      },
+      {
+        name: 'mech_of_action',
+        type: 'string',
+        sqlType: 'VARCHAR(255)',
+        ui: {
+          visibility: 'visible',
+          displayName: 'Mechanism of Action',
+          controlType: 'text',
+          placeholder: 'Enter mechanism of action'
+        }
+      },
+      {
+        name: 'class_or_type',
+        type: 'string',
+        sqlType: 'VARCHAR(255)',
+        ui: {
+          visibility: 'visible',
+          displayName: 'Drug Class/Type',
+          controlType: 'text',
+          placeholder: 'Enter drug class or type'
+        }
+      },
+      {
+        name: 'target',
+        type: 'string',
+        sqlType: 'VARCHAR(255)',
+        ui: {
+          visibility: 'visible',
+          displayName: 'Target',
+          controlType: 'text',
+          placeholder: 'Enter drug target (e.g., TNFi)'
+        }
+      }
+    ],
+    relationships: [
+      {
+        type: '1-n',
+        targetEntity: 'generic_aliases',
+        foreignKey: 'generic_uid',
+        displayName: 'Aliases',
+        isCollection: true
+      },
+      {
+        type: '1-n',
+        targetEntity: 'generic_routes',
+        foreignKey: 'generic_uid',
+        displayName: 'Routes & Dosing',
+        isCollection: true
+      },
+      {
+        type: '1-n',
+        targetEntity: 'generic_approvals',
+        foreignKey: 'generic_uid',
+        displayName: 'Approvals',
+        isCollection: true
+      },
+      {
+        type: '1-n',
+        targetEntity: 'manu_drugs',
+        foreignKey: 'generic_uid',
+        displayName: 'Manufactured Products',
+        isCollection: true
+      }
+    ],
+    subCollections: [
+      {
+        id: 'details',
+        displayName: 'Details',
+        type: 'properties',
+        fields: ['generic_name', 'biologic', 'mech_of_action', 'class_or_type', 'target']
+      },
+      {
+        id: 'aliases',
+        displayName: 'Aliases',
+        type: 'collection',
+        collectionEntity: 'generic_aliases'
+      },
+      {
+        id: 'routes',
+        displayName: 'Routes & Dosing',
+        type: 'collection',
+        collectionEntity: 'generic_routes'
+      },
+      {
+        id: 'approvals',
+        displayName: 'Approvals',
+        type: 'collection',
+        collectionEntity: 'generic_approvals'
+      },
+      {
+        id: 'products',
+        displayName: 'Manufactured Products',
+        type: 'collection',
+        collectionEntity: 'manu_drugs'
       }
     ]
   },
@@ -612,7 +616,7 @@ export const ENTITY_SCHEMAS: Record<string, EntitySchema> = {
         isCollection: false
       }
     ],
-    tabs: [
+    subCollections: [
       {
         id: 'details',
         displayName: 'Details',

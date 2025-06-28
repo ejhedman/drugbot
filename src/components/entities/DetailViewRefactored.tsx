@@ -1,6 +1,10 @@
 'use client';
 
-import { Entity, ChildEntity } from '@/types';
+import { 
+  UIEntity, 
+  convertLegacyEntityToUIEntity,
+  convertLegacyChildEntityToUIEntity
+} from '@/types';
 import { EntityDetailPage } from './EntityDetailPage';
 import { FormCard, FormField } from './FormCard';
 import { useEntityOperations } from '@/hooks/useEntityOperations';
@@ -12,10 +16,10 @@ interface DetailViewRefactoredProps {
   isAddingChild?: boolean;
   onCancelAddEntity?: () => void;
   onCancelAddChild?: () => void;
-  onEntityCreated?: (entity: Entity) => void;
-  onChildCreated?: (child: ChildEntity) => void;
-  onEntityUpdated?: (entity: Entity) => void;
-  onChildUpdated?: (child: ChildEntity) => void;
+  onEntityCreated?: (entity: UIEntity) => void;
+  onChildCreated?: (child: UIEntity) => void;
+  onEntityUpdated?: (entity: UIEntity) => void;
+  onChildUpdated?: (child: UIEntity) => void;
   onEntityDeleted?: (entityKey: string) => void;
   onChildDeleted?: (childKey: string) => void;
 }
@@ -38,17 +42,19 @@ export function DetailViewRefactored({
 
   // Handle entity creation
   const handleCreateEntity = async (data: Record<string, any>) => {
-    const newEntity = await operations.createEntity(data);
-    onEntityCreated?.(newEntity);
+    const legacyEntity = await operations.createEntity(data);
+    const unifiedEntity = convertLegacyEntityToUIEntity(legacyEntity);
+    onEntityCreated?.(unifiedEntity);
   };
 
   // Handle child creation  
   const handleCreateChild = async (data: Record<string, any>) => {
-    const newChild = await operations.createChild({
+    const legacyChild = await operations.createChild({
       ...data,
       entity_key: entityKey || undefined, // Link to parent entity
     });
-    onChildCreated?.(newChild);
+    const unifiedChild = convertLegacyChildEntityToUIEntity(legacyChild);
+    onChildCreated?.(unifiedChild);
   };
 
   // Entity form fields configuration

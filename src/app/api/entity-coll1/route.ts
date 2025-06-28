@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataRepository } from '@/lib/repository';
-import { CreateEntityColl1Request } from '@/types';
+import { CreateLegacyEntityColl1Request } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body: CreateEntityColl1Request = await request.json();
+    const body: CreateLegacyEntityColl1Request = await request.json();
     
     // Validate required fields
     if (!body.entity_key || !body.coll1_property1 || !body.coll1_property2 || typeof body.coll1_property3 !== 'number') {

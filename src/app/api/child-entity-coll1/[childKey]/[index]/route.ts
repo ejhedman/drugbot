@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataRepository } from '@/lib/repository';
-import { UpdateChildEntityColl1Request } from '@/types';
+import { UpdateLegacyChildEntityColl1Request } from '@/types';
 
 export async function PATCH(
   request: NextRequest,
@@ -8,7 +8,7 @@ export async function PATCH(
 ) {
   try {
     const { childKey, index } = await params;
-    const body: UpdateChildEntityColl1Request = await request.json();
+    const body: UpdateLegacyChildEntityColl1Request = await request.json();
     const indexNum = parseInt(index, 10);
     
     if (isNaN(indexNum) || indexNum < 0) {

@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { Entity, ChildEntity } from '@/types';
+import { LegacyEntity, LegacyChildEntity } from '@/types';
 
 interface UseEntityOperationsReturn {
   loading: boolean;
   error: string | null;
-  createEntity: (entity: Partial<Entity>) => Promise<Entity>;
-  updateEntity: (key: string, entity: Partial<Entity>) => Promise<Entity>;
+  createEntity: (entity: Partial<LegacyEntity>) => Promise<LegacyEntity>;
+  updateEntity: (key: string, entity: Partial<LegacyEntity>) => Promise<LegacyEntity>;
   deleteEntity: (key: string) => Promise<void>;
-  createChild: (child: Partial<ChildEntity>) => Promise<ChildEntity>;
-  updateChild: (key: string, child: Partial<ChildEntity>) => Promise<ChildEntity>;
+  createChild: (child: Partial<LegacyChildEntity>) => Promise<LegacyChildEntity>;
+  updateChild: (key: string, child: Partial<LegacyChildEntity>) => Promise<LegacyChildEntity>;
   deleteChild: (key: string) => Promise<void>;
   updateCollection: (type: string, parentKey: string, index: number, data: any) => Promise<any>;
   deleteFromCollection: (type: string, parentKey: string, id: string | number) => Promise<void>;
@@ -34,7 +34,7 @@ export function useEntityOperations(): UseEntityOperationsReturn {
     }
   };
 
-  const createEntity = async (entity: Partial<Entity>): Promise<Entity> => {
+  const createEntity = async (entity: Partial<LegacyEntity>): Promise<LegacyEntity> => {
     return handleApiCall(async () => {
       const response = await fetch('/api/entities', {
         method: 'POST',
@@ -46,7 +46,7 @@ export function useEntityOperations(): UseEntityOperationsReturn {
     });
   };
 
-  const updateEntity = async (key: string, entity: Partial<Entity>): Promise<Entity> => {
+  const updateEntity = async (key: string, entity: Partial<LegacyEntity>): Promise<LegacyEntity> => {
     return handleApiCall(async () => {
       const response = await fetch(`/api/entities/${encodeURIComponent(key)}`, {
         method: 'PATCH',
@@ -67,7 +67,7 @@ export function useEntityOperations(): UseEntityOperationsReturn {
     });
   };
 
-  const createChild = async (child: Partial<ChildEntity>): Promise<ChildEntity> => {
+  const createChild = async (child: Partial<LegacyChildEntity>): Promise<LegacyChildEntity> => {
     return handleApiCall(async () => {
       const response = await fetch('/api/children', {
         method: 'POST',
@@ -79,7 +79,7 @@ export function useEntityOperations(): UseEntityOperationsReturn {
     });
   };
 
-  const updateChild = async (key: string, child: Partial<ChildEntity>): Promise<ChildEntity> => {
+  const updateChild = async (key: string, child: Partial<LegacyChildEntity>): Promise<LegacyChildEntity> => {
     return handleApiCall(async () => {
       const response = await fetch(`/api/children/${encodeURIComponent(key)}`, {
         method: 'PATCH',

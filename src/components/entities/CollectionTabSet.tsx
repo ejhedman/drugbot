@@ -12,6 +12,7 @@ export interface TabConfig {
   data: any[] | Record<string, any>;
   emptyMessage?: string;
   type?: 'table' | 'properties' | 'auto';
+  schemaEntityName?: string; // Schema entity name for metadata lookup
 }
 
 export interface TabCallbacks {
@@ -65,6 +66,7 @@ export function CollectionTabSet({
           onUpdate={tabCallbacks.onUpdate}
           onDelete={tabCallbacks.onDelete}
           onCreate={tabCallbacks.onCreate}
+          schemaEntityName={tabConfig.schemaEntityName}
         />
       );
     } else {
@@ -75,6 +77,7 @@ export function CollectionTabSet({
           emptyMessage={tabConfig.emptyMessage}
           loading={loading}
           onUpdate={tabCallbacks.onUpdate}
+          schemaEntityName={tabConfig.schemaEntityName}
         />
       );
     }
