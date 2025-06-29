@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Use the new AggregateRepository method
-    const aliases: UIAggregate[] = await aggregateRepository.getGenericAliasAggregatesByEntityKey(entityKey);
+    const aliases: UIAggregate = await aggregateRepository.getGenericAliasAggregatesByEntityKey(entityKey);
 
     return NextResponse.json(aliases);
   } catch (error) {

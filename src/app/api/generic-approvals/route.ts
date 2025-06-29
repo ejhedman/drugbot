@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Use the new AggregateRepository method
-    const approvals: UIAggregate[] = await aggregateRepository.getGenericApprovalAggregatesByEntityKey(entityKey);
+    const approvals: UIAggregate = await aggregateRepository.getGenericApprovalAggregatesByEntityKey(entityKey);
 
     return NextResponse.json(approvals);
   } catch (error) {

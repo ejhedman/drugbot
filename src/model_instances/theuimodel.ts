@@ -254,7 +254,6 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
 // Main entity schemas (only contains the actual entities, not sub-collections)
 export const ENTITIES: Record<string, UIEntityMeta> = {
   generic_drugs: {
-    tableName: 'generic_drugs',
     displayName: 'Generic Drug',
     pluralName: 'Generic Drugs',
     propertyDefs: [
@@ -356,7 +355,6 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
   },
 
   manu_drugs: {
-    tableName: 'manu_drugs',
     displayName: 'Manufactured Drug',
     pluralName: 'Manufactured Drugs',
     propertyDefs: [

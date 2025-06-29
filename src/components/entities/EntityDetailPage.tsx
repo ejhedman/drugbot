@@ -39,9 +39,9 @@ export function EntityDetailPage({
   const [collectionsLoading, setCollectionsLoading] = useState(false);
   
   // Collection data for entity (generic_drugs)
-  const [aliasesList, setAliasesList] = useState<UIAggregate[]>([]);
-  const [routesList, setRoutesList] = useState<UIAggregate[]>([]);
-  const [approvalsList, setApprovalsList] = useState<UIAggregate[]>([]);
+  const [aliasesList, setAliasesList] = useState<UIAggregate | null>(null);
+  const [routesList, setRoutesList] = useState<UIAggregate | null>(null);
+  const [approvalsList, setApprovalsList] = useState<UIAggregate | null>(null);
 
   const operations = useEntityOperations();
 
@@ -55,9 +55,9 @@ export function EntityDetailPage({
     } else {
       setEntity(null);
       setChild(null);
-      setAliasesList([]);
-      setRoutesList([]);
-      setApprovalsList([]);
+      setAliasesList(null);
+      setRoutesList(null);
+      setApprovalsList(null);
     }
   }, [entityKey, childKey]);
 
@@ -113,37 +113,37 @@ export function EntityDetailPage({
       // Set routes data (already processed by fetchRoutes)
       setRoutesList(routesData);
 
-      // Fetch aliases (now returns UIAggregate directly)
+      // Fetch aliases (now returns single UIAggregate)
       if (aliasesRes.ok) {
-        const aliases: UIAggregate[] = await aliasesRes.json();
+        const aliases: UIAggregate = await aliasesRes.json();
         setAliasesList(aliases);
       } else {
-        setAliasesList([]);
+        setAliasesList(null);
       }
 
-      // Fetch approvals (now returns UIAggregate directly)
+      // Fetch approvals (now returns single UIAggregate)
       if (approvalsRes.ok) {
-        const approvals: UIAggregate[] = await approvalsRes.json();
+        const approvals: UIAggregate = await approvalsRes.json();
         setApprovalsList(approvals);
       } else {
-        setApprovalsList([]);
+        setApprovalsList(null);
       }
     } catch (error) {
-      setAliasesList([]);
-      setRoutesList([]);
-      setApprovalsList([]);
+      setAliasesList(null);
+      setRoutesList(null);
+      setApprovalsList(null);
     } finally {
       setCollectionsLoading(false);
     }
   };
 
-  async function fetchRoutes(entityKey: string): Promise<UIAggregate[]> {
+  async function fetchRoutes(entityKey: string): Promise<UIAggregate> {
     const routesRes = await fetch(`/api/generic-routes?entityKey=${encodeURIComponent(entityKey)}`);
     if (!routesRes.ok) {
       throw new Error('Failed to fetch routes');
     }
     
-    const routes: UIAggregate[] = await routesRes.json();
+    const routes: UIAggregate = await routesRes.json();
     return routes;
   }
 
@@ -289,15 +289,26 @@ export function EntityDetailPage({
     });
   };
 
-  // Helper function to convert UIAggregate properties array to simple object for TabProperties
-  const convertUIAggregateToTabData = (uiAggregates: UIAggregate[]): any[] => {
-    return uiAggregates.map(uiAggregate => {
-      const obj: Record<string, any> = {};
-      uiAggregate.properties?.forEach(prop => {
-        obj[prop.propertyName] = prop.propertyValue;
+  // Helper function to convert UIAggregate rows to simple objects for TabProperties
+  const convertUIAggregateToTabData = (uiAggregate: UIAggregate | null): any[] => {
+    if (!uiAggregate) {
+      return [];
+    }
+    
+    // Handle new rows structure (2D array)
+    if (uiAggregate.rows && uiAggregate.rows.length > 0) {
+      return uiAggregate.rows.map(row => {
+        const obj: Record<string, any> = {};
+        row.forEach(prop => {
+          obj[prop.propertyName] = prop.propertyValue;
+        });
+        return obj;
       });
-      return obj;
-    });
+    }
+    
+
+    
+    return [];
   };
 
   // Get entity key for legacy API compatibility
@@ -313,7 +324,7 @@ export function EntityDetailPage({
           key: collection.displayName.toLowerCase().replace(/\s+/g, '-'),
           label: collection.displayName,
           icon: <Database className="w-4 h-4" />,
-          data: collection.properties || [],
+          data: convertUIAggregateToTabData(collection),
           emptyMessage: `No ${collection.displayName.toLowerCase()} for this entity.`,
           type: 'auto' as const,
           schemaEntityName: collection.displayName.toLowerCase().replace(/\s+/g, '_'),
