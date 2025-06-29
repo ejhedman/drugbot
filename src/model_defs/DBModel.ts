@@ -180,12 +180,12 @@ export interface CreateUIAggregateRequest {
   displayName: string;
   ordinal: number;
   properties: {
-    property_name: string;
-    property_value: string;
+    propertyName: string;
+    propertyValue: string;
     ordinal: number;
-    is_editable: boolean;
-    is_visible: boolean;
-    is_key: boolean;
+    isEditable: boolean;
+    isVisible: boolean;
+    isKey: boolean;
   }[];
 }
 
@@ -196,12 +196,12 @@ export interface UpdateUIAggregateRequest {
   displayName?: string;
   ordinal?: number;
   properties?: {
-    property_name: string;
-    property_value: string;
+    propertyName: string;
+    propertyValue: string;
     ordinal: number;
-    is_editable: boolean;
-    is_visible: boolean;
-    is_key: boolean;
+    isEditable: boolean;
+    isVisible: boolean;
+    isKey: boolean;
   }[];
 }
 
@@ -213,12 +213,12 @@ export interface CreateChildUIAggregateRequest {
   displayName: string;
   ordinal: number;
   properties: {
-    property_name: string;
-    property_value: string;
+    propertyName: string;
+    propertyValue: string;
     ordinal: number;
-    is_editable: boolean;
-    is_visible: boolean;
-    is_key: boolean;
+    isEditable: boolean;
+    isVisible: boolean;
+    isKey: boolean;
   }[];
 }
 
@@ -229,12 +229,12 @@ export interface UpdateChildUIAggregateRequest {
   displayName?: string;
   ordinal?: number;
   properties?: {
-    property_name: string;
-    property_value: string;
+    propertyName: string;
+    propertyValue: string;
     ordinal: number;
-    is_editable: boolean;
-    is_visible: boolean;
-    is_key: boolean;
+    isEditable: boolean;
+    isVisible: boolean;
+    isKey: boolean;
   }[];
 }
 

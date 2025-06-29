@@ -63,12 +63,15 @@ export class BaseRepository {
     return table.fields
       .filter(field => field.name !== 'uid' && field.name !== 'row') // Skip system fields
       .map((field, index) => ({
-        property_name: field.name,
-        property_value: rowData[field.name] || '',
+        propertyName: field.name,
+        propertyValue: rowData[field.name] || '',
         ordinal: index + 1,
-        is_editable: !field.is_primary_key && !defaultExcludeFromEditing.includes(field.name),
-        is_visible: true,
-        is_key: field.name === keyField.name
+        isEditable: !field.is_primary_key && !defaultExcludeFromEditing.includes(field.name),
+        isVisible: true,
+        isKey: field.name === keyField.name, 
+        isId: false,                          // EJH: FIX THIS: isId
+        controlType: 'text',                  // EJH: FIX THIS: controlType
+        isRequired: false,                    // EJH: FIX THIS: isRequired
       }));
   }
 
@@ -122,7 +125,7 @@ export class BaseRepository {
     }
 
     const children: UIEntityRef[] = data.map(row => ({
-      entity_id: row.child_uid,
+      entityUid: row.child_uid,
       displayName: row.child_name,
       ancestors: [], // Populated separately if needed
       children: [] // Child entities typically don't have children themselves
@@ -162,7 +165,7 @@ export class BaseRepository {
     }
 
     const ancestors: UIEntityRef[] = data.map(row => ({
-      entity_id: row.ancestor_uid,
+      entityUid: row.ancestor_uid,
       displayName: row.ancestor_name,
       ancestors: [], // Ancestors typically don't have ancestors themselves  
       children: [] // Populated separately if needed

@@ -54,7 +54,7 @@ class MetadataRepository {
     const schema = this.getEntitySchema(entityName);
     if (!schema) return [];
     
-    return (schema.properties || []).filter((field: UIProperty) => field.visibility === 'visible');
+    return (schema.properties || []).filter((field: UIProperty) => field.isVisible);
   }
 
   getEditableFields(entityName: string): UIProperty[] {
@@ -62,7 +62,7 @@ class MetadataRepository {
     if (!schema) return [];
     
     return (schema.properties || []).filter((field: UIProperty) => 
-      field.visibility === 'visible' && !(field as any).isId
+      field.isVisible && field.isEditable && !(field as any).isId
     );
   }
 
@@ -71,7 +71,7 @@ class MetadataRepository {
   //   const schema = this.getEntitySchema(entityName);
   //   if (!schema) return [];
     
-  //   return (schema.properties || []).filter((field: UIProperty) => field.is_key || (field as any).isId);
+  //   return (schema.properties || []).filter((field: UIProperty) => field.isKey || (field as any).isId);
   // }
 
   // // NOT USED
@@ -86,7 +86,7 @@ class MetadataRepository {
     const schema = this.getEntitySchema(entityName);
     if (!schema) return undefined;
     
-    return (schema.properties || []).find((field: UIProperty) => field.is_key && !(field as any).isId);
+    return (schema.properties || []).find((field: UIProperty) => field.isKey && !(field as any).isId);
   }
 
   // ============================================================================
@@ -107,13 +107,13 @@ class MetadataRepository {
 
   //   // Check required fields
   //   for (const field of (schema.properties || [])) {
-  //     if (field.isRequired && (data[field.property_name] === undefined || data[field.property_name] === null || data[field.property_name] === '')) {
+  //     if (field.isRequired && (data[field.propertyName] === undefined || data[field.propertyName] === null || data[field.propertyName] === '')) {
   //       errors.push(`${field.displayName} is required`);
   //     }
 
   //     // Type validation
-  //     if (data[field.property_name] !== undefined && data[field.property_name] !== null) {
-  //       const value = data[field.property_name];
+  //     if (data[field.propertyName] !== undefined && data[field.propertyName] !== null) {
+  //       const value = data[field.propertyName];
         
   //       switch (field.type) {
   //         case 'number':
@@ -166,7 +166,7 @@ class MetadataRepository {
   //   }
 
   //   const keyField = this.getReadableKeyField(entityName);
-  //   const keyPrefix = prefix || keyField?.property_name.replace('_key', '') || entityName;
+  //   const keyPrefix = prefix || keyField?.propertyName.replace('_key', '') || entityName;
     
   //   return `${keyPrefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   // }
@@ -189,18 +189,16 @@ class MetadataRepository {
   //   const transformed = { ...data };
 
   //   for (const field of (schema.properties || [])) {
-  //     if (transformed[field.property_name] !== undefined) {
+  //     if (transformed[field.propertyName] !== undefined) {
   //       switch (field.type) {
   //         case 'boolean':
   //           // Convert to integer for database storage if needed
-  //           if (field.sqlType?.includes('INTEGER')) {
-  //             transformed[field.property_name] = transformed[field.property_name] ? 1 : 0;
-  //           }
+  //           // Note: Database conversion logic removed with sqlType
   //           break;
   //         case 'date':
   //           // Ensure proper date format
-  //           if (typeof transformed[field.property_name] === 'string') {
-  //             transformed[field.property_name] = new Date(transformed[field.property_name]).toISOString().split('T')[0];
+  //           if (typeof transformed[field.propertyName] === 'string') {
+  //             transformed[field.propertyName] = new Date(transformed[field.propertyName]).toISOString().split('T')[0];
   //           }
   //           break;
   //       }
@@ -218,22 +216,20 @@ class MetadataRepository {
   //   const transformed = { ...data };
 
   //   for (const field of (schema.properties || [])) {
-  //     if (transformed[field.property_name] !== undefined) {
+  //     if (transformed[field.propertyName] !== undefined) {
   //       switch (field.type) {
   //         case 'boolean':
   //           // Convert from integer back to boolean if needed
-  //           if (field.sqlType?.includes('INTEGER')) {
-  //             transformed[field.property_name] = transformed[field.property_name] === 1;
-  //           }
+  //           // Note: Database conversion logic removed with sqlType
   //           break;
   //         case 'number':
-  //           if (typeof transformed[field.property_name] === 'string') {
-  //             transformed[field.property_name] = Number(transformed[field.property_name]);
+  //           if (typeof transformed[field.propertyName] === 'string') {
+  //             transformed[field.propertyName] = Number(transformed[field.propertyName]);
   //           }
   //           break;
   //         case 'date':
-  //           if (typeof transformed[field.property_name] === 'string') {
-  //             transformed[field.property_name] = new Date(transformed[field.property_name]);
+  //           if (typeof transformed[field.propertyName] === 'string') {
+  //             transformed[field.propertyName] = new Date(transformed[field.propertyName]);
   //           }
   //           break;
   //       }
@@ -258,10 +254,10 @@ class MetadataRepository {
   //   if (!aggregate.properties || aggregate.properties.length === 0) return this.getVisibleFields(entityName);
 
   //   // Extract property names from the aggregate's properties array
-  //   const aggregatePropertyNames = aggregate.properties.map(prop => prop.property_name);
+  //   const aggregatePropertyNames = aggregate.properties.map(prop => prop.propertyName);
 
   //   return (schema.properties || []).filter((field: UIProperty) => 
-  //     aggregatePropertyNames.includes(field.property_name) && field.visibility === 'visible'
+  //     aggregatePropertyNames.includes(field.propertyName) && field.isVisible
   //   );
   // }
 
@@ -279,7 +275,7 @@ class MetadataRepository {
   //     .filter((aggregate: any) => aggregate.type === 'collection')
   //     .map((aggregate: any) => {
   //       const relationship = (schema.children || []).find((rel: any) => 
-  //         rel.entity_id === aggregate.collectionEntity
+  //         rel.entityUid === aggregate.collectionEntity
   //       );
   //       return {
   //         id: aggregate.id || 'unknown',
@@ -304,10 +300,11 @@ class MetadataRepository {
   //       pluralName: schema.pluralName,
   //       comment: schema.comment,
   //       fields: (schema.properties || []).reduce((acc: any, field: UIProperty) => {
-  //         acc[field.property_name] = {
+  //         acc[field.propertyName] = {
   //           displayName: field.displayName,
   //           controlType: field.controlType,
-  //           visibility: field.visibility,
+  //           isVisible: field.isVisible,
+  //           isEditable: field.isEditable,
   //           placeholder: field.placeholder,
   //           validation: field.validation,
   //           type: field.type,

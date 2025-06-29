@@ -10,54 +10,46 @@
 // ============================================================================
 
 /**
- * UIProperty - Unified interface for both runtime data and schema definitions
+ * UIPropertyMeta - Unified interface for both runtime data and schema definitions
  * 
- * Runtime Usage (with property_value):
- * - property_name: The name/label of the property
- * - property_value: The actual value (can be any type)
+ * - propertyName: The name/label of the property
  * - ordinal: Sort order for displaying property order
- * - is_editable: Whether this property can be edited in the UI
- * - is_visible: Whether this property should be displayed in the UI
- * - is_key: Whether this property serves as a key/identifier
+ * - isEditable: Whether this property can be edited in the UI
+ * - isVisible: Whether this property should be displayed in the UI
+ * - isKey: Whether this property serves as a key/identifier
  * 
- * Schema Definition Usage (without property_value):
+ * Schema Definition Usage (without propertyValue):
  * - All the above plus schema metadata for configuration
  */
-export interface UIProperty {
-  // Core identification and runtime data
-  property_name: string;
-  property_value?: any; // Optional for schema definitions
+export interface UIPropertyMeta {
+  propertyName: string;
+  controlType: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'boolean';
+  isEditable: boolean;
+  isVisible: boolean;
+  isKey: boolean;
+  isId: boolean;
+  isRequired: boolean;
   ordinal: number;
-  is_editable: boolean;
-  is_visible: boolean;
-  is_key: boolean;
-  
-  // Schema metadata (optional, used for field definitions)
-  type?: 'string' | 'number' | 'boolean' | 'date' | 'enum' | 'json';
-  sqlType?: string;
-  isId?: boolean;
-  isRequired?: boolean;
-  enumValues?: string[];
 
-  displayName?: string;   // EJH: Make required
-  visibility?: 'visible' | 'hidden' | 'readonly';  // EJH: Make required
+  selectValues?: string[];
+  displayName?: string;
   placeholder?: string;
-  controlType?: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox';  // EJH: Make required
-  validation?: {  // EJH: Make required
+  validation?: {
     min?: number;
     max?: number;
     pattern?: string;
     custom?: string;
   };  
+}
 
-
+export interface UIProperty extends UIPropertyMeta {
+  propertyValue?: any;
 }
 
 /**
  * UIAggregate - Unified interface for both runtime aggregates and schema definitions
  * 
- * Runtime Usage (with entity_id and properties):
- * - entity_id: The id of the entity owning the aggregate
+ * Runtime Usage (with entityUid and properties):
  * - displayName: The name to display in the tab
  * - ordinal: Sort order for displaying tabs
  * - properties: Array of actual property instances
@@ -66,43 +58,41 @@ export interface UIProperty {
  * - id: Schema identifier for the sub-collection type
  * - All the above plus schema metadata for configuration
  */
-export interface UIAggregate {
-  // Core identification and runtime data
-  entity_id?: string; // Optional for schema definitions
-  aggregate_type?: string; // Optional for schema definitions, required for runtime usage
+export interface UIAggregateMeta {
+  aggregateType: string; 
   displayName: string;
+  propertyDefs?: UIPropertyMeta[]; // Optional for schema definitions
   ordinal: number;
+}
+
+export interface UIAggregate extends UIAggregateMeta {
+  entityUid?: string; 
   properties?: UIProperty[]; // Optional for schema definitions
-  
-  // Schema metadata (optional, used for sub-collection definitions)
-  id?: string; // Schema identifier
-  type?: 'properties' | 'collection' | 'custom';
-  collectionEntity?: string;
-  customComponent?: string;
 }
 
 /**
  * UIEntityRef - A Reference to an entity (that can be used in a tree view)
  * 
  * Properties:
- * - entity_id: The id of the entity
- * - display_name: The name to display
+ * - entityUid: The id of the entity
+ * - displayName: The name to display
  * - ancestors: Array of ancestors (Entity Refs)
  * - children: Array of children (Entity Refs)
  */
 export interface UIEntityRef {
-  entity_id: string;
+  entityUid?: string;
   displayName: string;
   ancestors: UIEntityRef[];
   children: UIEntityRef[];
 }
 
+
 /**
  * UIEntity - Unified interface for both runtime entity instances and schema definitions
  * 
- * Runtime Usage (with entity_id, entity_key, properties with values):
- * - entity_id: Unique GUID identifier for the instance
- * - entity_key: String key identifier (for URLs, references, etc.)
+ * Runtime Usage (with entityUid, entityKey, properties with values):
+ * - entityUid: Unique GUID identifier for the instance
+ * - entityKey: String key identifier (for URLs, references, etc.)
  * - displayName: Human-readable name for the entity instance
  * - properties: Array of properties with actual values
  * - aggregates: Array of sub-collections with runtime data
@@ -120,31 +110,26 @@ export interface UIEntityRef {
  * - aggregates: Array of sub-collection definitions
  * - hierarchical: Optional hierarchical configuration
  */
-export interface UIEntity {
-  // Runtime instance identification (optional for schema definitions)
-  entity_id?: string;
-  entity_key?: string;
-  entity_type?: string;
-  
-  // Core display information (required for both)
+export interface UIEntityMeta {
+  entityType?: string;
   displayName: string;
+  pluralName?: string; 
+  propertyDefs?: UIPropertyMeta[]; // Runtime: properties with values
+  aggregateDefs?: UIAggregateMeta[]; // Runtime: aggregates with data
+
+  tableName?: string; // Database table name
+}
+
+export interface UIEntity extends UIEntityMeta {
+  // Runtime instance identification (optional for schema definitions)
+  entityUid?: string;
+  entityKey?: string;
   
   // Runtime data (optional for schema definitions)
   properties?: UIProperty[]; // Runtime: properties with values
   aggregates?: UIAggregate[]; // Runtime: aggregates with data
   ancestors?: UIEntityRef[];
   children?: UIEntityRef[];
-  
-  // Schema metadata (optional, used for entity type definitions)
-  name?: string; // Schema identifier
-  tableName?: string; // Database table name
-  pluralName?: string; // Plural name for collections
-  comment?: string; // Documentation
-  // children?: UIEntityRef[]; // Schema: child entity references
-  // hierarchical?: {
-  //   parentField: string;
-  //   maxDepth?: number;
-  // };
 }
 
 // ============================================================================
@@ -156,11 +141,11 @@ export interface UIEntity {
  */
 export function isUIProperty(obj: any): obj is UIProperty {
   return obj && 
-    typeof obj.property_name === 'string' &&
+    typeof obj.propertyName === 'string' &&
     typeof obj.ordinal === 'number' &&
-    typeof obj.is_editable === 'boolean' &&
-    typeof obj.is_visible === 'boolean' &&
-    typeof obj.is_key === 'boolean' &&
+    typeof obj.isEditable === 'boolean' &&
+    typeof obj.isVisible === 'boolean' &&
+    typeof obj.isKey === 'boolean' &&
     // Optional schema metadata checks
     (obj.type === undefined || typeof obj.type === 'string') &&
     (obj.ui === undefined || (obj.ui && typeof obj.displayName === 'string'));
@@ -172,10 +157,10 @@ export function isUIProperty(obj: any): obj is UIProperty {
 export function isUIAggregate(obj: any): obj is UIAggregate {
   return obj && 
   typeof obj.displayName === 'string' &&
-  (obj.aggregate_type === undefined || typeof obj.aggregate_type === 'string') &&
+  (obj.aggregateType === undefined || typeof obj.aggregateType === 'string') &&
   typeof obj.ordinal === 'number' &&
     // Runtime aggregate checks
-    (obj.entity_id === undefined || typeof obj.entity_id === 'string') &&
+    (obj.entityUid === undefined || typeof obj.entityUid === 'string') &&
     (obj.properties === undefined || (Array.isArray(obj.properties) && obj.properties.every((prop: any) => isUIProperty(prop)))) &&
     // Schema definition checks
     (obj.id === undefined || typeof obj.id === 'string') &&
@@ -189,8 +174,8 @@ export function isUIEntity(obj: any): obj is UIEntity {
   return obj && 
     typeof obj.displayName === 'string' &&
     // Runtime entity checks
-    (obj.entity_id === undefined || typeof obj.entity_id === 'string') &&
-    (obj.entity_key === undefined || typeof obj.entity_key === 'string') &&
+    (obj.entityUid === undefined || typeof obj.entityUid === 'string') &&
+    (obj.entityKey === undefined || typeof obj.entityKey === 'string') &&
     (obj.entity_type === undefined || typeof obj.entity_type === 'string') &&
     (obj.properties === undefined || (Array.isArray(obj.properties) && obj.properties.every((prop: any) => isUIProperty(prop)))) &&
     (obj.aggregates === undefined || (Array.isArray(obj.aggregates) && obj.aggregates.every((coll: any) => isUIAggregate(coll)))) &&
@@ -205,12 +190,12 @@ export function isUIEntity(obj: any): obj is UIEntity {
  * Type guard to check if a UIEntity is being used as a schema definition
  */
 export function isUIEntitySchema(obj: UIEntity): obj is UIEntity & { name: string; tableName: string; properties: UIProperty[] } {
-  return obj.name !== undefined && obj.tableName !== undefined && obj.properties !== undefined;
+  return obj.tableName !== undefined && obj.properties !== undefined;
 }
 
 /**
  * Type guard to check if a UIEntity is being used as a runtime instance
  */
-export function isUIEntityInstance(obj: UIEntity): obj is UIEntity & { entity_id: string; entity_key: string; properties: UIProperty[] } {
-  return obj.entity_id !== undefined && obj.entity_key !== undefined && obj.properties !== undefined;
+export function isUIEntityInstance(obj: UIEntity): obj is UIEntity & { entityUid: string; entityKey: string; properties: UIProperty[] } {
+  return obj.entityUid !== undefined && obj.entityKey !== undefined && obj.properties !== undefined;
 } 

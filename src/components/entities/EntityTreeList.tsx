@@ -153,76 +153,86 @@ export function EntityTreeList({
           </div>
         ) : (
           <div className="space-y-1 px-2">
-            {entities.map((entity) => (
-              <div key={entity.entity_key!} className="space-y-1">
-                {/* Entity Row */}
-                <div className="flex items-center gap-2 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => handleEntityClick(entity.entity_key!)}
-                    className={`flex-1 text-left px-4 py-2 hover:bg-gray-50 transition-colors text-sm rounded-xl ${
-                      selectedEntityKey === entity.entity_key
-                        ? 'bg-slate-100'
-                        : 'hover-accent'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {isExpanded(entity.entity_key!) ? (
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-gray-400" />
-                      )}
-                      <Pill className="w-4 h-4 text-blue-500" />
-                      <span className="font-medium text-gray-900 text-sm">
-                        {entity.displayName}
-                      </span>
-                    </div>
-                  </button>
-                  
-                  {/* Add Child Button */}
-                  {onAddChild && isExpanded(entity.entity_key!) && (
-                    <Button
-                      onClick={(e) => handleAddChild(entity.entity_key!, e)}
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0 mr-2 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                      title="Add Child Entity"
+            {entities.map((entity, index) => {
+              const entityKey = entity.entityKey || entity.entityUid || `entity-${index}`;
+              const uniqueKey = entity.entityUid || `entity-${index}`;
+              
+              return (
+                <div key={uniqueKey} className="space-y-1">
+                  {/* Entity Row */}
+                  <div className="flex items-center gap-2 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => handleEntityClick(entityKey)}
+                      className={`flex-1 text-left px-4 py-2 hover:bg-gray-50 transition-colors text-sm rounded-xl ${
+                        selectedEntityKey === entityKey
+                          ? 'bg-slate-100'
+                          : 'hover-accent'
+                      }`}
                     >
-                      <SquarePlus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-
-                {/* Children Section */}
-                {isExpanded(entity.entity_key!) && (
-                  <div className="ml-6 space-y-1">
-                    {isLoadingChildren(entity.entity_key!) ? (
-                      <ChildEntitySkeleton />
-                    ) : children(entity.entity_key!).length === 0 ? (
-                      <div className="px-4 py-2 text-center label">
-                        No children found
+                      <div className="flex items-center gap-3">
+                        {isExpanded(entityKey) ? (
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        )}
+                        <Pill className="w-4 h-4 text-blue-500" />
+                        <span className="font-medium text-gray-900 text-sm">
+                          {entity.displayName}
+                        </span>
                       </div>
-                    ) : (
-                      children(entity.entity_key!).map((child) => (
-                        <div
-                          key={child.entity_key}
-                          onClick={() => handleChildClick(child.entity_key!)}
-                          className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors text-sm rounded-xl cursor-pointer ${
-                            selectedChildKey === child.entity_key
-                              ? 'bg-green-50'
-                              : ''
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 font-medium text-gray-900 text-sm">
-                            <Tag className="w-4 h-4 text-green-500" />
-                            {child.displayName}
-                          </div>
-                        </div>
-                      ))
+                    </button>
+                    
+                    {/* Add Child Button */}
+                    {onAddChild && isExpanded(entityKey) && (
+                      <Button
+                        onClick={(e) => handleAddChild(entityKey, e)}
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 mr-2 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                        title="Add Child Entity"
+                      >
+                        <SquarePlus className="h-4 w-4" />
+                      </Button>
                     )}
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {/* Children Section */}
+                  {isExpanded(entityKey) && (
+                    <div className="ml-6 space-y-1">
+                      {isLoadingChildren(entityKey) ? (
+                        <ChildEntitySkeleton />
+                      ) : children(entityKey).length === 0 ? (
+                        <div className="px-4 py-2 text-center label">
+                          No children found
+                        </div>
+                      ) : (
+                        children(entityKey).map((child, childIndex) => {
+                          const childKey = child.entityKey || child.entityUid || `child-${childIndex}`;
+                          const childUniqueKey = child.entityUid || `child-${childIndex}`;
+                          
+                          return (
+                            <div
+                              key={childUniqueKey}
+                              onClick={() => handleChildClick(childKey)}
+                              className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors text-sm rounded-xl cursor-pointer ${
+                                selectedChildKey === childKey
+                                  ? 'bg-green-50'
+                                  : ''
+                              }`}
+                            >
+                              <div className="flex items-center gap-3 font-medium text-gray-900 text-sm">
+                                <Tag className="w-4 h-4 text-green-500" />
+                                {child.displayName}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

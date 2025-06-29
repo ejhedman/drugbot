@@ -63,8 +63,8 @@ export class ChildEntityRepository extends BaseRepository {
         const ancestors = await this.fetchAncestorsForEntity(row.uid, genericDrugsTable);
         
         return {
-          entity_id: row.uid,
-          entity_key: row[keyField.name],
+          entityUid: row.uid,
+          entityKey: row[keyField.name],
           displayName: row[nameField.name],
           properties: this.generatePropertiesFromTable(table, row, { isChildEntity: true }),
           aggregates: [],
@@ -157,8 +157,8 @@ export class ChildEntityRepository extends BaseRepository {
     const ancestors = await this.fetchAncestorsForEntity(inserted.uid, genericDrugsTable);
 
     const entity: UIEntity = {
-      entity_id: inserted.uid,
-      entity_key: inserted[keyField.name],
+      entityUid: inserted.uid,
+      entityKey: inserted[keyField.name],
       displayName: inserted[nameField.name],
       properties: this.generatePropertiesFromTable(table, inserted, { isChildEntity: true }),
       aggregates: [],
@@ -232,8 +232,8 @@ export class ChildEntityRepository extends BaseRepository {
     const ancestors = await this.fetchAncestorsForEntity(updated.uid, genericDrugsTable);
 
     const entity: UIEntity = {
-      entity_id: updated.uid,
-      entity_key: updated[keyField.name],
+      entityUid: updated.uid,
+      entityKey: updated[keyField.name],
       displayName: updated[nameField.name],
       properties: this.generatePropertiesFromTable(table, updated, { isChildEntity: true }),
       aggregates: [],

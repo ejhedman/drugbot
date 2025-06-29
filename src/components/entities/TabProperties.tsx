@@ -43,7 +43,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
       return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
     
-    const field = (schema.properties || []).find((f: UIProperty) => (f as any).name === fieldName || f.property_name === fieldName);
+    const field = (schema.properties || []).find((f: UIProperty) => (f as any).name === fieldName || f.propertyName === fieldName);
     return field?.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 

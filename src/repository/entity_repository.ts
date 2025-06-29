@@ -42,8 +42,8 @@ export class EntityRepository extends BaseRepository {
     }
 
     const entities: UIEntity[] = data.map(row => ({
-      entity_id: row.uid,
-      entity_key: row[keyField.name],
+      entityUid: row.uid,
+      entityKey: row[keyField.name],
       displayName: nameField ? row[nameField.name] : row[keyField.name],
       properties: this.generatePropertiesFromTable(table, row),
       aggregates: [],
@@ -130,8 +130,8 @@ export class EntityRepository extends BaseRepository {
     }
     
     const entity: UIEntity = {
-      entity_id: data.uid,
-      entity_key: data[keyField.name],
+      entityUid: data.uid,
+      entityKey: data[keyField.name],
       displayName: displayName,
       properties: this.generatePropertiesFromTable(table, data, { isChildEntity }),
       aggregates: [],
@@ -190,8 +190,8 @@ export class EntityRepository extends BaseRepository {
     }
 
     const entities: UIEntity[] = data.map(row => ({
-      entity_id: row.uid,
-      entity_key: row[keyField.name],
+      entityUid: row.uid,
+      entityKey: row[keyField.name],
       displayName: nameField ? row[nameField.name] : row[keyField.name],
       properties: this.generatePropertiesFromTable(table, row),
       aggregates: [],
@@ -258,8 +258,8 @@ export class EntityRepository extends BaseRepository {
     }
 
     const entity: UIEntity = {
-      entity_id: inserted.uid,
-      entity_key: inserted[keyField.name],
+      entityUid: inserted.uid,
+      entityKey: inserted[keyField.name],
       displayName: inserted[nameField.name],
       properties: this.generatePropertiesFromTable(table, inserted),
       aggregates: [],
@@ -324,8 +324,8 @@ export class EntityRepository extends BaseRepository {
     }
 
     const entity: UIEntity = {
-      entity_id: updated.uid,
-      entity_key: updated[keyField.name],
+      entityUid: updated.uid,
+      entityKey: updated[keyField.name],
       displayName: nameField ? updated[nameField.name] : updated[keyField.name],
       properties: this.generatePropertiesFromTable(table, updated),
       aggregates: [],

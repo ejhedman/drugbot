@@ -1,65 +1,57 @@
 // Drug Database Schema - Refined from DDL
 // This file defines the complete metadata for the drug database
 
-import { UIAggregate, UIEntity } from '../model_defs/UIModel';
+import { UIAggregateMeta, UIEntityMeta } from '../model_defs/UIModel';
 
 // ============================================================================
 // SUB-COLLECTION SCHEMAS (for tabs/aggregates)
 // ============================================================================
 
 // Sub-collection schemas (separate from main entities)
-export const ENTITY_AGGREGATES: Record<string, UIAggregate> = {
+export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
   generic_aliases: {
-    aggregate_type: 'GenericAlias',
+    aggregateType: 'GenericAlias',
     displayName: 'Generic Alias',
     ordinal: 3,
-    properties: [
+    propertyDefs: [
       {
-        property_name: 'uid',
+        propertyName: 'uid',
         ordinal: 1,
-        is_editable: false,
-        is_visible: false,
-        is_key: true,
-        type: 'string',
-        sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isKey: true,
         isId: true,
-        isRequired: true,
-        visibility: 'hidden',
         displayName: 'ID',
         controlType: 'text'
       },{
-        property_name: 'generic_uid',
+        propertyName: 'generic_uid',
         ordinal: 2,
-        is_editable: false,
-        is_visible: false,
-        is_key: false,
-        type: 'string',
-        sqlType: 'UUID',
-        isRequired: true,
-        visibility: 'hidden',
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
         displayName: 'Generic Drug ID',
         controlType: 'text'
       },{
-        property_name: 'generic_key',
+        propertyName: 'generic_key',
         ordinal: 3,
-        is_editable: true,
-        is_visible: false,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'readonly',
+        isEditable: true,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
         displayName: 'Generic Key',
         controlType: 'text'
       },{
-        property_name: 'alias',
+        propertyName: 'alias',
         ordinal: 3,
-        is_editable: false,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
+        isEditable: false,
+        isVisible: true,
         isRequired: true,
-        visibility: 'visible',
+        isKey: false,
+        isId: false,
         displayName: 'Alias Name',
         controlType: 'text',
         placeholder: 'Enter alternative name'
@@ -68,128 +60,115 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregate> = {
   },
 
   generic_routes: {
-    aggregate_type: 'GenericRoute',
+    aggregateType: 'GenericRoute',
     displayName: 'Drug Route & Dosing',
     ordinal: 2,
-    properties: [
+    propertyDefs: [
       {
-        property_name: 'uid',
+        propertyName: 'uid',
         ordinal: 1,
-        is_editable: false,
-        is_visible: true,
-        is_key: true,
-        type: 'string',
-        sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
-        isId: true,
+        isEditable: false,
+        isVisible: true,
         isRequired: true,
-        visibility: 'hidden',
+        isKey: true,
+        isId: true,
         displayName: 'ID',
         controlType: 'text'
       },{
-        property_name: 'route_key',
+        propertyName: 'route_key',
         ordinal: 2,
-        is_editable: false,
-        is_visible: false,
-        is_key: true,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'readonly',
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isKey: true,
+        isId: false,
         displayName: 'Route Key',
         controlType: 'text'
       },{
-        property_name: 'generic_uid',
+        propertyName: 'generic_uid',
         ordinal: 7,
-        is_editable: false,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'UUID',
+        isEditable: false,
+        isVisible: true,
         isRequired: true,
-        visibility: 'hidden',
+        isKey: false,
+        isId: false,
         displayName: 'Generic Drug ID',
         controlType: 'text'
       },{
-        property_name: 'route_type',
+        propertyName: 'route_type',
         ordinal: 2,
-        is_editable: true,
-        is_visible: false,
-        is_key: false,
-        type: 'enum',
-        sqlType: 'VARCHAR(255)',
-        enumValues: ['Subcutaneous', 'Intravenous', 'Oral'],
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
+        selectValues: ['Subcutaneous', 'Intravenous', 'Oral'],
         displayName: 'Route Type',
         controlType: 'select',
         placeholder: 'Select administration route'
       },{
-        property_name: 'load_dose',
+        propertyName: 'load_dose',
         ordinal: 9,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Loading Dose',
         controlType: 'text',
         placeholder: 'Enter loading dose'
       },{
-        property_name: 'load_measure',
+        propertyName: 'load_measure',
         ordinal: 9,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Loading Dose Unit',
         controlType: 'text',
         placeholder: 'Enter dose unit (mg, ml, etc.)'
       },{
-        property_name: 'maintain_dose',
+        propertyName: 'maintain_dose',
         ordinal: 11,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Maintenance Dose',
         controlType: 'text',
         placeholder: 'Enter maintenance dose'
       },{
-        property_name: 'maintain_measure',
+        propertyName: 'maintain_measure',
         ordinal: 11,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Maintenance Dose Unit',
         controlType: 'text',
         placeholder: 'Enter dose unit'
       },{
-        property_name: 'montherapy',
+        propertyName: 'montherapy',
         ordinal: 13,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Monotherapy Status',
         controlType: 'text',
         placeholder: 'Enter monotherapy approval status'
       },{
-        property_name: 'half_life',
+        propertyName: 'half_life',
         ordinal: 13,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'TEXT',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Half Life',
         controlType: 'textarea',
         placeholder: 'Enter drug half-life information'
@@ -198,81 +177,72 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregate> = {
   },
 
   generic_approvals: {
-    aggregate_type: 'GenericApproval',
+    aggregateType: 'GenericApproval',
     displayName: 'Drug Approval',
     ordinal: 1,
-    properties: [
+    propertyDefs: [
       {
-        property_name: 'uid',
+        propertyName: 'uid',
         ordinal: 1,
-        is_editable: true,
-        is_visible: false,
-        is_key: false,
-        type: 'string',
-        sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
-        isId: true,
-        isRequired: true,
-        visibility: 'hidden',
+        isEditable: true,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
         displayName: 'ID',
         controlType: 'text'
       },{
-        property_name: 'generic_uid',
+        propertyName: 'generic_uid',
         ordinal: 2,
-        is_editable: false,
-        is_visible: false,
-        is_key: false,
-        type: 'string',
-        sqlType: 'UUID',
-        isRequired: true,
-        visibility: 'hidden',
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
         displayName: 'Generic Drug ID',
         controlType: 'text'
       },{
-        property_name: 'country',
+        propertyName: 'country',
         ordinal: 17,
-        is_editable: true,
-        is_visible: false,
-        is_key: false,
-        type: 'enum',
-        sqlType: 'VARCHAR(255)',
-        enumValues: ['USA', 'CAN', 'FRA', 'UK'],
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
+        selectValues: ['USA', 'CAN', 'FRA', 'UK'],
         displayName: 'Country',
         controlType: 'select',
         placeholder: 'Select country'
       },{
-        property_name: 'indication',
+        propertyName: 'indication',
         ordinal: 17,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'TEXT',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Indication',
         controlType: 'textarea',
         placeholder: 'Enter medical indication'
       },{
-        property_name: 'approval_date',
+        propertyName: 'approval_date',
         ordinal: 19,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'date',
-        sqlType: 'DATE',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Approval Date',
         controlType: 'date',
         placeholder: 'Select approval date'
       },{
-        property_name: 'box_warning',
+        propertyName: 'box_warning',
         ordinal: 19,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'TEXT',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Box Warning',
         controlType: 'textarea',
         placeholder: 'Enter black box warning information'
@@ -282,361 +252,199 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregate> = {
 };
 
 // Main entity schemas (only contains the actual entities, not sub-collections)
-export const ENTITIES: Record<string, UIEntity> = {
+export const ENTITIES: Record<string, UIEntityMeta> = {
   generic_drugs: {
-    name: 'generic_drugs',
     tableName: 'generic_drugs',
     displayName: 'Generic Drug',
     pluralName: 'Generic Drugs',
-    comment: 'Generic drug information including mechanism of action and classification',
-    properties: [
+    propertyDefs: [
       {
-        property_name: 'uid',
+        propertyName: 'uid',
         ordinal: 1,
-        is_editable: false,
-        is_visible: true,
-        is_key: true,
-        type: 'string',
-        sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
-        isId: true,
+        isEditable: false,
+        isVisible: true,
         isRequired: true,
-        visibility: 'hidden',
+        isKey: true,
+        isId: true,
         displayName: 'ID',
         controlType: 'text'
       },{
-        property_name: 'generic_key',
+        propertyName: 'generic_key',
         ordinal: 2,
-        is_editable: false,
-        is_visible: false,
-        is_key: true,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        isRequired: true,
-        visibility: 'readonly',
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isKey: true,
+        isId: false,
         displayName: 'Generic Key',
         controlType: 'text',
         placeholder: 'Auto-generated key'
       },{
-        property_name: 'generic_name',
+        propertyName: 'generic_name',
         ordinal: 23,
-        is_editable: false,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
+        isEditable: false,
+        isVisible: true,
         isRequired: true,
-        visibility: 'visible',
+        isKey: false,
+        isId: false,
         displayName: 'Generic Name',
         controlType: 'text',
         placeholder: 'Enter generic drug name'
       },{
-        property_name: 'biologic',
+        propertyName: 'biologic',
         ordinal: 23,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'TEXT',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Biologic Classification',
         controlType: 'textarea',
         placeholder: 'Enter biologic information'
       },{
-        property_name: 'mech_of_action',
+        propertyName: 'mech_of_action',
         ordinal: 25,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Mechanism of Action',
         controlType: 'text',
         placeholder: 'Enter mechanism of action'
       },{
-        property_name: 'class_or_type',
+        propertyName: 'class_or_type',
         ordinal: 25,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Drug Class/Type',
         controlType: 'text',
         placeholder: 'Enter drug class or type'
       },{
-        property_name: 'target',
+        propertyName: 'target',
         ordinal: 27,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Target',
         controlType: 'text',
         placeholder: 'Enter drug target (e.g., TNFi)'
       }
     ],
-    children: [
+    aggregateDefs: [
       {
-        entity_id: 'generic_aliases',
         displayName: 'Aliases',
-        ancestors: [],
-        children: []
-      },
-      {
-        entity_id: 'generic_routes',
-        displayName: 'Routes & Dosing',
-        ancestors: [],
-        children: []
-      },
-      {
-        entity_id: 'generic_approvals',
-        displayName: 'Approvals',
-        ancestors: [],
-        children: []
-      },
-      {
-        entity_id: 'manu_drugs',
-        displayName: 'Manufactured Products',
-        ancestors: [],
-        children: []
-      }
-    ],
-    aggregates: [
-      {
-        id: 'details',
-        displayName: 'Details',
-        type: 'properties',
-        properties: [
-          {
-            property_name: 'generic_name',
-            ordinal: 1,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          },
-          {
-            property_name: 'biologic',
-            ordinal: 2,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          },
-          {
-            property_name: 'mech_of_action',
-            ordinal: 3,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          },
-          {
-            property_name: 'class_or_type',
-            ordinal: 4,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          },
-          {
-            property_name: 'target',
-            ordinal: 5,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          }
-        ],
+        aggregateType: 'GenericAlias',
         ordinal: 1
       },
       {
-        id: 'aliases',
-        displayName: 'Aliases',
-        type: 'collection',
-        collectionEntity: 'generic_aliases',
+        displayName: 'Routes & Dosing',
+        aggregateType: 'generic_routes',
         ordinal: 2
       },
       {
-        id: 'routes',
-        displayName: 'Routes & Dosing',
-        type: 'collection',
-        collectionEntity: 'generic_routes',
+        aggregateType: 'generic_approvals',
+        displayName: 'Approvals',
         ordinal: 3
       },
-      {
-        id: 'approvals',
-        displayName: 'Approvals',
-        type: 'collection',
-        collectionEntity: 'generic_approvals',
-        ordinal: 4
-      },
-      {
-        id: 'products',
-        displayName: 'Manufactured Products',
-        type: 'collection',
-        collectionEntity: 'manu_drugs',
-        ordinal: 5
-      }
     ]
   },
 
   manu_drugs: {
-    name: 'manu_drugs',
     tableName: 'manu_drugs',
     displayName: 'Manufactured Drug',
     pluralName: 'Manufactured Drugs',
-    comment: 'Manufactured drug products including brand names and biosimilar information',
-    properties: [
+    propertyDefs: [
       {
-        property_name: 'uid',
+        propertyName: 'uid',
         ordinal: 27,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
         isId: true,
-        isRequired: true,
-          visibility: 'hidden',
-          displayName: 'ID',
-          controlType: 'text'
+        displayName: 'ID',
+        controlType: 'text'
       },{
-        property_name: 'manu_drug_key',
+        propertyName: 'manu_drug_key',
         ordinal: 2,
-        is_editable: false,
-        is_visible: false,
-        is_key: true,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-          visibility: 'readonly',
-          displayName: 'Product Key',
-          controlType: 'text'
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isKey: true,
+        isId: false,
+        displayName: 'Product Key',
+        controlType: 'text'
       },{
-        property_name: 'generic_uid',
+        propertyName: 'generic_uid',
         ordinal: 30,
-        is_editable: false,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'UUID',
+        isEditable: false,
+        isVisible: true,
         isRequired: true,
-          visibility: 'hidden',
-          displayName: 'Generic Drug ID',
-          controlType: 'text'
+        isKey: false,
+        isId: false,
+        displayName: 'Generic Drug ID',
+        controlType: 'text'
       },{
-        property_name: 'drug_name',
+        propertyName: 'drug_name',
         ordinal: 2,
-        is_editable: true,
-        is_visible: false,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        isRequired: true,
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
         displayName: 'Brand Name',
         controlType: 'text',
         placeholder: 'Enter brand name'
       },{
-        property_name: 'manufacturer',
+        propertyName: 'manufacturer',
         ordinal: 32,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Manufacturer',
         controlType: 'text',
         placeholder: 'Enter manufacturer name'
       },{
-        property_name: 'biosimilar',
+        propertyName: 'biosimilar',
         ordinal: 32,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'boolean',
-        sqlType: 'INTEGER',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Biosimilar',
         controlType: 'checkbox'
       },{
-        property_name: 'biosimilar_suffix',
+        propertyName: 'biosimilar_suffix',
         ordinal: 34,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Biosimilar Suffix',
         controlType: 'text',
         placeholder: 'Enter FDA suffix (e.g., -aacf)'
       },{
-        property_name: 'biosimilar_originator',
+        propertyName: 'biosimilar_originator',
         ordinal: 34,
-        is_editable: true,
-        is_visible: true,
-        is_key: false,
-        type: 'string',
-        sqlType: 'VARCHAR(255)',
-        visibility: 'visible',
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
         displayName: 'Biosimilar Originator',
         controlType: 'text',
         placeholder: 'Enter original brand name'
       }
     ],
-    children: [
-      {
-        entity_id: 'generic_drugs',
-        displayName: 'Generic Drug',
-        ancestors: [],
-        children: []
-      }
-    ],
-    aggregates: [
-      {
-        id: 'details',
-        displayName: 'Details',
-        type: 'properties',
-        properties: [
-          {
-            property_name: 'drug_name',
-            ordinal: 1,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          },
-          {
-            property_name: 'manufacturer',
-            ordinal: 2,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          },
-          {
-            property_name: 'biosimilar',
-            ordinal: 3,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          },
-          {
-            property_name: 'biosimilar_suffix',
-            ordinal: 4,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          },
-          {
-            property_name: 'biosimilar_originator',
-            ordinal: 5,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          }
-        ],
-        ordinal: 1
-      }
-    ]
   }
 };

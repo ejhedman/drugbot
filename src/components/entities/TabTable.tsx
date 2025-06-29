@@ -55,8 +55,8 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       
       // Add each property as a separate column
       entity.properties.forEach((prop: any) => {
-        if (prop.is_visible) {
-          flatRow[prop.property_name] = prop.property_value;
+        if (prop.isVisible) {
+          flatRow[prop.propertyName] = prop.propertyValue;
         }
       });
       
@@ -74,8 +74,8 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     const propertyNames = new Set<string>();
     data.forEach(entity => {
       entity.properties.forEach((prop: any) => {
-        if (prop.is_visible) {
-          propertyNames.add(prop.property_name);
+        if (prop.isVisible) {
+          propertyNames.add(prop.propertyName);
         }
       });
     });
@@ -107,7 +107,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
     
-    const field = (schema.properties || []).find((f: UIProperty) => (f as any).name === fieldName || f.property_name === fieldName);
+    const field = (schema.properties || []).find((f: UIProperty) => (f as any).name === fieldName || f.propertyName === fieldName);
     return field?.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
@@ -137,8 +137,8 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
           
           // Update property values
           updatedEntity.properties = updatedEntity.properties.map((prop: any) => {
-            if (editedData.hasOwnProperty(prop.property_name)) {
-              return { ...prop, property_value: editedData[prop.property_name] };
+            if (editedData.hasOwnProperty(prop.propertyName)) {
+              return { ...prop, propertyValue: editedData[prop.propertyName] };
             }
             return prop;
           });
@@ -165,7 +165,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       if (onDelete) {
         // Use the appropriate id field based on data type
         const idToDelete = isUsingUIEntityData 
-          ? tableData[index]?.entity_id || index
+          ? tableData[index]?.entityUid || index
           : tableData[index]?.id || index;
         await onDelete(idToDelete);
       }
@@ -227,16 +227,16 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       if (isUsingUIEntityData) {
         // Create a new UIEntity structure
         const newEntity = {
-          entity_id: crypto.randomUUID(),
+          entityUid: crypto.randomUUID(),
           entity_key: 'new-item',
           displayName: newItemData.displayName,
           properties: propertyColumns.map((propName, index) => ({
-            property_name: propName,
-            property_value: newItemData[propName] || '',
+            propertyName: propName,
+            propertyValue: newItemData[propName] || '',
             ordinal: index + 1,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
+            isEditable: true,
+            isVisible: true,
+            isKey: false
           })),
           aggregates: []
         };

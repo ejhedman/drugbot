@@ -44,7 +44,7 @@ export function DetailCardProperties({
   const displayTitle = title || entity.displayName;
 
   // Filter visible properties for display
-  const visibleProperties = (entity.properties || []).filter((prop: UIProperty) => prop.is_visible);
+  const visibleProperties = (entity.properties || []).filter((prop: UIProperty) => prop.isVisible);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -80,8 +80,8 @@ export function DetailCardProperties({
   const handlePropertyChange = (propertyName: string, value: any) => {
     setEditedProperties((prev: UIProperty[]) => 
       prev.map(prop => 
-        prop.property_name === propertyName 
-          ? { ...prop, property_value: value }
+        prop.propertyName === propertyName 
+          ? { ...prop, propertyValue: value }
           : prop
       )
     );
@@ -89,23 +89,23 @@ export function DetailCardProperties({
 
   const renderProperty = (property: UIProperty) => {
     const currentProperty = isEditing 
-      ? editedProperties.find(p => p.property_name === property.property_name) || property
+      ? editedProperties.find(p => p.propertyName === property.propertyName) || property
       : property;
     
     return (
-      <div key={property.property_name} className="flex items-center gap-2">
-        <span className="label min-w-32">{property.property_name}:</span>
+      <div key={property.propertyName} className="flex items-center gap-2">
+        <span className="label min-w-32">{property.propertyName}:</span>
         <div className="flex-1">
-          {isEditing && property.is_editable ? (
+          {isEditing && property.isEditable ? (
             <input
               type="text"
-              value={currentProperty.property_value || ''}
-              onChange={(e) => handlePropertyChange(property.property_name, e.target.value)}
+              value={currentProperty.propertyValue || ''}
+              onChange={(e) => handlePropertyChange(property.propertyName, e.target.value)}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
             />
           ) : (
-            <span className={!property.is_editable ? 'label' : 'value'}>
-              {currentProperty.property_value || ''}
+            <span className={!property.isEditable ? 'label' : 'value'}>
+              {currentProperty.propertyValue || ''}
             </span>
           )}
         </div>

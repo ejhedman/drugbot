@@ -35,9 +35,7 @@ export function MetadataTable({
   const confirmDialog = useConfirmDialog();
   
   // Only show visible fields in the table
-  const visibleFields = fields.filter(field => 
-    (field.visibility === 'visible' || field.visibility === 'readonly')
-  );
+  const visibleFields = fields.filter(field => field.isVisible);
 
   const handleDelete = (row: Record<string, any>) => {
     confirmDialog.openDialog(async () => {
@@ -52,7 +50,7 @@ export function MetadataTable({
       return <span className="text-gray-400">-</span>;
     }
 
-    switch (field.type) {
+    switch (field.controlType) {
       case 'boolean':
         return (
           <Badge variant={value ? 'default' : 'secondary'}>
@@ -64,7 +62,7 @@ export function MetadataTable({
         return isNaN(date.getTime()) ? 
           <span className="text-gray-400">Invalid Date</span> : 
           date.toLocaleDateString();
-      case 'enum':
+      case 'select':
         return (
           <Badge variant="outline">
             {value}
@@ -124,7 +122,7 @@ export function MetadataTable({
                 <tr className="border-b">
                   {visibleFields.map((field) => (
                     <th
-                      key={field.property_name}
+                      key={field.propertyName}
                       className="text-left py-3 px-4 font-medium text-gray-600"
                     >
                       {field.displayName}
@@ -147,8 +145,8 @@ export function MetadataTable({
                     onClick={() => onRowClick?.(row)}
                   >
                     {visibleFields.map((field) => (
-                      <td key={field.property_name} className="py-3 px-4">
-                        {formatCellValue(row[field.property_name], field)}
+                      <td key={field.propertyName} className="py-3 px-4">
+                        {formatCellValue(row[field.propertyName], field)}
                       </td>
                     ))}
                     {(onEdit || onDelete) && (

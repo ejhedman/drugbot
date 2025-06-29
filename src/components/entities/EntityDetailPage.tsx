@@ -176,61 +176,61 @@ export function EntityDetailPage({
   const handleUpdate = async (entity: UIEntity, updatedProperties: UIProperty[]) => {
     try {
       // Check if this is a child entity by looking for child_entity_key property
-      const childKeyProp = updatedProperties.find((p: UIProperty) => p.property_name === 'child_entity_key');
+      const childKeyProp = updatedProperties.find((p: UIProperty) => p.propertyName === 'child_entity_key');
       
       if (childKeyProp) {
         // Handle child entity update - build properties object from updated properties
-        const nameProperty = updatedProperties.find(p => p.property_name === 'child_entity_name');
+        const nameProperty = updatedProperties.find(p => p.propertyName === 'child_entity_name');
         
         // Build properties object from all non-name, non-key properties
         const properties: { [key: string]: any } = {};
         updatedProperties.forEach(prop => {
-          if (prop.property_name !== 'child_entity_name' && 
-              prop.property_name !== 'child_entity_key' && 
-              prop.property_name !== 'uid') {
+          if (prop.propertyName !== 'child_entity_name' && 
+              prop.propertyName !== 'child_entity_key' && 
+              prop.propertyName !== 'uid') {
             // Map property names to actual database field names
-            if (prop.property_name === 'child_entity_property1') {
-              properties['manufacturer'] = prop.property_value;
+            if (prop.propertyName === 'child_entity_property1') {
+              properties['manufacturer'] = prop.propertyValue;
             } else {
-              properties[prop.property_name] = prop.property_value;
+              properties[prop.propertyName] = prop.propertyValue;
             }
           }
         });
         
         const updateData: UpdateChildEntityRequest = {
-          displayName: nameProperty?.property_value || '',
+          displayName: nameProperty?.propertyValue || '',
           properties: Object.keys(properties).length > 0 ? properties : undefined
         };
         
-        const updatedChild = await operations.updateChild(childKeyProp.property_value, updateData);
+        const updatedChild = await operations.updateChild(childKeyProp.propertyValue, updateData);
         setChild(updatedChild);
         onChildUpdated?.(updatedChild);
       } else {
         // Handle main entity update - build properties object from updated properties
-        const nameProperty = updatedProperties.find(p => p.property_name === 'entity_name');
+        const nameProperty = updatedProperties.find(p => p.propertyName === 'entity_name');
         
         // Build properties object from all non-name, non-key properties
         const properties: { [key: string]: any } = {};
         updatedProperties.forEach(prop => {
-          if (prop.property_name !== 'entity_name' && 
-              prop.property_name !== 'entity_key' && 
-              prop.property_name !== 'uid') {
+          if (prop.propertyName !== 'entity_name' && 
+              prop.propertyName !== 'entity_key' && 
+              prop.propertyName !== 'uid') {
             // Map property names to actual database field names
-            if (prop.property_name === 'entity_property1') {
-              properties['mech_of_action'] = prop.property_value;
+            if (prop.propertyName === 'entity_property1') {
+              properties['mech_of_action'] = prop.propertyValue;
             } else {
-              properties[prop.property_name] = prop.property_value;
+              properties[prop.propertyName] = prop.propertyValue;
             }
           }
         });
         
         const updateData: UpdateEntityRequest = {
-          displayName: nameProperty?.property_value || '',
+          displayName: nameProperty?.propertyValue || '',
           properties: Object.keys(properties).length > 0 ? properties : undefined
         };
         
-        if (entity.entity_key) {
-          const updatedEntity = await operations.updateEntity(entity.entity_key, updateData);
+        if (entity.entityKey) {
+          const updatedEntity = await operations.updateEntity(entity.entityKey, updateData);
           setEntity(updatedEntity);
           onEntityUpdated?.(updatedEntity);
         }
@@ -244,17 +244,17 @@ export function EntityDetailPage({
   const handleDelete = async (entity: UIEntity) => {
     try {
       // Check if this is a child entity by looking for child_entity_key property
-      const childKeyProp = entity.properties?.find((p: UIProperty) => p.property_name === 'child_entity_key');
+      const childKeyProp = entity.properties?.find((p: UIProperty) => p.propertyName === 'child_entity_key');
       
       if (childKeyProp) {
         // Handle child entity delete
-        await operations.deleteChild(childKeyProp.property_value);
-        onChildDeleted?.(childKeyProp.property_value);
+        await operations.deleteChild(childKeyProp.propertyValue);
+        onChildDeleted?.(childKeyProp.propertyValue);
       } else {
         // Handle main entity delete
-        if (entity.entity_key) {
-          await operations.deleteEntity(entity.entity_key);
-          onEntityDeleted?.(entity.entity_key);
+        if (entity.entityKey) {
+          await operations.deleteEntity(entity.entityKey);
+          onEntityDeleted?.(entity.entityKey);
         }
       }
     } catch (error) {
@@ -283,7 +283,7 @@ export function EntityDetailPage({
     return uiEntities.map(uiEntity => {
       const obj: Record<string, any> = {};
       uiEntity.properties?.forEach(prop => {
-        obj[prop.property_name] = prop.property_value;
+        obj[prop.propertyName] = prop.propertyValue;
       });
       return obj;
     });
@@ -294,14 +294,14 @@ export function EntityDetailPage({
     return uiAggregates.map(uiAggregate => {
       const obj: Record<string, any> = {};
       uiAggregate.properties?.forEach(prop => {
-        obj[prop.property_name] = prop.property_value;
+        obj[prop.propertyName] = prop.propertyValue;
       });
       return obj;
     });
   };
 
   // Get entity key for legacy API compatibility
-  const entityKeyForAPI = entity?.entity_key || '';
+  const entityKeyForAPI = entity?.entityKey || '';
   
   // Prepare tab configurations - use aggregates from the unified entity if available
   const tabConfigs: TabConfig[] = child

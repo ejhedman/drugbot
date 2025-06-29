@@ -45,21 +45,21 @@ export function MetadataForm({
 
   const renderField = (field: UIProperty) => {
     
-    const fieldValue = watch(field.property_name);
+    const fieldValue = watch(field.propertyName);
     
-    if (field.visibility === 'hidden') {
+    if (!field.isVisible) {
       return null;
     }
 
-    const fieldId = `${entityName}-${field.property_name}`;
-    const isReadonly = field.visibility === 'readonly';
+    const fieldId = `${entityName}-${field.propertyName}`;
+    const isReadonly = !field.isEditable;
     const isRequired = field.isRequired;
-    const errorMessage = getErrorMessage(field.property_name);
+    const errorMessage = getErrorMessage(field.propertyName);
 
     const commonProps = {
       id: fieldId,
       disabled: isReadonly || isLoading,
-      ...register(field.property_name, {
+      ...register(field.propertyName, {
         required: isRequired ? `${field.displayName} is required` : false,
         pattern: field.validation?.pattern ? {
           value: new RegExp(field.validation.pattern),
@@ -71,7 +71,7 @@ export function MetadataForm({
     switch (field.controlType) {
       case 'textarea':
         return (
-          <div key={field.property_name} className="space-y-2">
+          <div key={field.propertyName} className="space-y-2">
             <Label htmlFor={fieldId}>
               {field.displayName}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
@@ -89,21 +89,21 @@ export function MetadataForm({
 
       case 'select':
         return (
-          <div key={field.property_name} className="space-y-2">
+          <div key={field.propertyName} className="space-y-2">
             <Label htmlFor={fieldId}>
               {field.displayName}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
             </Label>
             <Select
               value={fieldValue || ''}
-              onValueChange={(value) => setValue(field.property_name, value)}
+              onValueChange={(value) => setValue(field.propertyName, value)}
               disabled={isReadonly || isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder={field.placeholder} />
               </SelectTrigger>
               <SelectContent>
-                {field.enumValues?.map((option) => (
+                {field.selectValues?.map((option) => (
                   <SelectItem key={option} value={option}>
                     {option}
                   </SelectItem>
@@ -118,7 +118,7 @@ export function MetadataForm({
 
       case 'checkbox':
         return (
-          <div key={field.property_name} className="space-y-2">
+          <div key={field.propertyName} className="space-y-2">
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -139,7 +139,7 @@ export function MetadataForm({
 
       case 'date':
         return (
-          <div key={field.property_name} className="space-y-2">
+          <div key={field.propertyName} className="space-y-2">
             <Label htmlFor={fieldId}>
               {field.displayName}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
@@ -157,7 +157,7 @@ export function MetadataForm({
 
       case 'number':
         return (
-          <div key={field.property_name} className="space-y-2">
+          <div key={field.propertyName} className="space-y-2">
             <Label htmlFor={fieldId}>
               {field.displayName}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
@@ -178,7 +178,7 @@ export function MetadataForm({
       case 'text':
       default:
         return (
-          <div key={field.property_name} className="space-y-2">
+          <div key={field.propertyName} className="space-y-2">
             <Label htmlFor={fieldId}>
               {field.displayName}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
@@ -205,7 +205,7 @@ export function MetadataForm({
       )}
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {fields.filter(f => f.visibility !== 'hidden').map(renderField)}
+          {fields.filter(f => f.isVisible).map(renderField)}
           
           <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={isLoading}>
