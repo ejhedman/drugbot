@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import DatabaseRepository from '@/lib/database-repository';
+import { aggregateRepository } from '@/lib/repository';
 import { UIAggregate } from '@/model_defs';
 
 export async function GET(request: NextRequest) {
@@ -11,10 +11,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'entityKey parameter is required' }, { status: 400 });
     }
 
-    const repo = new DatabaseRepository();
-    
-    // Use the new UIAggregate-based method
-    const approvals: UIAggregate[] = await repo.getGenericApprovalAggregatesByEntityKey(entityKey);
+    // Use the new AggregateRepository method
+    const approvals: UIAggregate[] = await aggregateRepository.getGenericApprovalAggregatesByEntityKey(entityKey);
 
     return NextResponse.json(approvals);
   } catch (error) {

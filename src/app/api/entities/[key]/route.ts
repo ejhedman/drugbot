@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dataRepository } from '@/lib/repository';
+import { entityRepository } from '@/lib/repository';
 import { UpdateEntityRequest } from '@/model_defs';
 
 export async function GET(
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { key } = await params;
-    const entity = await dataRepository.getEntityByKey(key); // Now returns UIEntity
+    const entity = await entityRepository.getEntityByKey(key); // Now returns UIEntity
     
     if (!entity) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });
@@ -29,7 +29,7 @@ export async function PATCH(
     const { key } = await params;
     const body: UpdateEntityRequest = await request.json();
     
-    const updatedEntity = await dataRepository.updateEntity(key, body); // Now returns UIEntity
+    const updatedEntity = await entityRepository.updateEntity(key, body); // Now returns UIEntity
     
     if (!updatedEntity) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });
@@ -48,7 +48,7 @@ export async function DELETE(
 ) {
   try {
     const { key } = await params;
-    const deleted = await dataRepository.deleteEntity(key);
+    const deleted = await entityRepository.deleteEntity(key);
     
     if (!deleted) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Trash2, Edit, X, Check, SquarePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TableSkeleton } from '@/components/ui/skeleton';
-import { MetadataRepository } from '@/lib/metadata-repository';
+import { MetadataRepository } from '@/model_instances/metadata-repository';
 import { ENTITY_AGGREGATES } from '@/model_instances/theuimodel';
 import { UIProperty } from '@/model_defs/UIModel';
 import { ConfirmDialog, useConfirmDialog } from '@/components/ui/confirm-dialog';

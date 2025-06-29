@@ -1,4 +1,4 @@
-import { MetadataRepository } from './metadata-repository';
+import { MetadataRepository } from '../model_instances/metadata-repository';
 import { UIEntity } from '../model_defs/UIModel';
 
 const metadataRepo = new MetadataRepository();

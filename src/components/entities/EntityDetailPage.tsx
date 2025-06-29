@@ -136,13 +136,13 @@ export function EntityDetailPage({
   };
 
   async function fetchRoutes(entityKey: string): Promise<UIAggregate[]> {
-    const routesRes = await fetch(`/api/entity-coll1?entityKey=${entityKey}`);
+    const routesRes = await fetch(`/api/generic-routes?entityKey=${encodeURIComponent(entityKey)}`);
     if (!routesRes.ok) {
       throw new Error('Failed to fetch routes');
     }
     
     const routes: UIAggregate[] = await routesRes.json();
-    return routes.filter((item: UIAggregate) => item.entity_id === entityKey);
+    return routes;
   }
 
   // Create callback maps for tabs

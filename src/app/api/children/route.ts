@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dataRepository } from '@/lib/repository';
+import { entityRepository, childEntityRepository } from '@/lib/repository';
 import { CreateChildEntityRequest } from '@/model_defs';
 
 export async function GET(request: NextRequest) {
@@ -12,22 +12,24 @@ export async function GET(request: NextRequest) {
     let children;
     if (entityKey) {
       // if (format === 'ui') {
-        children = await dataRepository.getChildrenAsUIEntitiesByEntityKey(entityKey);
+        children = await childEntityRepository.getChildrenAsUIEntitiesByEntityKey(entityKey);
       // } else {
       //   children = await dataRepository.getChildrenByEntityKey(entityKey);
       // }
     } else if (search) {
       // if (format === 'ui') {
-        children = await dataRepository.searchChildrenAsUIEntities(search);
+        children = await childEntityRepository.searchChildrenAsUIEntities(search);
       // } else {
       //   children = await dataRepository.searchChildren(search);
       // }
-    } else {
-      // if (format === 'ui') {
-        children = await dataRepository.getAllChildrenAsUIEntities();
-      // } else {
-      //   children = await dataRepository.getAllChildren();
-      // }
+    } 
+    else {
+      throw new Error('no usable arguments');
+    //   // if (format === 'ui') {
+    //     children = await childEntityRepository.getAllChildrenAsUIEntities();
+    //   // } else {
+    //   //   children = await dataRepository.getAllChildren();
+    //   // }
     }
 
     return NextResponse.json(children);
@@ -53,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify that the parent entity exists
-    const parentEntity = await dataRepository.getEntityByKey(body.parent_entity_key);
+    const parentEntity = await entityRepository.getEntityByKey(body.parent_entity_key);
     if (!parentEntity) {
       return NextResponse.json(
         { error: 'Parent entity not found' },
@@ -61,7 +63,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newChild = await dataRepository.createChildEntityAsUIEntity(body);
+    const newChild = await childEntityRepository.createChildEntityAsUIEntity(body);
     
     return NextResponse.json(newChild, { status: 201 });
   } catch (error) {

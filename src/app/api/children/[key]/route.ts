@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dataRepository } from '@/lib/repository';
+import { childEntityRepository } from '@/lib/repository';
 import { UpdateChildEntityRequest } from '@/model_defs';
 
 export async function GET(
@@ -11,7 +11,7 @@ export async function GET(
     // const format = searchParams.get('format'); // 'ui' for UIEntity format, default to legacy
     
     const { key } = await params;
-    const child = await dataRepository.getChildByKeyAsUIEntity(key);
+    const child = await childEntityRepository.getChildByKeyAsUIEntity(key);
     
     if (!child) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });
@@ -35,7 +35,7 @@ export async function PATCH(
     const { key } = await params;
     const body: UpdateChildEntityRequest = await request.json();
     
-    const updatedChild = await dataRepository.updateChildEntityAsUIEntity(key, body);
+    const updatedChild = await childEntityRepository.updateChildEntityAsUIEntity(key, body);
     
     if (!updatedChild) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });
@@ -54,7 +54,7 @@ export async function DELETE(
 ) {
   try {
     const { key } = await params;
-    const deleted = await dataRepository.deleteChildEntity(key);
+    const deleted = await childEntityRepository.deleteChildEntity(key);
     
     if (!deleted) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });

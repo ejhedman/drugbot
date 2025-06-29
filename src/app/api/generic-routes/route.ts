@@ -12,11 +12,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Use the new AggregateRepository method
-    const aliases: UIAggregate[] = await aggregateRepository.getGenericAliasAggregatesByEntityKey(entityKey);
+    const routes: UIAggregate[] = await aggregateRepository.getEntityAggregatesByEntityKey(entityKey);
 
-    return NextResponse.json(aliases);
+    return NextResponse.json(routes);
   } catch (error) {
-    console.error('Error in generic-aliases API:', error);
+    console.error('Error in generic-routes API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

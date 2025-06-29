@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dataRepository } from '@/lib/repository';
+import { entityRepository } from '@/lib/repository';
 import { CreateEntityRequest } from '@/model_defs';
 
 export async function GET(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       //   // Convert UIEntity back to legacy format if needed - but we'll remove this conversion
       //   // since we're migrating everything to UIEntity
       // } else {
-        entities = await dataRepository.searchEntities(search); // Now returns UIEntity[]
+        entities = await entityRepository.searchEntities(search); // Now returns UIEntity[]
       // }
     } else {
       // if (format === 'legacy') {
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       //   // Convert UIEntity back to legacy format if needed - but we'll remove this conversion
       //   // since we're migrating everything to UIEntity
       // } else {
-        entities = await dataRepository.getAllEntities(); // Now returns UIEntity[]
+        entities = await entityRepository.getAllEntities(); // Now returns UIEntity[]
       // }
     }
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newEntity = await dataRepository.createEntity(body); // Now returns UIEntity
+    const newEntity = await entityRepository.createEntity(body); // Now returns UIEntity
     return NextResponse.json(newEntity, { status: 201 });
   } catch (error) {
     console.error('Error creating entity:', error);

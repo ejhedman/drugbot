@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Edit, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TabContentSkeleton } from '@/components/ui/skeleton';
-import { MetadataRepository } from '@/lib/metadata-repository';
+import { MetadataRepository } from '@/model_instances/metadata-repository';
 import { ENTITY_AGGREGATES } from '@/model_instances/theuimodel';
 import { UIProperty } from '@/model_defs/UIModel';
 
