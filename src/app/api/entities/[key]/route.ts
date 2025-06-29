@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { key } = await params;
-    const entity = await dataRepository.getEntityByKey(key);
+    const entity = await dataRepository.getEntityByKey(key); // Now returns UIEntity
     
     if (!entity) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });
@@ -29,7 +29,7 @@ export async function PATCH(
     const { key } = await params;
     const body: UpdateEntityRequest = await request.json();
     
-    const updatedEntity = await dataRepository.updateEntity(key, body);
+    const updatedEntity = await dataRepository.updateEntity(key, body); // Now returns UIEntity
     
     if (!updatedEntity) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });

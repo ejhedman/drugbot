@@ -7,8 +7,11 @@ export async function GET(
   { params }: { params: Promise<{ key: string }> }
 ) {
   try {
+    // const { searchParams } = new URL(request.url);
+    // const format = searchParams.get('format'); // 'ui' for UIEntity format, default to legacy
+    
     const { key } = await params;
-    const child = await dataRepository.getChildByKey(key);
+    const child = await dataRepository.getChildByKeyAsUIEntity(key);
     
     if (!child) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });
@@ -26,10 +29,13 @@ export async function PATCH(
   { params }: { params: Promise<{ key: string }> }
 ) {
   try {
+    // const { searchParams } = new URL(request.url);
+    // const format = searchParams.get('format'); // 'ui' for UIEntity format, default to legacy
+    
     const { key } = await params;
     const body: UpdateChildEntityRequest = await request.json();
     
-    const updatedChild = await dataRepository.updateChildEntity(key, body);
+    const updatedChild = await dataRepository.updateChildEntityAsUIEntity(key, body);
     
     if (!updatedChild) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });

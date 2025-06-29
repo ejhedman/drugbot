@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataRepository } from '@/lib/repository';
-import { UpdateLegacyChildEntityColl1Request } from '@/model_defs';
+import { UpdateChildUIAggregateRequest } from '@/model_defs';
 
 export async function PATCH(
   request: NextRequest,
@@ -8,23 +8,19 @@ export async function PATCH(
 ) {
   try {
     const { childKey, index } = await params;
-    const body: UpdateLegacyChildEntityColl1Request = await request.json();
-    const indexNum = parseInt(index, 10);
+    const indexNum = parseInt(index);
     
-    if (isNaN(indexNum) || indexNum < 0) {
-      return NextResponse.json({ error: 'Invalid index' }, { status: 400 });
+    const body: UpdateChildUIAggregateRequest = await request.json();
+    const updatedAggregate = await dataRepository.updateChildEntityAggregate(childKey, indexNum, body);
+    
+    if (!updatedAggregate) {
+      return NextResponse.json({ error: 'Child aggregate not found' }, { status: 404 });
     }
     
-    const updatedItem = await dataRepository.updateChildEntityColl1(childKey, indexNum, body);
-    
-    if (!updatedItem) {
-      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(updatedItem);
+    return NextResponse.json(updatedAggregate);
   } catch (error) {
-    console.error('Error updating child_entity_coll1 item:', error);
-    return NextResponse.json({ error: 'Failed to update child_entity_coll1 item' }, { status: 500 });
+    console.error('Error updating child entity aggregate:', error);
+    return NextResponse.json({ error: 'Failed to update child entity aggregate' }, { status: 500 });
   }
 }
 
@@ -34,21 +30,17 @@ export async function DELETE(
 ) {
   try {
     const { childKey, index } = await params;
-    const indexNum = parseInt(index, 10);
+    const indexNum = parseInt(index);
     
-    if (isNaN(indexNum) || indexNum < 0) {
-      return NextResponse.json({ error: 'Invalid index' }, { status: 400 });
-    }
-    
-    const deleted = await dataRepository.deleteChildEntityColl1(childKey, indexNum);
+    const deleted = await dataRepository.deleteChildEntityAggregate(childKey, indexNum);
     
     if (!deleted) {
-      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Child aggregate not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ message: 'Item deleted successfully' });
+    return NextResponse.json({ message: 'Child entity aggregate deleted successfully' });
   } catch (error) {
-    console.error('Error deleting child_entity_coll1 item:', error);
-    return NextResponse.json({ error: 'Failed to delete child_entity_coll1 item' }, { status: 500 });
+    console.error('Error deleting child entity aggregate:', error);
+    return NextResponse.json({ error: 'Failed to delete child entity aggregate' }, { status: 500 });
   }
 } 

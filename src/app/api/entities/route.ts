@@ -6,12 +6,25 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
+    // const format = searchParams.get('format'); // 'legacy' for LegacyEntity format, default to UIEntity
 
     let entities;
     if (search) {
-      entities = await dataRepository.searchEntities(search);
+      // if (format === 'legacy') {
+      //   entities = await dataRepository.searchEntitiesAsUIEntities(search);
+      //   // Convert UIEntity back to legacy format if needed - but we'll remove this conversion
+      //   // since we're migrating everything to UIEntity
+      // } else {
+        entities = await dataRepository.searchEntities(search); // Now returns UIEntity[]
+      // }
     } else {
-      entities = await dataRepository.getAllEntities();
+      // if (format === 'legacy') {
+      //   entities = await dataRepository.getAllEntitiesAsUIEntities();
+      //   // Convert UIEntity back to legacy format if needed - but we'll remove this conversion
+      //   // since we're migrating everything to UIEntity
+      // } else {
+        entities = await dataRepository.getAllEntities(); // Now returns UIEntity[]
+      // }
     }
 
     return NextResponse.json(entities);
@@ -26,14 +39,14 @@ export async function POST(request: NextRequest) {
     const body: CreateEntityRequest = await request.json();
     
     // Validate required fields
-    if (!body.entity_name || !body.entity_property1) {
+    if (!body.displayName) {
       return NextResponse.json(
-        { error: 'entity_name and entity_property1 are required' },
+        { error: 'entity_name is required' },
         { status: 400 }
       );
     }
 
-    const newEntity = await dataRepository.createEntity(body);
+    const newEntity = await dataRepository.createEntity(body); // Now returns UIEntity
     return NextResponse.json(newEntity, { status: 201 });
   } catch (error) {
     console.error('Error creating entity:', error);

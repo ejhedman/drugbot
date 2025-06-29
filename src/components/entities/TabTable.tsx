@@ -5,7 +5,7 @@ import { Trash2, Edit, X, Check, SquarePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TableSkeleton } from '@/components/ui/skeleton';
 import { MetadataRepository } from '@/lib/metadata-repository';
-import { ENTITY_SUB_COLLECTIONS } from '@/model_instances/theuimodel';
+import { ENTITY_AGGREGATES } from '@/model_instances/theuimodel';
 import { UIProperty } from '@/model_defs/UIModel';
 import { ConfirmDialog, useConfirmDialog } from '@/components/ui/confirm-dialog';
 
@@ -100,7 +100,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     
     // If not found in main schemas, try sub-collections
     if (!schema) {
-      schema = ENTITY_SUB_COLLECTIONS[schemaEntityName];
+      schema = ENTITY_AGGREGATES[schemaEntityName];
     }
     
     if (!schema) {
@@ -108,7 +108,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     }
     
     const field = (schema.properties || []).find((f: UIProperty) => (f as any).name === fieldName || f.property_name === fieldName);
-    return field?.ui?.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return field?.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const handleEdit = (index: number) => {

@@ -1,4 +1,5 @@
-import { ENTITY_SCHEMAS, UIEntity, getSchemaByTableName, UIProperty } from '../model_instances';
+import { ENTITIES } from '../model_instances';
+import { UIEntity, UIProperty } from '../model_defs/UIModel';
 
 interface RepositoryOptions {
   dataPath?: string;
@@ -6,11 +7,11 @@ interface RepositoryOptions {
 }
 
 class MetadataRepository {
-  private schemas: typeof ENTITY_SCHEMAS;
+  private schemas: typeof ENTITIES;
   private options: RepositoryOptions;
 
   constructor(options: RepositoryOptions = {}) {
-    this.schemas = ENTITY_SCHEMAS;
+    this.schemas = ENTITIES;
     this.options = {
       dataPath: options.dataPath || 'data',
       ...options
@@ -25,11 +26,11 @@ class MetadataRepository {
     return this.schemas[entityName];
   }
 
-  getEntitySchemaByTable(tableName: string): UIEntity | undefined {
-    return getSchemaByTableName(tableName);
-  }
+  // getEntitySchemaByTable(tableName: string): UIEntity | undefined {
+  //   return getSchemaByTableName(tableName);
+  // }
 
-  getAllSchemas(): typeof ENTITY_SCHEMAS {
+  getAllSchemas(): typeof ENTITIES {
     return this.schemas;
   }
 
@@ -51,7 +52,7 @@ class MetadataRepository {
     const schema = this.getEntitySchema(entityName);
     if (!schema) return [];
     
-    return (schema.properties || []).filter((field: UIProperty) => field.ui?.visibility === 'visible');
+    return (schema.properties || []).filter((field: UIProperty) => field.visibility === 'visible');
   }
 
   getEditableFields(entityName: string): UIProperty[] {
@@ -59,7 +60,7 @@ class MetadataRepository {
     if (!schema) return [];
     
     return (schema.properties || []).filter((field: UIProperty) => 
-      field.ui?.visibility === 'visible' && !(field as any).isId
+      field.visibility === 'visible' && !(field as any).isId
     );
   }
 
@@ -102,7 +103,7 @@ class MetadataRepository {
     // Check required fields
     for (const field of (schema.properties || [])) {
       if (field.isRequired && (data[field.property_name] === undefined || data[field.property_name] === null || data[field.property_name] === '')) {
-        errors.push(`${field.ui?.displayName} is required`);
+        errors.push(`${field.displayName} is required`);
       }
 
       // Type validation
@@ -112,31 +113,31 @@ class MetadataRepository {
         switch (field.type) {
           case 'number':
             if (typeof value !== 'number' && isNaN(Number(value))) {
-              errors.push(`${field.ui?.displayName} must be a number`);
+              errors.push(`${field.displayName} must be a number`);
             }
             break;
           case 'boolean':
             if (typeof value !== 'boolean' && value !== 0 && value !== 1 && value !== 'true' && value !== 'false') {
-              errors.push(`${field.ui?.displayName} must be a boolean value`);
+              errors.push(`${field.displayName} must be a boolean value`);
             }
             break;
           case 'date':
             if (!(value instanceof Date) && isNaN(Date.parse(value))) {
-              errors.push(`${field.ui?.displayName} must be a valid date`);
+              errors.push(`${field.displayName} must be a valid date`);
             }
             break;
           case 'enum':
             if (field.enumValues && !field.enumValues.includes(value)) {
-              errors.push(`${field.ui?.displayName} must be one of: ${field.enumValues.join(', ')}`);
+              errors.push(`${field.displayName} must be one of: ${field.enumValues.join(', ')}`);
             }
             break;
         }
 
         // Custom validation patterns
-        if (field.ui?.validation?.pattern && typeof value === 'string') {
-          const regex = new RegExp(field.ui?.validation.pattern);
+        if (field.validation?.pattern && typeof value === 'string') {
+          const regex = new RegExp(field.validation.pattern);
           if (!regex.test(value)) {
-            errors.push(`${field.ui?.displayName} format is invalid`);
+            errors.push(`${field.displayName} format is invalid`);
           }
         }
       }
@@ -244,10 +245,13 @@ class MetadataRepository {
     const aggregate = (schema.aggregates || []).find((sc: any) => sc.id === tabId);
     if (!aggregate || aggregate.type !== 'properties') return [];
 
-    if (!aggregate.fields) return this.getVisibleFields(entityName);
+    if (!aggregate.properties || aggregate.properties.length === 0) return this.getVisibleFields(entityName);
+
+    // Extract property names from the aggregate's properties array
+    const aggregatePropertyNames = aggregate.properties.map(prop => prop.property_name);
 
     return (schema.properties || []).filter((field: UIProperty) => 
-      (aggregate.fields || []).includes(field.property_name) && field.ui?.visibility === 'visible'
+      aggregatePropertyNames.includes(field.property_name) && field.visibility === 'visible'
     );
   }
 
@@ -263,8 +267,8 @@ class MetadataRepository {
     return (schema.aggregates || [])
       .filter((aggregate: any) => aggregate.type === 'collection')
       .map((aggregate: any) => {
-        const relationship = (schema.relationships || []).find((rel: any) => 
-          rel.targetEntity === aggregate.collectionEntity
+        const relationship = (schema.children || []).find((rel: any) => 
+          rel.entity_id === aggregate.collectionEntity
         );
         return {
           id: aggregate.id || 'unknown',
@@ -289,11 +293,11 @@ class MetadataRepository {
         comment: schema.comment,
         fields: (schema.properties || []).reduce((acc: any, field: UIProperty) => {
           acc[field.property_name] = {
-            displayName: field.ui?.displayName,
-            controlType: field.ui?.controlType,
-            visibility: field.ui?.visibility,
-            placeholder: field.ui?.placeholder,
-            validation: field.ui?.validation,
+            displayName: field.displayName,
+            controlType: field.controlType,
+            visibility: field.visibility,
+            placeholder: field.placeholder,
+            validation: field.validation,
             type: field.type,
             enumValues: field.enumValues,
             isRequired: field.isRequired
@@ -301,7 +305,7 @@ class MetadataRepository {
           return acc;
         }, {} as Record<string, any>),
         aggregates: schema.aggregates,
-        relationships: schema.relationships
+        relationships: schema.children
       };
     }
 

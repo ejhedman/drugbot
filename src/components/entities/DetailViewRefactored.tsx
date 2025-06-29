@@ -1,9 +1,7 @@
 'use client';
 
 import { 
-  UIEntity, 
-  convertLegacyEntityToUIEntity,
-  convertLegacyChildEntityToUIEntity
+  UIEntity
 } from '@/model_defs';
 import { EntityDetailPage } from './EntityDetailPage';
 import { FormCard, FormField } from './FormCard';
@@ -42,18 +40,23 @@ export function DetailViewRefactored({
 
   // Handle entity creation
   const handleCreateEntity = async (data: Record<string, any>) => {
-    const legacyEntity = await operations.createEntity(data);
-    const unifiedEntity = convertLegacyEntityToUIEntity(legacyEntity);
+    const unifiedEntity = await operations.createEntity({
+      displayName: data.entity_name || '',
+      entity_property1: data.entity_property1 || ''
+    });
     onEntityCreated?.(unifiedEntity);
   };
 
   // Handle child creation  
   const handleCreateChild = async (data: Record<string, any>) => {
-    const legacyChild = await operations.createChild({
-      ...data,
-      entity_key: entityKey || undefined, // Link to parent entity
+    if (!entityKey) {
+      throw new Error('Entity key is required to create a child entity');
+    }
+    const unifiedChild = await operations.createChild({
+      parent_entity_key: entityKey, // Link to parent entity
+      displayName: data.child_entity_name || '',
+      child_entity_property1: data.child_entity_property1 || ''
     });
-    const unifiedChild = convertLegacyChildEntityToUIEntity(legacyChild);
     onChildCreated?.(unifiedChild);
   };
 

@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
+import { UIProperty } from '@/model_defs/UIModel';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { UIProperty } from '@/model_instances';
 import { ConfirmDialog, useConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface MetadataTableProps {
@@ -21,7 +21,7 @@ interface MetadataTableProps {
 }
 
 export function MetadataTable({
-  entityName,
+  // entityName,
   fields,
   data,
   title,
@@ -36,7 +36,7 @@ export function MetadataTable({
   
   // Only show visible fields in the table
   const visibleFields = fields.filter(field => 
-    field.ui && (field.ui.visibility === 'visible' || field.ui.visibility === 'readonly')
+    (field.visibility === 'visible' || field.visibility === 'readonly')
   );
 
   const handleDelete = (row: Record<string, any>) => {
@@ -127,7 +127,7 @@ export function MetadataTable({
                       key={field.property_name}
                       className="text-left py-3 px-4 font-medium text-gray-600"
                     >
-                      {field.ui?.displayName}
+                      {field.displayName}
                     </th>
                   ))}
                   {(onEdit || onDelete) && (

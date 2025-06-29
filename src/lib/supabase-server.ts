@@ -16,14 +16,14 @@ export async function createServerSupabaseClient() {
         set(name: string, value: string, options: any) {
           try {
             cookieStore.set({ name, value, ...options })
-          } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+          } catch (error) {
             // Server component
           }
         },
         remove(name: string, options: any) {
           try {
             cookieStore.set({ name, value: '', ...options })
-          } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+          } catch (error) {
             // Server component
           }
         },

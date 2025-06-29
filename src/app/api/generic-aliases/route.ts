@@ -1,31 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import DatabaseRepository from '@/lib/database-repository';
+import { UIAggregate } from '@/model_defs';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const entityKey = searchParams.get('entityKey');
-    
-    const supabase = await createServerSupabaseClient();
-    
-    let query = supabase
-      .from('generic_aliases')
-      .select('*');
-    
-    if (entityKey) {
-      query = query.eq('generic_key', entityKey);
+
+    if (!entityKey) {
+      return NextResponse.json({ error: 'entityKey parameter is required' }, { status: 400 });
     }
+
+    const repo = new DatabaseRepository();
     
-    const { data, error } = await query.order('alias');
-    
-    if (error) {
-      console.error('Error fetching aliases:', error);
-      return NextResponse.json({ error: 'Failed to fetch aliases' }, { status: 500 });
-    }
-    
-    return NextResponse.json(data || []);
+    // Use the new UIAggregate-based method
+    const aliases: UIAggregate[] = await repo.getGenericAliasAggregatesByEntityKey(entityKey);
+
+    return NextResponse.json(aliases);
   } catch (error) {
-    console.error('Error in aliases API:', error);
+    console.error('Error in generic-aliases API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

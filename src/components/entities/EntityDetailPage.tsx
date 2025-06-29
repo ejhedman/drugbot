@@ -4,18 +4,9 @@ import { useState, useEffect } from 'react';
 import { 
   UIEntity, 
   UIProperty, 
-  LegacyEntity, 
-  LegacyChildEntity,
-  LegacyEntityColl1,
-  GenericAlias,
-  GenericApproval,
-  convertLegacyEntityToUIEntity,
-  convertLegacyChildEntityToUIEntity,
-  convertUIEntityToLegacyEntity,
-  convertUIEntityToLegacyChildEntity,
-  convertLegacyEntityColl1ToUIEntity,
-  convertGenericAliasToUIEntity,
-  convertGenericApprovalToUIEntity
+  UIAggregate,
+  UpdateChildEntityRequest,
+  UpdateEntityRequest
 } from '@/model_defs';
 import { Settings, Database, Pill, Tag } from 'lucide-react';
 import { DetailCardProperties } from './DetailCardProperties';
@@ -46,9 +37,9 @@ export function EntityDetailPage({
   const [collectionsLoading, setCollectionsLoading] = useState(false);
   
   // Collection data for entity (generic_drugs)
-  const [aliasesList, setAliasesList] = useState<any[]>([]);
-  const [routesList, setRoutesList] = useState<any[]>([]);
-  const [approvalsList, setApprovalsList] = useState<any[]>([]);
+  const [aliasesList, setAliasesList] = useState<UIAggregate[]>([]);
+  const [routesList, setRoutesList] = useState<UIAggregate[]>([]);
+  const [approvalsList, setApprovalsList] = useState<UIAggregate[]>([]);
 
   const operations = useEntityOperations();
 
@@ -74,8 +65,7 @@ export function EntityDetailPage({
       setLoading(true);
       const response = await fetch(`/api/entities/${encodeURIComponent(entityKey)}`);
       if (response.ok) {
-        const legacyData: LegacyEntity = await response.json();
-        const unifiedEntity = convertLegacyEntityToUIEntity(legacyData);
+        const unifiedEntity: UIEntity = await response.json();
         setEntity(unifiedEntity);
         setChild(null);
       }
@@ -90,20 +80,15 @@ export function EntityDetailPage({
     if (!childKey) return;
     try {
       setLoading(true);
-      const response = await fetch(`/api/children/${encodeURIComponent(childKey)}`);
+      const response = await fetch(`/api/children/${encodeURIComponent(childKey)}?format=ui`);
       if (response.ok) {
-        const legacyChildData: LegacyChildEntity = await response.json();
-        const unifiedChild = convertLegacyChildEntityToUIEntity(legacyChildData);
+        const unifiedChild: UIEntity = await response.json();
         setChild(unifiedChild);
         
-        // Also fetch the parent entity
-        if (legacyChildData.entity_key) {
-          const entityResponse = await fetch(`/api/entities/${encodeURIComponent(legacyChildData.entity_key)}`);
-          if (entityResponse.ok) {
-            const legacyEntityData: LegacyEntity = await entityResponse.json();
-            const unifiedEntity = convertLegacyEntityToUIEntity(legacyEntityData);
-            setEntity(unifiedEntity);
-          }
+        // Also fetch the parent entity from the child's ancestors
+        if (unifiedChild.ancestors && unifiedChild.ancestors.length > 0) {
+          const parentEntity = unifiedChild.ancestors[0];
+          setEntity(parentEntity);
         }
       }
     } catch (error) {
@@ -117,41 +102,31 @@ export function EntityDetailPage({
     try {
       setCollectionsLoading(true);
       // Fetch all three collections for the entity
-      const [routesRes, aliasesRes, approvalsRes] = await Promise.all([
-        fetch('/api/entity-coll1'), // routes and dosing (generic_routes)
+      const [routesData, aliasesRes, approvalsRes] = await Promise.all([
+        fetchRoutes(entityKey),
         fetch(`/api/generic-aliases?entityKey=${encodeURIComponent(entityKey)}`), // aliases (generic_aliases)
         fetch(`/api/generic-approvals?entityKey=${encodeURIComponent(entityKey)}`) // approvals (generic_approvals)
       ]);
 
-      // Fetch and convert aliases
+      // Set routes data (already processed by fetchRoutes)
+      setRoutesList(routesData);
+
+      // Fetch aliases (now returns UIAggregate directly)
       if (aliasesRes.ok) {
-        const aliases: GenericAlias[] = await aliasesRes.json();
-        const convertedAliases = aliases.map(alias => convertGenericAliasToUIEntity(alias));
-        setAliasesList(convertedAliases);
+        const aliases: UIAggregate[] = await aliasesRes.json();
+        setAliasesList(aliases);
       } else {
         setAliasesList([]);
       }
 
-      // Fetch and convert routes
-      if (routesRes.ok) {
-        const routes: LegacyEntityColl1[] = await routesRes.json();
-        const filteredRoutes = routes.filter((item: LegacyEntityColl1) => item.entity_key === entityKey);
-        // Convert legacy collection data to UIEntity format with proper schema field names
-        const convertedRoutes = filteredRoutes.map(route => convertLegacyEntityColl1ToUIEntity(route));
-        setRoutesList(convertedRoutes);
-      } else {
-        setRoutesList([]);
-      }
-
-      // Fetch and convert approvals
+      // Fetch approvals (now returns UIAggregate directly)
       if (approvalsRes.ok) {
-        const approvals: GenericApproval[] = await approvalsRes.json();
-        const convertedApprovals = approvals.map(approval => convertGenericApprovalToUIEntity(approval));
-        setApprovalsList(convertedApprovals);
+        const approvals: UIAggregate[] = await approvalsRes.json();
+        setApprovalsList(approvals);
       } else {
         setApprovalsList([]);
       }
-    } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+    } catch (error) {
       setAliasesList([]);
       setRoutesList([]);
       setApprovalsList([]);
@@ -159,6 +134,16 @@ export function EntityDetailPage({
       setCollectionsLoading(false);
     }
   };
+
+  async function fetchRoutes(entityKey: string): Promise<UIAggregate[]> {
+    const routesRes = await fetch(`/api/entity-coll1?entityKey=${entityKey}`);
+    if (!routesRes.ok) {
+      throw new Error('Failed to fetch routes');
+    }
+    
+    const routes: UIAggregate[] = await routesRes.json();
+    return routes.filter((item: UIAggregate) => item.entity_id === entityKey);
+  }
 
   // Create callback maps for tabs
   const createTabCallbacks = (collectionType: string, parentKey: string): TabCallbacks => ({
@@ -192,39 +177,33 @@ export function EntityDetailPage({
       const childKeyProp = updatedProperties.find((p: UIProperty) => p.property_name === 'child_entity_key');
       
       if (childKeyProp) {
-        // Handle child entity update - convert to legacy format for API
-        const legacyChildEntity = convertUIEntityToLegacyChildEntity({
-          ...entity,
-          properties: updatedProperties
-        });
+        // Handle child entity update - extract update data from properties
+        const nameProperty = updatedProperties.find(p => p.property_name === 'child_entity_name');
+        const property1 = updatedProperties.find(p => p.property_name === 'child_entity_property1');
         
-        const updatedChild = await operations.updateChild(legacyChildEntity.child_entity_key, {
-          child_entity_name: legacyChildEntity.child_entity_name,
-          child_entity_property1: legacyChildEntity.child_entity_property1
-        });
-        
-        // Convert back to unified UIEntity type
-        const unifiedChild = convertLegacyChildEntityToUIEntity(updatedChild);
-        setChild(unifiedChild);
-        onChildUpdated?.(unifiedChild);
-      } else {
-        // Handle main entity update - convert to legacy format for API
-        const legacyEntity = convertUIEntityToLegacyEntity({
-          ...entity,
-          properties: updatedProperties
-        });
-        
-        // Use legacy format for API call
-        const updateData: Partial<LegacyEntity> = {
-          entity_name: legacyEntity.entity_name,
-          entity_property1: legacyEntity.entity_property1,
+        const updateData: UpdateChildEntityRequest = {
+          displayName: nameProperty?.property_value || '',
+          child_entity_property1: property1?.property_value || ''
         };
-        const updatedEntity = await operations.updateEntity(legacyEntity.entity_key, updateData);
         
-        // Convert back to unified UIEntity type (API still returns legacy format)
-        const unifiedEntity = convertLegacyEntityToUIEntity(updatedEntity as any);
-        setEntity(unifiedEntity);
-        onEntityUpdated?.(unifiedEntity);
+        const updatedChild = await operations.updateChild(childKeyProp.property_value, updateData);
+        setChild(updatedChild);
+        onChildUpdated?.(updatedChild);
+      } else {
+        // Handle main entity update - extract update data from properties
+        const nameProperty = updatedProperties.find(p => p.property_name === 'entity_name');
+        const property1 = updatedProperties.find(p => p.property_name === 'entity_property1');
+        
+        const updateData: UpdateEntityRequest = {
+          displayName: nameProperty?.property_value || '',
+          entity_property1: property1?.property_value || ''
+        };
+        
+        if (entity.entity_key) {
+          const updatedEntity = await operations.updateEntity(entity.entity_key, updateData);
+          setEntity(updatedEntity);
+          onEntityUpdated?.(updatedEntity);
+        }
       }
     } catch (error) {
       console.error('Error updating entity:', error);
@@ -280,6 +259,17 @@ export function EntityDetailPage({
     });
   };
 
+  // Helper function to convert UIAggregate properties array to simple object for TabProperties
+  const convertUIAggregateToTabData = (uiAggregates: UIAggregate[]): any[] => {
+    return uiAggregates.map(uiAggregate => {
+      const obj: Record<string, any> = {};
+      uiAggregate.properties?.forEach(prop => {
+        obj[prop.property_name] = prop.property_value;
+      });
+      return obj;
+    });
+  };
+
   // Get entity key for legacy API compatibility
   const entityKeyForAPI = entity?.entity_key || '';
   
@@ -305,7 +295,7 @@ export function EntityDetailPage({
           key: 'aliases',
           label: 'Aliases',
           icon: <Tag className="w-4 h-4" />,
-          data: convertUIEntityToTabData(aliasesList),
+          data: convertUIAggregateToTabData(aliasesList),
           emptyMessage: 'No aliases for this generic drug.',
           type: 'auto' as const,
           schemaEntityName: 'generic_aliases',
@@ -314,7 +304,7 @@ export function EntityDetailPage({
           key: 'routes',
           label: 'Routes & Dosing',
           icon: <Database className="w-4 h-4" />,
-          data: convertUIEntityToTabData(routesList),
+          data: convertUIAggregateToTabData(routesList),
           emptyMessage: 'No routes & dosing information for this generic drug.',
           type: 'auto' as const,
           schemaEntityName: 'generic_routes',
@@ -323,7 +313,7 @@ export function EntityDetailPage({
           key: 'approvals',
           label: 'Approvals',
           icon: <Settings className="w-4 h-4" />,
-          data: approvalsList,
+          data: convertUIAggregateToTabData(approvalsList),
           emptyMessage: 'No approval information for this generic drug.',
           type: 'auto' as const,
           schemaEntityName: 'generic_approvals',

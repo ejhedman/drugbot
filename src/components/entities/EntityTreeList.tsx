@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LegacyEntity, LegacyChildEntity } from '@/model_defs';
+import { UIEntity } from '@/model_defs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SquarePlus, Search, Pill, Tag, ChevronRight, ChevronDown } from 'lucide-react';
@@ -25,8 +25,8 @@ export function EntityTreeList({
   onAddEntity, 
   onAddChild 
 }: EntityTreeListProps) {
-  const [entities, setEntities] = useState<LegacyEntity[]>([]);
-  const [childrenMap, setChildrenMap] = useState<Record<string, LegacyChildEntity[]>>({});
+  const [entities, setEntities] = useState<UIEntity[]>([]);
+  const [childrenMap, setChildrenMap] = useState<Record<string, UIEntity[]>>({});
   const [expandedEntities, setExpandedEntities] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -39,7 +39,9 @@ export function EntityTreeList({
   const fetchEntities = async () => {
     try {
       setLoading(true);
-      const params = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+      const params = searchTerm 
+        ? `?search=${encodeURIComponent(searchTerm)}&format=ui` 
+        : '?format=ui';
       const response = await fetch(`/api/entities${params}`);
       if (response.ok) {
         const data = await response.json();
@@ -59,7 +61,7 @@ export function EntityTreeList({
     
     try {
       setLoadingChildren(prev => new Set(prev).add(entityKey));
-      const response = await fetch(`/api/children?entityKey=${encodeURIComponent(entityKey)}`);
+      const response = await fetch(`/api/children?entityKey=${encodeURIComponent(entityKey)}&format=ui`);
       if (response.ok) {
         const data = await response.json();
         // Add delay to see skeleton loader
@@ -152,11 +154,11 @@ export function EntityTreeList({
         ) : (
           <div className="space-y-1 px-2">
             {entities.map((entity) => (
-              <div key={entity.entity_key} className="space-y-1">
+              <div key={entity.entity_key!} className="space-y-1">
                 {/* Entity Row */}
                 <div className="flex items-center gap-2 rounded-xl overflow-hidden">
                   <button
-                    onClick={() => handleEntityClick(entity.entity_key)}
+                    onClick={() => handleEntityClick(entity.entity_key!)}
                     className={`flex-1 text-left px-4 py-2 hover:bg-gray-50 transition-colors text-sm rounded-xl ${
                       selectedEntityKey === entity.entity_key
                         ? 'bg-slate-100'
@@ -164,22 +166,22 @@ export function EntityTreeList({
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      {isExpanded(entity.entity_key) ? (
+                      {isExpanded(entity.entity_key!) ? (
                         <ChevronDown className="w-4 h-4 text-gray-400" />
                       ) : (
                         <ChevronRight className="w-4 h-4 text-gray-400" />
                       )}
                       <Pill className="w-4 h-4 text-blue-500" />
                       <span className="font-medium text-gray-900 text-sm">
-                        {entity.entity_name}
+                        {entity.displayName}
                       </span>
                     </div>
                   </button>
                   
                   {/* Add Child Button */}
-                  {onAddChild && isExpanded(entity.entity_key) && (
+                  {onAddChild && isExpanded(entity.entity_key!) && (
                     <Button
-                      onClick={(e) => handleAddChild(entity.entity_key, e)}
+                      onClick={(e) => handleAddChild(entity.entity_key!, e)}
                       size="sm"
                       variant="ghost"
                       className="h-8 w-8 p-0 mr-2 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
@@ -191,28 +193,28 @@ export function EntityTreeList({
                 </div>
 
                 {/* Children Section */}
-                {isExpanded(entity.entity_key) && (
+                {isExpanded(entity.entity_key!) && (
                   <div className="ml-6 space-y-1">
-                    {isLoadingChildren(entity.entity_key) ? (
+                    {isLoadingChildren(entity.entity_key!) ? (
                       <ChildEntitySkeleton />
-                    ) : children(entity.entity_key).length === 0 ? (
+                    ) : children(entity.entity_key!).length === 0 ? (
                       <div className="px-4 py-2 text-center label">
                         No children found
                       </div>
                     ) : (
-                      children(entity.entity_key).map((child) => (
+                      children(entity.entity_key!).map((child) => (
                         <div
-                          key={child.child_entity_key}
-                          onClick={() => handleChildClick(child.child_entity_key)}
+                          key={child.entity_key}
+                          onClick={() => handleChildClick(child.entity_key!)}
                           className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors text-sm rounded-xl cursor-pointer ${
-                            selectedChildKey === child.child_entity_key
+                            selectedChildKey === child.entity_key
                               ? 'bg-green-50'
                               : ''
                           }`}
                         >
                           <div className="flex items-center gap-3 font-medium text-gray-900 text-sm">
                             <Tag className="w-4 h-4 text-green-500" />
-                            {child.child_entity_name}
+                            {child.displayName}
                           </div>
                         </div>
                       ))

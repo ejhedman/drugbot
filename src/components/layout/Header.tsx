@@ -10,7 +10,7 @@ interface HeaderProps {
   onLogout: () => void;
 }
 
-export function Header({ onLogin, onLogout }: HeaderProps) { // eslint-disable-line @typescript-eslint/no-unused-vars
+export function Header({ onLogin, onLogout }: HeaderProps) {
   const { user } = useAuth();
   
   // Get display name and avatar from GitHub user data

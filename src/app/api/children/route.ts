@@ -7,14 +7,27 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const entityKey = searchParams.get('entityKey');
     const search = searchParams.get('search');
+    // const format = searchParams.get('format'); // 'ui' for UIEntity format, default to legacy
 
     let children;
     if (entityKey) {
-      children = await dataRepository.getChildrenByEntityKey(entityKey);
+      // if (format === 'ui') {
+        children = await dataRepository.getChildrenAsUIEntitiesByEntityKey(entityKey);
+      // } else {
+      //   children = await dataRepository.getChildrenByEntityKey(entityKey);
+      // }
     } else if (search) {
-      children = await dataRepository.searchChildren(search);
+      // if (format === 'ui') {
+        children = await dataRepository.searchChildrenAsUIEntities(search);
+      // } else {
+      //   children = await dataRepository.searchChildren(search);
+      // }
     } else {
-      children = await dataRepository.getAllChildren();
+      // if (format === 'ui') {
+        children = await dataRepository.getAllChildrenAsUIEntities();
+      // } else {
+      //   children = await dataRepository.getAllChildren();
+      // }
     }
 
     return NextResponse.json(children);
@@ -26,10 +39,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // const { searchParams } = new URL(request.url);
+    // const format = searchParams.get('format'); // 'ui' for UIEntity format, default to legacy
+    
     const body: CreateChildEntityRequest = await request.json();
     
     // Validate required fields
-    if (!body.entity_key || !body.child_entity_name || !body.child_entity_property1) {
+    if (!body.parent_entity_key || !body.displayName || !body.child_entity_property1) {
       return NextResponse.json(
         { error: 'entity_key, child_entity_name, and child_entity_property1 are required' },
         { status: 400 }
@@ -37,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify that the parent entity exists
-    const parentEntity = await dataRepository.getEntityByKey(body.entity_key);
+    const parentEntity = await dataRepository.getEntityByKey(body.parent_entity_key);
     if (!parentEntity) {
       return NextResponse.json(
         { error: 'Parent entity not found' },
@@ -45,7 +61,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newChild = await dataRepository.createChildEntity(body);
+    const newChild = await dataRepository.createChildEntityAsUIEntity(body);
+    
     return NextResponse.json(newChild, { status: 201 });
   } catch (error) {
     console.error('Error creating child entity:', error);
