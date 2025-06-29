@@ -5,9 +5,11 @@ import {
   UIEntity, 
   UIProperty, 
   UIAggregate,
+} from '@/model_defs';
+import {
   UpdateChildEntityRequest,
   UpdateEntityRequest
-} from '@/model_defs';
+} from '@/model_defs/DBModel';
 import { Settings, Database, Pill, Tag } from 'lucide-react';
 import { DetailCardProperties } from './DetailCardProperties';
 import { CollectionTabSet, TabConfig, TabCallbacks } from './CollectionTabSet';
@@ -177,26 +179,54 @@ export function EntityDetailPage({
       const childKeyProp = updatedProperties.find((p: UIProperty) => p.property_name === 'child_entity_key');
       
       if (childKeyProp) {
-        // Handle child entity update - extract update data from properties
+        // Handle child entity update - build properties object from updated properties
         const nameProperty = updatedProperties.find(p => p.property_name === 'child_entity_name');
-        const property1 = updatedProperties.find(p => p.property_name === 'child_entity_property1');
+        
+        // Build properties object from all non-name, non-key properties
+        const properties: { [key: string]: any } = {};
+        updatedProperties.forEach(prop => {
+          if (prop.property_name !== 'child_entity_name' && 
+              prop.property_name !== 'child_entity_key' && 
+              prop.property_name !== 'uid') {
+            // Map property names to actual database field names
+            if (prop.property_name === 'child_entity_property1') {
+              properties['manufacturer'] = prop.property_value;
+            } else {
+              properties[prop.property_name] = prop.property_value;
+            }
+          }
+        });
         
         const updateData: UpdateChildEntityRequest = {
           displayName: nameProperty?.property_value || '',
-          child_entity_property1: property1?.property_value || ''
+          properties: Object.keys(properties).length > 0 ? properties : undefined
         };
         
         const updatedChild = await operations.updateChild(childKeyProp.property_value, updateData);
         setChild(updatedChild);
         onChildUpdated?.(updatedChild);
       } else {
-        // Handle main entity update - extract update data from properties
+        // Handle main entity update - build properties object from updated properties
         const nameProperty = updatedProperties.find(p => p.property_name === 'entity_name');
-        const property1 = updatedProperties.find(p => p.property_name === 'entity_property1');
+        
+        // Build properties object from all non-name, non-key properties
+        const properties: { [key: string]: any } = {};
+        updatedProperties.forEach(prop => {
+          if (prop.property_name !== 'entity_name' && 
+              prop.property_name !== 'entity_key' && 
+              prop.property_name !== 'uid') {
+            // Map property names to actual database field names
+            if (prop.property_name === 'entity_property1') {
+              properties['mech_of_action'] = prop.property_value;
+            } else {
+              properties[prop.property_name] = prop.property_value;
+            }
+          }
+        });
         
         const updateData: UpdateEntityRequest = {
           displayName: nameProperty?.property_value || '',
-          entity_property1: property1?.property_value || ''
+          properties: Object.keys(properties).length > 0 ? properties : undefined
         };
         
         if (entity.entity_key) {

@@ -10,6 +10,8 @@
 // ============================================================================
 export { BaseRepository } from './base_repository';
 
+export { drugBotDBSchema  } from './thedb';
+
 // ============================================================================
 // ENTITY REPOSITORIES
 // ============================================================================
@@ -63,3 +65,4 @@ export const unifiedRepository = new UnifiedRepository();
 
 // Export as default for convenience
 export default unifiedRepository; 
+

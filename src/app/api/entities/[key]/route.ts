@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { entityRepository } from '@/lib/repository';
-import { UpdateEntityRequest } from '@/model_defs';
+import { entityRepository } from '@/repository';
+import { genericDrugsTable } from '@/repository/thedb';
+import { UpdateEntityRequest } from '@/model_defs/DBModel';
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +9,8 @@ export async function GET(
 ) {
   try {
     const { key } = await params;
-    const entity = await entityRepository.getEntityByKey(key); // Now returns UIEntity
+    
+    const entity = await entityRepository.getEntityByKey(key, genericDrugsTable); // Now returns UIEntity
     
     if (!entity) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });
@@ -17,7 +19,7 @@ export async function GET(
     return NextResponse.json(entity);
   } catch (error) {
     console.error('Error fetching entity:', error);
-    return NextResponse.json({ error: 'Failed to fetch entity' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -29,7 +31,7 @@ export async function PATCH(
     const { key } = await params;
     const body: UpdateEntityRequest = await request.json();
     
-    const updatedEntity = await entityRepository.updateEntity(key, body); // Now returns UIEntity
+    const updatedEntity = await entityRepository.updateEntity(key, body, genericDrugsTable); // Now returns UIEntity
     
     if (!updatedEntity) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });
@@ -48,7 +50,7 @@ export async function DELETE(
 ) {
   try {
     const { key } = await params;
-    const deleted = await entityRepository.deleteEntity(key);
+    const deleted = await entityRepository.deleteEntity(key, genericDrugsTable);
     
     if (!deleted) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });

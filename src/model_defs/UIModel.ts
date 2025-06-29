@@ -81,8 +81,6 @@ export interface UIAggregate {
   customComponent?: string;
 }
 
-
-
 /**
  * UIEntityRef - A Reference to an entity (that can be used in a tree view)
  * 

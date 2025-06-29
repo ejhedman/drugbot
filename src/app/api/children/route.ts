@@ -1,35 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { entityRepository, childEntityRepository } from '@/lib/repository';
-import { CreateChildEntityRequest } from '@/model_defs';
+import { entityRepository, childEntityRepository } from '@/repository';
+import { UIEntity } from '@/model_defs';
+import { CreateChildEntityRequest } from '@/model_defs/DBModel';
+import { genericDrugsTable, manuDrugsTable } from '@/repository/thedb';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const entityKey = searchParams.get('entityKey');
     const search = searchParams.get('search');
-    // const format = searchParams.get('format'); // 'ui' for UIEntity format, default to legacy
 
-    let children;
+    let children: UIEntity[];
     if (entityKey) {
-      // if (format === 'ui') {
-        children = await childEntityRepository.getChildrenAsUIEntitiesByEntityKey(entityKey);
-      // } else {
-      //   children = await dataRepository.getChildrenByEntityKey(entityKey);
-      // }
+      children = await childEntityRepository.getChildrenAsUIEntitiesByEntityKey(entityKey, manuDrugsTable);
     } else if (search) {
-      // if (format === 'ui') {
-        children = await childEntityRepository.searchChildrenAsUIEntities(search);
-      // } else {
-      //   children = await dataRepository.searchChildren(search);
-      // }
-    } 
-    else {
-      throw new Error('no usable arguments');
-    //   // if (format === 'ui') {
-    //     children = await childEntityRepository.getAllChildrenAsUIEntities();
-    //   // } else {
-    //   //   children = await dataRepository.getAllChildren();
-    //   // }
+      // Use the unified searchEntities method from entityRepository
+      children = await entityRepository.searchEntities(search, manuDrugsTable);
+    } else {
+      // Get all children - this might need a new method or different approach
+      children = [];
     }
 
     return NextResponse.json(children);
@@ -41,31 +30,28 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // const { searchParams } = new URL(request.url);
-    // const format = searchParams.get('format'); // 'ui' for UIEntity format, default to legacy
+    const body = await request.json();
     
-    const body: CreateChildEntityRequest = await request.json();
-    
-    // Validate required fields
-    if (!body.parent_entity_key || !body.displayName || !body.child_entity_property1) {
-      return NextResponse.json(
-        { error: 'entity_key, child_entity_name, and child_entity_property1 are required' },
-        { status: 400 }
-      );
-    }
-
     // Verify that the parent entity exists
-    const parentEntity = await entityRepository.getEntityByKey(body.parent_entity_key);
+    const parentEntity = await entityRepository.getEntityByKey(body.parent_entity_key, genericDrugsTable);
     if (!parentEntity) {
       return NextResponse.json(
-        { error: 'Parent entity not found' },
+        { error: 'Parent entity not found' }, 
+        { status: 404 }
+      );
+    }
+
+    // Validate required fields
+    if (!body.parent_entity_key || !body.displayName) {
+      return NextResponse.json(
+        { error: 'parent_entity_key and displayName are required' },
         { status: 400 }
       );
     }
 
-    const newChild = await childEntityRepository.createChildEntityAsUIEntity(body);
+    const child = await childEntityRepository.createChildEntityAsUIEntity(body, manuDrugsTable);
     
-    return NextResponse.json(newChild, { status: 201 });
+    return NextResponse.json(child, { status: 201 });
   } catch (error) {
     console.error('Error creating child entity:', error);
     return NextResponse.json({ error: 'Failed to create child entity' }, { status: 500 });

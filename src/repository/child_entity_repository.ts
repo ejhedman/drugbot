@@ -1,14 +1,15 @@
 import { BaseRepository } from './base_repository';
-import { 
-  UIEntity,
-  UIEntityRef,
+import { UIEntity } from '@/model_defs';
+import {
   CreateChildEntityRequest,
   UpdateChildEntityRequest
-} from '@/model_defs';
+} from '@/model_defs/DBModel';
+import { DBTable } from '@/model_defs/DBModel';
+import { genericDrugsTable } from './thedb';
 
 /**
  * Repository for Child Entity operations (manu_drugs table)
- * Handles CRUD operations for child entities (manufactured drugs)
+ * Handles CRUD operations for entity entities (manufactured drugs)
  */
 export class ChildEntityRepository extends BaseRepository {
   
@@ -16,507 +17,232 @@ export class ChildEntityRepository extends BaseRepository {
   // CHILD ENTITY OPERATIONS (manu_drugs table)
   // ============================================================================
 
-  async getChildrenAsUIEntitiesByEntityKey(entityKey: string): Promise<UIEntity[]> {
-    this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY', 'CHILD_ENTITIES', { entityKey });
+  async getChildrenAsUIEntitiesByEntityKey(entityKey: string, table: DBTable): Promise<UIEntity[]> {
+    this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY', 'CHILD_ENTITIES', { entityKey, tableName: table.name });
     const supabase = await this.getSupabaseClient();
     
-    // Get the child entities and parent info in one query
+    // Extract table name from the DBTable parameter
+    const tableName = table.name;
+    
+    // Find the key field for the entity table - assume it's the field that contains '_key' and isn't 'generic_key'
+    const keyField = this.findKeyField(table, true);
+    if (!keyField) {
+      throw new Error(`No entity key field found in table ${tableName}`);
+    }
+    
+    // Find the name field - assume it's the field that contains '_name' or 'name'
+    const nameField = this.findNameField(table);
+    if (!nameField) {
+      throw new Error(`No name field found in table ${tableName}`);
+    }
+    
+    // Simplified query - no embedded join needed
     const { data, error } = await supabase
-      .from('manu_drugs')
-      .select('*, generic_drugs!inner(uid, generic_key, generic_name, mech_of_action)')
+      .from(tableName)
+      .select('*')
       .eq('generic_key', entityKey)
-      .order('drug_name');
+      .order(nameField.name);
 
     if (error) {
-      this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY_ERROR', 'CHILD_ENTITIES', { entityKey, error: error.message });
-      throw new Error(`Failed to fetch child entities: ${error.message}`);
+      this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY_ERROR', 'CHILD_ENTITIES', { entityKey, tableName, error: error.message });
+      throw new Error(`Failed to fetch entity entities: ${error.message}`);
     }
 
     if (data.length === 0) {
       this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY_SUCCESS', 'CHILD_ENTITIES', { 
         entityKey, 
+        tableName,
         recordCount: 0
       });
       return [];
     }
 
-    // Create parent entity reference for ancestors (same for all children)
-    const parentInfo = data[0].generic_drugs;
-    const parentEntityRef: UIEntityRef = {
-      entity_id: parentInfo.uid,
-      displayName: parentInfo.generic_name,
-      ancestors: [],
-      children: []
-    };
-
-    const children: UIEntity[] = data.map(row => ({
-      entity_id: row.uid,
-      entity_key: row.manu_drug_key,
-      displayName: row.drug_name,
-      properties: [
-        {
-          property_name: 'child_entity_key',
-          property_value: row.manu_drug_key,
-          ordinal: 1,
-          is_editable: false,
-          is_visible: true,
-          is_key: true
-        },
-        {
-          property_name: 'entity_key',
-          property_value: row.generic_key,
-          ordinal: 2,
-          is_editable: false,
-          is_visible: true,
-          is_key: false
-        },
-        {
-          property_name: 'child_entity_name',
-          property_value: row.drug_name,
-          ordinal: 3,
-          is_editable: true,
-          is_visible: true,
-          is_key: false
-        },
-        {
-          property_name: 'child_entity_property1',
-          property_value: row.manufacturer || '',
-          ordinal: 4,
-          is_editable: true,
-          is_visible: true,
-          is_key: false
-        }
-      ],
-      aggregates: [],
-      ancestors: [parentEntityRef], // Parent is the first (and only) ancestor
-      children: []
-    }));
+    // Fetch ancestors for each entity entity
+    const children: UIEntity[] = await Promise.all(
+      data.map(async (row) => {
+        const ancestors = await this.fetchAncestorsForEntity(row.uid, genericDrugsTable);
+        
+        return {
+          entity_id: row.uid,
+          entity_key: row[keyField.name],
+          displayName: row[nameField.name],
+          properties: this.generatePropertiesFromTable(table, row, { isChildEntity: true }),
+          aggregates: [],
+          ancestors: ancestors, // Populated from relationships table
+          children: [] // Child entities typically don't have children
+        };
+      })
+    );
 
     this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY_SUCCESS', 'CHILD_ENTITIES', { 
       entityKey, 
+      tableName,
       recordCount: children.length 
     });
     return children;
   }
 
-  // async getAllChildrenAsUIEntities(): Promise<UIEntity[]> {
-  //   this.log('GET_ALL_AS_UI_ENTITIES', 'CHILD_ENTITIES');
-  //   const supabase = await this.getSupabaseClient();
-    
-  //   const { data, error } = await supabase
-  //     .from('manu_drugs')
-  //     .select('*, generic_drugs!inner(uid, generic_key, generic_name, mech_of_action)')
-  //     .order('drug_name');
-
-  //   if (error) {
-  //     this.log('GET_ALL_AS_UI_ENTITIES_ERROR', 'CHILD_ENTITIES', { error: error.message });
-  //     throw new Error(`Failed to fetch child entities: ${error.message}`);
-  //   }
-
-  //   const children: UIEntity[] = data.map(row => {
-  //     // Create parent entity reference for ancestors
-  //     const parentInfo = row.generic_drugs;
-  //     const parentEntityRef: UIEntityRef = {
-  //       entity_id: parentInfo.uid,
-  //       displayName: parentInfo.generic_name,
-  //       ancestors: [],
-  //       children: []
-  //     };
-
-  //     return {
-  //       entity_id: row.uid,
-  //       entity_key: row.manu_drug_key,
-  //       displayName: row.drug_name,
-  //       properties: [
-  //         {
-  //           property_name: 'child_entity_key',
-  //           property_value: row.manu_drug_key,
-  //           ordinal: 1,
-  //           is_editable: false,
-  //           is_visible: true,
-  //           is_key: true
-  //         },
-  //         {
-  //           property_name: 'entity_key',
-  //           property_value: row.generic_key,
-  //           ordinal: 2,
-  //           is_editable: false,
-  //           is_visible: true,
-  //           is_key: false
-  //         },
-  //         {
-  //           property_name: 'child_entity_name',
-  //           property_value: row.drug_name,
-  //           ordinal: 3,
-  //           is_editable: true,
-  //           is_visible: true,
-  //           is_key: false
-  //         },
-  //         {
-  //           property_name: 'child_entity_property1',
-  //           property_value: row.manufacturer || '',
-  //           ordinal: 4,
-  //           is_editable: true,
-  //           is_visible: true,
-  //           is_key: false
-  //         }
-  //       ],
-  //       aggregates: [],
-  //       ancestors: [parentEntityRef], // Parent is the first (and only) ancestor
-  //       children: []
-  //     };
-  //   });
-
-  //   this.log('GET_ALL_AS_UI_ENTITIES_SUCCESS', 'CHILD_ENTITIES', { recordCount: children.length });
-  //   return children;
-  // }
-
-  async getChildByKey(childKey: string): Promise<UIEntity | null> {
-    return this.getChildByKeyAsUIEntity(childKey);
-  }
-
-  async getChildByKeyAsUIEntity(childKey: string): Promise<UIEntity | null> {
-    this.log('GET_BY_KEY_AS_UI_ENTITY', 'CHILD_ENTITIES', { childKey });
-    
+  async createChildEntityAsUIEntity(data: CreateChildEntityRequest, table: DBTable): Promise<UIEntity> {
+    this.log('CREATE_AS_UI_ENTITY', 'CHILD_ENTITIES', { data, tableName: table.name });
     const supabase = await this.getSupabaseClient();
     
-    const { data, error } = await supabase
-      .from('manu_drugs')
-      .select('*, generic_drugs!inner(uid, generic_key, generic_name, mech_of_action)')
-      .eq('manu_drug_key', childKey)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        this.log('GET_BY_KEY_AS_UI_ENTITY_NOT_FOUND', 'CHILD_ENTITIES', { childKey });
-        return null;
-      }
-      this.log('GET_BY_KEY_AS_UI_ENTITY_ERROR', 'CHILD_ENTITIES', { childKey, error: error.message });
-      throw new Error(`Failed to fetch child entity: ${error.message}`);
-    }
-
-    // Create parent entity reference for ancestors
-    const parentInfo = data.generic_drugs;
-    const parentEntityRef: UIEntityRef = {
-      entity_id: parentInfo.uid,
-      displayName: parentInfo.generic_name,
-      ancestors: [],
-      children: []
-    };
-
-    const child: UIEntity = {
-      entity_id: data.uid,
-      entity_key: data.manu_drug_key,
-      displayName: data.drug_name,
-      properties: [
-        {
-          property_name: 'child_entity_key',
-          property_value: data.manu_drug_key,
-          ordinal: 1,
-          is_editable: false,
-          is_visible: true,
-          is_key: true
-        },
-        {
-          property_name: 'entity_key',
-          property_value: data.generic_key,
-          ordinal: 2,
-          is_editable: false,
-          is_visible: true,
-          is_key: false
-        },
-        {
-          property_name: 'child_entity_name',
-          property_value: data.drug_name,
-          ordinal: 3,
-          is_editable: true,
-          is_visible: true,
-          is_key: false
-        },
-        {
-          property_name: 'child_entity_property1',
-          property_value: data.manufacturer || '',
-          ordinal: 4,
-          is_editable: true,
-          is_visible: true,
-          is_key: false
-        }
-      ],
-      aggregates: [],
-      ancestors: [parentEntityRef], // Parent is the first (and only) ancestor
-      children: []
-    };
-
-    this.log('GET_BY_KEY_AS_UI_ENTITY_SUCCESS', 'CHILD_ENTITIES', { childKey, childName: child.displayName });
-    return child;
-  }
-
-  async searchChildrenAsUIEntities(searchTerm: string): Promise<UIEntity[]> {
-    this.log('SEARCH_AS_UI_ENTITIES', 'CHILD_ENTITIES', { searchTerm });
-    const supabase = await this.getSupabaseClient();
+    // Extract table name and find key/name fields
+    const tableName = table.name;
+    const keyField = this.findKeyField(table, true);
+    const nameField = this.findNameField(table);
     
-    let query = supabase
-      .from('manu_drugs')
-      .select('*, generic_drugs!inner(uid, generic_key, generic_name, mech_of_action)')
-      .order('drug_name');
-
-    if (searchTerm) {
-      query = query.or(`drug_name.ilike.%${searchTerm}%,manufacturer.ilike.%${searchTerm}%`);
+    if (!keyField) {
+      throw new Error(`No entity key field found in table ${tableName}`);
+    }
+    if (!nameField) {
+      throw new Error(`No name field found in table ${tableName}`);
     }
 
-    const { data, error } = await query;
-
-    if (error) {
-      this.log('SEARCH_AS_UI_ENTITIES_ERROR', 'CHILD_ENTITIES', { searchTerm, error: error.message });
-      throw new Error(`Failed to search child entities: ${error.message}`);
-    }
-
-    const children: UIEntity[] = data.map(row => {
-      // Create parent entity reference for ancestors
-      const parentInfo = row.generic_drugs;
-      const parentEntityRef: UIEntityRef = {
-        entity_id: parentInfo.uid,
-        displayName: parentInfo.generic_name,
-        ancestors: [],
-        children: []
-      };
-
-      return {
-        entity_id: row.uid,
-        entity_key: row.manu_drug_key,
-        displayName: row.drug_name,
-        properties: [
-          {
-            property_name: 'child_entity_key',
-            property_value: row.manu_drug_key,
-            ordinal: 1,
-            is_editable: false,
-            is_visible: true,
-            is_key: true
-          },
-          {
-            property_name: 'entity_key',
-            property_value: row.generic_key,
-            ordinal: 2,
-            is_editable: false,
-            is_visible: true,
-            is_key: false
-          },
-          {
-            property_name: 'child_entity_name',
-            property_value: row.drug_name,
-            ordinal: 3,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          },
-          {
-            property_name: 'child_entity_property1',
-            property_value: row.manufacturer || '',
-            ordinal: 4,
-            is_editable: true,
-            is_visible: true,
-            is_key: false
-          }
-        ],
-        aggregates: [],
-        ancestors: [parentEntityRef], // Parent is the first (and only) ancestor
-        children: []
-      };
-    });
-
-    this.log('SEARCH_AS_UI_ENTITIES_SUCCESS', 'CHILD_ENTITIES', { 
-      searchTerm, 
-      matchedRecords: children.length 
-    });
-    return children;
-  }
-
-  async createChildEntityAsUIEntity(data: CreateChildEntityRequest): Promise<UIEntity> {
-    this.log('CREATE_AS_UI_ENTITY', 'CHILD_ENTITIES', { data });
-    const supabase = await this.getSupabaseClient();
-    
-    // Get the generic_uid for the foreign key and parent info
-    const { data: genericDrug, error: genericError } = await supabase
+    // First, find the parent entity UID from the parent_entity_key
+    const { data: parentData, error: parentError } = await supabase
       .from('generic_drugs')
-      .select('uid, generic_key, generic_name, mech_of_action')
+      .select('uid')
       .eq('generic_key', data.parent_entity_key)
       .single();
 
-    if (genericError) {
-      this.log('CREATE_AS_UI_ENTITY_ERROR', 'CHILD_ENTITIES', { data, error: 'Parent entity not found' });
-      throw new Error(`Parent entity not found: ${genericError.message}`);
+    if (parentError || !parentData) {
+      this.log('CREATE_AS_UI_ENTITY_ERROR', 'CHILD_ENTITIES', { 
+        data, 
+        tableName, 
+        error: 'Parent entity not found' 
+      });
+      throw new Error(`Parent entity not found for key: ${data.parent_entity_key}`);
     }
-
-    const newChild: any = {
-      manu_drug_key: this.generateKey('manu'),
-      drug_name: data.displayName,
-      manufacturer: data.child_entity_property1 || '',
-      generic_uid: genericDrug.uid
+    
+    const newEntity: any = {
+      [keyField.name]: this.generateKey('entity'),
+      generic_key: data.parent_entity_key,
+      [nameField.name]: data.displayName
     };
 
+    // Add dynamic properties from the request
+    if (data.properties) {
+      Object.entries(data.properties).forEach(([propertyName, propertyValue]) => {
+        // Find the corresponding field in the table
+        const field = table.fields.find(f => 
+          f.name === propertyName && 
+          f.name !== keyField.name && 
+          f.name !== nameField.name && 
+          f.name !== 'uid' &&
+          f.name !== 'generic_key' &&
+          !f.is_primary_key
+        );
+        if (field) {
+          newEntity[field.name] = propertyValue;
+        }
+      });
+    }
+
+    // Insert the new entity entity
     const { data: inserted, error } = await supabase
-      .from('manu_drugs')
-      .insert(newChild)
+      .from(tableName)
+      .insert(newEntity)
       .select()
       .single();
 
     if (error) {
-      this.log('CREATE_AS_UI_ENTITY_ERROR', 'CHILD_ENTITIES', { data, error: error.message });
-      throw new Error(`Failed to create child entity: ${error.message}`);
+      this.log('CREATE_AS_UI_ENTITY_ERROR', 'CHILD_ENTITIES', { data, tableName, error: error.message });
+      throw new Error(`Failed to create entity entity: ${error.message}`);
     }
 
-    // Create parent entity reference for ancestors
-    const parentEntityRef: UIEntityRef = {
-      entity_id: genericDrug.uid,
-      displayName: genericDrug.generic_name,
-      ancestors: [],
-      children: []
-    };
+    // Create the relationship entry in entity_relationships table
+    await this.createEntityRelationship(parentData.uid, inserted.uid, 'parent_child');
 
-    const child: UIEntity = {
+    // Fetch ancestors using the relationship utilities
+    const ancestors = await this.fetchAncestorsForEntity(inserted.uid, genericDrugsTable);
+
+    const entity: UIEntity = {
       entity_id: inserted.uid,
-      entity_key: inserted.manu_drug_key,
-      displayName: inserted.drug_name,
-      properties: [
-        {
-          property_name: 'child_entity_key',
-          property_value: inserted.manu_drug_key,
-          ordinal: 1,
-          is_editable: false,
-          is_visible: true,
-          is_key: true
-        },
-        {
-          property_name: 'entity_key',
-          property_value: data.parent_entity_key,
-          ordinal: 2,
-          is_editable: false,
-          is_visible: true,
-          is_key: false
-        },
-        {
-          property_name: 'child_entity_name',
-          property_value: inserted.drug_name,
-          ordinal: 3,
-          is_editable: true,
-          is_visible: true,
-          is_key: false
-        },
-        {
-          property_name: 'child_entity_property1',
-          property_value: inserted.manufacturer || '',
-          ordinal: 4,
-          is_editable: true,
-          is_visible: true,
-          is_key: false
-        }
-      ],
+      entity_key: inserted[keyField.name],
+      displayName: inserted[nameField.name],
+      properties: this.generatePropertiesFromTable(table, inserted, { isChildEntity: true }),
       aggregates: [],
-      ancestors: [parentEntityRef], // Parent is the first (and only) ancestor
-      children: []
+      ancestors: ancestors, // Populated from relationships table
+      children: [] // Child entities typically don't have children
     };
 
-    this.log('CREATE_AS_UI_ENTITY_SUCCESS', 'CHILD_ENTITIES', { newChild: child });
-    return child;
+    this.log('CREATE_AS_UI_ENTITY_SUCCESS', 'CHILD_ENTITIES', { newChild: entity, tableName });
+    return entity;
   }
 
-  async updateChildEntityAsUIEntity(childKey: string, data: UpdateChildEntityRequest): Promise<UIEntity | null> {
-    this.log('UPDATE_AS_UI_ENTITY', 'CHILD_ENTITIES', { childKey, data });
+  async updateChildEntityAsUIEntity(entityKey: string, data: UpdateChildEntityRequest, table: DBTable): Promise<UIEntity | null> {
+    this.log('UPDATE_AS_UI_ENTITY', 'CHILD_ENTITIES', { childKey: entityKey, data, tableName: table.name });
     const supabase = await this.getSupabaseClient();
+    
+    // Extract table name and find key/name fields
+    const tableName = table.name;
+    const keyField = this.findKeyField(table, true);
+    const nameField = this.findNameField(table);
+    
+    if (!keyField) {
+      throw new Error(`No entity key field found in table ${tableName}`);
+    }
+    if (!nameField) {
+      throw new Error(`No name field found in table ${tableName}`);
+    }
     
     const updateData: any = {};
     
-    if (data.displayName !== undefined) updateData.drug_name = data.displayName;
-    if (data.child_entity_property1 !== undefined) updateData.manufacturer = data.child_entity_property1;
+    // Update display name if provided
+    if (data.displayName !== undefined) {
+      updateData[nameField.name] = data.displayName;
+    }
+    
+    // Update dynamic properties if provided
+    if (data.properties) {
+      Object.entries(data.properties).forEach(([propertyName, propertyValue]) => {
+        // Find the corresponding field in the table
+        const field = table.fields.find(f => 
+          f.name === propertyName && 
+          f.name !== keyField.name && 
+          f.name !== nameField.name && 
+          f.name !== 'uid' &&
+          f.name !== 'generic_key' &&
+          !f.is_primary_key
+        );
+        if (field) {
+          updateData[field.name] = propertyValue;
+        }
+      });
+    }
 
+    // Update the entity entity
     const { data: updated, error } = await supabase
-      .from('manu_drugs')
+      .from(tableName)
       .update(updateData)
-      .eq('manu_drug_key', childKey)
-      .select('*, generic_drugs!inner(uid, generic_key, generic_name, mech_of_action)')
+      .eq(keyField.name, entityKey)
+      .select()
       .single();
 
     if (error) {
       if (error.code === 'PGRST116') {
-        this.log('UPDATE_AS_UI_ENTITY_NOT_FOUND', 'CHILD_ENTITIES', { childKey });
+        this.log('UPDATE_AS_UI_ENTITY_NOT_FOUND', 'CHILD_ENTITIES', { childKey: entityKey, tableName });
         return null;
       }
-      this.log('UPDATE_AS_UI_ENTITY_ERROR', 'CHILD_ENTITIES', { childKey, data, error: error.message });
-      throw new Error(`Failed to update child entity: ${error.message}`);
+      this.log('UPDATE_AS_UI_ENTITY_ERROR', 'CHILD_ENTITIES', { childKey: entityKey, data, tableName, error: error.message });
+      throw new Error(`Failed to update entity entity: ${error.message}`);
     }
 
-    // Create parent entity reference for ancestors
-    const parentInfo = updated.generic_drugs;
-    const parentEntityRef: UIEntityRef = {
-      entity_id: parentInfo.uid,
-      displayName: parentInfo.generic_name,
-      ancestors: [],
-      children: []
-    };
+    // Fetch ancestors using the relationship utilities
+    const ancestors = await this.fetchAncestorsForEntity(updated.uid, genericDrugsTable);
 
-    const child: UIEntity = {
+    const entity: UIEntity = {
       entity_id: updated.uid,
-      entity_key: updated.manu_drug_key,
-      displayName: updated.drug_name,
-      properties: [
-        {
-          property_name: 'child_entity_key',
-          property_value: updated.manu_drug_key,
-          ordinal: 1,
-          is_editable: false,
-          is_visible: true,
-          is_key: true
-        },
-        {
-          property_name: 'entity_key',
-          property_value: updated.generic_key,
-          ordinal: 2,
-          is_editable: false,
-          is_visible: true,
-          is_key: false
-        },
-        {
-          property_name: 'child_entity_name',
-          property_value: updated.drug_name,
-          ordinal: 3,
-          is_editable: true,
-          is_visible: true,
-          is_key: false
-        },
-        {
-          property_name: 'child_entity_property1',
-          property_value: updated.manufacturer || '',
-          ordinal: 4,
-          is_editable: true,
-          is_visible: true,
-          is_key: false
-        }
-      ],
+      entity_key: updated[keyField.name],
+      displayName: updated[nameField.name],
+      properties: this.generatePropertiesFromTable(table, updated, { isChildEntity: true }),
       aggregates: [],
-      ancestors: [parentEntityRef], // Parent is the first (and only) ancestor
-      children: []
+      ancestors: ancestors, // Populated from relationships table
+      children: [] // Child entities typically don't have children
     };
 
-    this.log('UPDATE_AS_UI_ENTITY_SUCCESS', 'CHILD_ENTITIES', { childKey, updatedChild: child });
-    return child;
+    this.log('UPDATE_AS_UI_ENTITY_SUCCESS', 'CHILD_ENTITIES', { childKey: entityKey, tableName, updatedChild: entity });
+    return entity;
   }
 
-  async deleteChildEntity(childKey: string): Promise<boolean> {
-    this.log('DELETE', 'CHILD_ENTITIES', { childKey });
-    const supabase = await this.getSupabaseClient();
-    
-    const { error } = await supabase
-      .from('manu_drugs')
-      .delete()
-      .eq('manu_drug_key', childKey);
-
-    if (error) {
-      this.log('DELETE_ERROR', 'CHILD_ENTITIES', { childKey, error: error.message });
-      throw new Error(`Failed to delete child entity: ${error.message}`);
-    }
-
-    this.log('DELETE_SUCCESS', 'CHILD_ENTITIES', { childKey });
-    return true;
-  }
 } 

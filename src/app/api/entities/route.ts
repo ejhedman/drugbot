@@ -1,30 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { entityRepository } from '@/lib/repository';
-import { CreateEntityRequest } from '@/model_defs';
+import { genericDrugsTable } from '@/repository/thedb';
+import { CreateEntityRequest } from '@/model_defs/DBModel';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
-    // const format = searchParams.get('format'); // 'legacy' for LegacyEntity format, default to UIEntity
 
     let entities;
     if (search) {
-      // if (format === 'legacy') {
-      //   entities = await dataRepository.searchEntitiesAsUIEntities(search);
-      //   // Convert UIEntity back to legacy format if needed - but we'll remove this conversion
-      //   // since we're migrating everything to UIEntity
-      // } else {
-        entities = await entityRepository.searchEntities(search); // Now returns UIEntity[]
-      // }
+      entities = await entityRepository.searchEntities(search, genericDrugsTable); // Now returns UIEntity[]
     } else {
-      // if (format === 'legacy') {
-      //   entities = await dataRepository.getAllEntitiesAsUIEntities();
-      //   // Convert UIEntity back to legacy format if needed - but we'll remove this conversion
-      //   // since we're migrating everything to UIEntity
-      // } else {
-        entities = await entityRepository.getAllEntities(); // Now returns UIEntity[]
-      // }
+      entities = await entityRepository.getAllEntities(genericDrugsTable); // Now returns UIEntity[]
     }
 
     return NextResponse.json(entities);
@@ -46,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newEntity = await entityRepository.createEntity(body); // Now returns UIEntity
+    const newEntity = await entityRepository.createEntity(body, genericDrugsTable); // Now returns UIEntity
     return NextResponse.json(newEntity, { status: 201 });
   } catch (error) {
     console.error('Error creating entity:', error);

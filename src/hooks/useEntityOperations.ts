@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { UIEntity, CreateChildEntityRequest, UpdateChildEntityRequest, CreateEntityRequest, UpdateEntityRequest } from '@/model_defs';
+import { UIEntity } from '@/model_defs';
+import { 
+  CreateChildEntityRequest, 
+  UpdateChildEntityRequest, 
+  CreateEntityRequest, 
+  UpdateEntityRequest 
+} from '@/model_defs/DBModel';
 
 interface UseEntityOperationsReturn {
   loading: boolean;

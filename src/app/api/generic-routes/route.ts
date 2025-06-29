@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Use the new AggregateRepository method
-    const routes: UIAggregate[] = await aggregateRepository.getEntityAggregatesByEntityKey(entityKey);
+    const routes: UIAggregate[] = await aggregateRepository.getGenericRouteAggregatesByEntityKey(entityKey);
 
     return NextResponse.json(routes);
   } catch (error) {

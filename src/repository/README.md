@@ -13,10 +13,13 @@ This directory contains the organized repository layer for the DrugBot applicati
 ### Entity Repository (`entity_repository.ts`)
 - Handles CRUD operations for main entities (generic_drugs table)
 - Methods: getAllEntities, getEntityByKey, searchEntities, createEntity, updateEntity, deleteEntity
+- **Unified getEntityByKey**: Can handle both parent and child entities with `isChildEntity` option
+- **Unified deleteEntity**: Can handle both parent and child entities with `isChildEntity` option
 
 ### Child Entity Repository (`child_entity_repository.ts`)
 - Handles CRUD operations for child entities (manu_drugs table)
-- Methods: getChildrenAsUIEntitiesByEntityKey, getAllChildrenAsUIEntities, searchChildrenAsUIEntities, getChildByKey, createChildEntityAsUIEntity, updateChildEntityAsUIEntity, deleteChildEntity
+- Methods: getChildrenAsUIEntitiesByEntityKey, ~~searchChildrenAsUIEntities~~ (replaced by entityRepository.searchEntities), ~~getChildByKey~~ (replaced by entityRepository.getEntityByKey), createChildEntityAsUIEntity, updateChildEntityAsUIEntity, ~~deleteChildEntity~~ (replaced by entityRepository.deleteEntity)
+- **Note**: Several methods have been consolidated into the unified EntityRepository for consistency
 
 ### Legacy Database Repository (`database-repository.ts`)
 - Original monolithic repository (maintained for backward compatibility)

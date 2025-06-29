@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { childEntityRepository } from '@/lib/repository';
-import { UpdateChildEntityRequest } from '@/model_defs';
+import { entityRepository, childEntityRepository } from '@/repository';
+import { UpdateChildEntityRequest } from '@/model_defs/DBModel';
+import { manuDrugsTable } from '@/repository/thedb';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ key: string }> }
 ) {
   try {
-    // const { searchParams } = new URL(request.url);
-    // const format = searchParams.get('format'); // 'ui' for UIEntity format, default to legacy
-    
     const { key } = await params;
-    const child = await childEntityRepository.getChildByKeyAsUIEntity(key);
+    
+    // Use the unified getEntityByKey method with isChildEntity option
+    const child = await entityRepository.getEntityByKey(key, manuDrugsTable, { isChildEntity: true });
     
     if (!child) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });
@@ -20,7 +20,7 @@ export async function GET(
     return NextResponse.json(child);
   } catch (error) {
     console.error('Error fetching child entity:', error);
-    return NextResponse.json({ error: 'Failed to fetch child entity' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -29,13 +29,10 @@ export async function PATCH(
   { params }: { params: Promise<{ key: string }> }
 ) {
   try {
-    // const { searchParams } = new URL(request.url);
-    // const format = searchParams.get('format'); // 'ui' for UIEntity format, default to legacy
-    
     const { key } = await params;
     const body: UpdateChildEntityRequest = await request.json();
     
-    const updatedChild = await childEntityRepository.updateChildEntityAsUIEntity(key, body);
+    const updatedChild = await childEntityRepository.updateChildEntityAsUIEntity(key, body, manuDrugsTable);
     
     if (!updatedChild) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });
@@ -54,7 +51,8 @@ export async function DELETE(
 ) {
   try {
     const { key } = await params;
-    const deleted = await childEntityRepository.deleteChildEntity(key);
+    // Use the unified deleteEntity method with isChildEntity option
+    const deleted = await entityRepository.deleteEntity(key, manuDrugsTable, { isChildEntity: true });
     
     if (!deleted) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });

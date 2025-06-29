@@ -510,6 +510,64 @@ const manuDrugsTable: DBTable = {
 };
 
 // ============================================================================
+// RELATIONSHIP TABLES
+// ============================================================================
+
+const entityRelationshipsTable: DBTable = {
+  name: 'entity_relationships',
+  description: 'Tracks hierarchical relationships between entities (ancestors and children)',
+  fields: [
+    {
+      name: 'uid',
+      datatype: 'UUID',
+      is_nullable: false,
+      is_primary_key: true,
+      is_foreign_key: false,
+      default_value: 'gen_random_uuid()'
+    },
+    {
+      name: 'ancestor_uid',
+      datatype: 'UUID',
+      is_nullable: false,
+      is_primary_key: false,
+      is_foreign_key: true
+    },
+    {
+      name: 'child_uid',
+      datatype: 'UUID',
+      is_nullable: false,
+      is_primary_key: false,
+      is_foreign_key: true
+    },
+    {
+      name: 'relationship_type',
+      datatype: 'VARCHAR',
+      is_nullable: false,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 50,
+      default_value: 'parent_child'
+    },
+    {
+      name: 'created_at',
+      datatype: 'TIMESTAMP WITH TIME ZONE',
+      is_nullable: false,
+      is_primary_key: false,
+      is_foreign_key: false,
+      default_value: 'NOW()'
+    },
+    {
+      name: 'updated_at',
+      datatype: 'TIMESTAMP WITH TIME ZONE',
+      is_nullable: false,
+      is_primary_key: false,
+      is_foreign_key: false,
+      default_value: 'NOW()'
+    }
+  ]
+};
+
+// ============================================================================
 // COMPLETE DATABASE SCHEMA
 // ============================================================================
 
@@ -527,7 +585,9 @@ export const drugBotDBSchema: DBSchema = {
     genericAliasesTable,
     genericRoutesTable,
     genericApprovalsTable,
-    manuDrugsTable
+    manuDrugsTable,
+    // Relationship tables
+    entityRelationshipsTable
   ]
 };
 
@@ -540,5 +600,6 @@ export {
   genericAliasesTable,
   genericRoutesTable,
   genericApprovalsTable,
-  manuDrugsTable
+  manuDrugsTable,
+  entityRelationshipsTable
 }; 

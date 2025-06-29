@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { EntityTreeList } from '@/components/entities/EntityTreeList';
-import { DetailViewRefactored } from '@/components/entities/DetailViewRefactored';
+import { DetailView } from '@/components/entities/DetailView';
 import { getBorderClasses } from '@/lib/borderUtils';
 
 export function AuthenticatedContent() {
@@ -75,7 +75,7 @@ export function AuthenticatedContent() {
 
         {/* Column 2: Detail View */}
         <div className={getBorderClasses("col-span-9 h-full min-h-0 flex flex-col", "border-4 border-yellow-500")}>
-          <DetailViewRefactored
+          <DetailView
             entityKey={selectedEntityKey}
             childKey={selectedChildKey}
             isAddingEntity={isAddingEntity}
