@@ -114,6 +114,30 @@ export interface UIProperty extends UIPropertyMeta {
 // ============================================================================
 
 /**
+ * AggregateRef - Reference to an aggregate type
+ * 
+ * Used to reference an aggregate type within an entity without including the full
+ * aggregate definition. This is particularly useful for entity schemas where we want
+ * to define which aggregates are available without duplicating the full aggregate
+ * metadata.
+ * 
+ * Field Descriptions:
+ * - aggregateType: Type identifier matching a UIAggregateMeta definition
+ * - displayName: Human-readable name shown in tabs or section headers
+ * - ordinal: Display order for multiple aggregates (lower numbers first)
+ */
+export interface AggregateRef {
+  /** Type identifier matching a UIAggregateMeta definition */
+  aggregateType: string;
+  
+  /** Human-readable display name (shown in tabs, section headers, etc.) */
+  displayName: string;
+  
+  /** Display order when multiple aggregates are present (lower numbers appear first) */
+  ordinal: number;
+}
+
+/**
  * UIAggregateMeta - Base metadata interface for entity aggregates (collections/sub-tables)
  * 
  * An aggregate represents a collection of related data that belongs to an entity.
@@ -138,6 +162,9 @@ export interface UIAggregateMeta {
   
   /** Display order when multiple aggregates are present (lower numbers appear first) */
   ordinal: number;
+
+  /** Whether this aggregate should be displayed as a table (true) or as properties (false) */
+  isTable: boolean;
 }
 
 /**
@@ -211,18 +238,18 @@ export interface UIEntityRef {
 // ============================================================================
 
 /**
- * UIEntityMeta - Base metadata interface for entity definitions
+ * UIEntityMeta - Base metadata interface for entity types
  * 
- * Contains the core metadata that applies to both schema definitions and runtime instances.
- * This includes display information, property schemas, and aggregate schemas.
+ * This interface defines the schema-level metadata for an entity type. It contains
+ * information about how the entity should be displayed, what properties it has,
+ * and what aggregates (sub-collections) it can contain.
  * 
  * Field Descriptions:
- * - entityType: Type identifier for the entity (optional, used for polymorphic scenarios)
- * - displayName: Human-readable name for the entity type or instance
+ * - entityType: Type identifier for polymorphic entities
+ * - displayName: Human-readable name for UI display
  * - pluralName: Plural form for collections and lists
  * - propertyDefs: Schema definitions for the entity's properties
- * - aggregateDefs: Schema definitions for the entity's aggregates/sub-collections
- * - tableName: Database table name (for schema definitions only)
+ * - aggregateRefs: References to aggregates that this entity type can have
  */
 export interface UIEntityMeta {
   /** Type identifier for this entity (useful for polymorphic entities or type checking) */
@@ -237,8 +264,8 @@ export interface UIEntityMeta {
   /** Property schema definitions (the "columns" or "fields" that this entity type has) */
   propertyDefs?: UIPropertyMeta[];
   
-  /** Aggregate schema definitions (the sub-collections that this entity type can have) */
-  aggregateDefs?: UIAggregateMeta[];
+  /** References to aggregates that this entity type can have */
+  aggregateRefs?: AggregateRef[];
 }
 
 /**
@@ -461,15 +488,24 @@ export class UIModel {
    */
   getEntityAggregates(entityName: string): UIAggregateMeta[] {
     const entity = this.getEntity(entityName);
-    return entity?.aggregateDefs || [];
+    if (!entity) return [];
+    
+    // Map aggregate refs to their full definitions
+    return (entity.aggregateRefs || [])
+      .map(ref => this.getAggregate(ref.aggregateType))
+      .filter((agg): agg is UIAggregateMeta => agg !== undefined);
   }
 
   /**
    * Find a specific aggregate by type in an entity
    */
   findEntityAggregate(entityName: string, aggregateType: string): UIAggregateMeta | undefined {
-    const aggregates = this.getEntityAggregates(entityName);
-    return aggregates.find(agg => agg.aggregateType === aggregateType);
+    const entity = this.getEntity(entityName);
+    if (!entity) return undefined;
+    
+    // Find the aggregate ref and map to full definition
+    const ref = (entity.aggregateRefs || []).find(ref => ref.aggregateType === aggregateType);
+    return ref ? this.getAggregate(ref.aggregateType) : undefined;
   }
 
   // ============================================================================
@@ -599,16 +635,17 @@ export class UIModel {
   validateModel(): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    // Check that all entity aggregate references exist
-    for (const [entityName, entity] of Object.entries(this.entities)) {
-      if (entity.aggregateDefs) {
-        for (const aggregateDef of entity.aggregateDefs) {
-          if (!this.hasAggregate(aggregateDef.aggregateType)) {
-            errors.push(`Entity '${entityName}' references unknown aggregate '${aggregateDef.aggregateType}'`);
-          }
+    // Validate all entities
+    Object.entries(this.entities).forEach(([entityName, entity]) => {
+      // Check that all referenced aggregates exist
+      (entity.aggregateRefs || []).forEach(ref => {
+        if (!this.hasAggregate(ref.aggregateType)) {
+          errors.push(`Entity "${entityName}" references non-existent aggregate type "${ref.aggregateType}"`);
         }
-      }
-    }
+      });
+
+      // ... rest of validation code ...
+    });
 
     return {
       isValid: errors.length === 0,

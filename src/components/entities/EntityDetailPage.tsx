@@ -332,32 +332,20 @@ export function EntityDetailPage({
   // Get entity key for legacy API compatibility
   const entityKeyForAPI = entity?.entityKey || '';
   
-  // Prepare tab configurations - use aggregates from the unified entity if available
+  // Prepare tab configurations - use schema-driven approach for generic_drugs entities
   const tabConfigs: TabConfig[] = child
     ? [] // Child entities have no collections/tabs
-    : entity && entity.aggregates && entity.aggregates.length > 0
-    ? entity.aggregates
-        .sort((a, b) => a.ordinal - b.ordinal)
-        .map(collection => ({
-          key: collection.displayName.toLowerCase().replace(/\s+/g, '-'),
-          label: collection.displayName,
-          icon: <Database className="w-4 h-4" />,
-          data: convertUIAggregateToTabData(collection),
-          emptyMessage: `No ${collection.displayName.toLowerCase()} for this entity.`,
-          type: 'auto' as const,
-          schemaEntityName: collection.displayName.toLowerCase().replace(/\s+/g, '_'),
-        }))
     : entity
     ? [
-        // Fallback to legacy tab structure if no aggregates defined
+        // Schema-driven tab structure using API responses
         {
           key: 'aliases',
           label: 'Aliases',
           icon: <Tag className="w-4 h-4" />,
           data: convertUIAggregateToTabData(aliasesList),
           emptyMessage: 'No aliases for this generic drug.',
-          type: 'auto' as const,
           schemaEntityName: 'generic_aliases',
+          isTable: aliasesList?.isTable ?? true, // Use isTable from API response
         },
         {
           key: 'routes',
@@ -365,8 +353,8 @@ export function EntityDetailPage({
           icon: <Database className="w-4 h-4" />,
           data: convertUIAggregateToTabData(routesList),
           emptyMessage: 'No routes & dosing information for this generic drug.',
-          type: 'auto' as const,
           schemaEntityName: 'generic_routes',
+          isTable: routesList?.isTable ?? true, // Use isTable from API response
         },
         {
           key: 'approvals',
@@ -374,8 +362,8 @@ export function EntityDetailPage({
           icon: <Settings className="w-4 h-4" />,
           data: convertUIAggregateToTabData(approvalsList),
           emptyMessage: 'No approval information for this generic drug.',
-          type: 'auto' as const,
           schemaEntityName: 'generic_approvals',
+          isTable: approvalsList?.isTable ?? true, // Use isTable from API response
         },
         {
           key: 'manufactured-drugs',
@@ -383,8 +371,8 @@ export function EntityDetailPage({
           icon: <Database className="w-4 h-4" />,
           data: convertUIAggregateToTabData(manuDrugsList),
           emptyMessage: 'No manufactured drugs for this generic drug.',
-          type: 'auto' as const,
           schemaEntityName: 'generic_manu_drugs',
+          isTable: manuDrugsList?.isTable ?? true, // Use isTable from API response
         },
       ]
     : [];

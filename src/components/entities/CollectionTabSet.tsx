@@ -11,8 +11,8 @@ export interface TabConfig {
   icon?: React.ReactNode;
   data: any[] | Record<string, any>;
   emptyMessage?: string;
-  type?: 'table' | 'properties' | 'auto';
   schemaEntityName?: string; // Schema entity name for metadata lookup
+  isTable: boolean; // Whether this aggregate should be displayed as a table (true) or as properties (false) - REQUIRED
 }
 
 export interface TabCallbacks {
@@ -38,22 +38,24 @@ export function CollectionTabSet({
 }: CollectionTabSetProps) {
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.key || '');
 
-  const determineTabType = (data: any[] | Record<string, any>): 'table' | 'properties' => {
-    return Array.isArray(data) && data.length > 1 ? 'table' : 'properties';
+  const determineTabType = (isTable: boolean): 'table' | 'properties' => {
+    // Decision based SOLELY on the isTable property from aggregate schema
+    return isTable ? 'table' : 'properties';
   };
 
   const getTabData = (tabConfig: TabConfig) => {
-    if (tabConfig.type === 'table' || (tabConfig.type === 'auto' && determineTabType(tabConfig.data) === 'table')) {
+    if (determineTabType(tabConfig.isTable) === 'table') {
       return Array.isArray(tabConfig.data) ? tabConfig.data : [];
     } else {
-      return Array.isArray(tabConfig.data) && tabConfig.data.length === 1 
+      // For properties display: use first row if array has data, otherwise use data as-is
+      return Array.isArray(tabConfig.data) && tabConfig.data.length > 0
         ? tabConfig.data[0] 
         : Array.isArray(tabConfig.data) ? {} : tabConfig.data;
     }
   };
 
   const renderTabContent = (tabConfig: TabConfig) => {
-    const tabType = tabConfig.type === 'auto' ? determineTabType(tabConfig.data) : (tabConfig.type || 'properties');
+    const tabType = determineTabType(tabConfig.isTable);
     const tabCallbacks = callbacks[tabConfig.key] || {};
     
     if (tabType === 'table') {

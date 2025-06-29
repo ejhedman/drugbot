@@ -83,6 +83,7 @@ export class AggregateRepository extends BaseRepository {
       aggregateType: 'GenericRoute',
       displayName: 'Routes & Dosing',
       ordinal: 1,
+      isTable: ENTITY_AGGREGATES['generic_routes'].isTable,
       rows: rows
     };
 
@@ -122,6 +123,7 @@ export class AggregateRepository extends BaseRepository {
       aggregateType: 'GenericApproval',
       displayName: 'Approvals',
       ordinal: 2,
+      isTable: ENTITY_AGGREGATES['generic_approvals'].isTable,
       rows: rows
     };
 
@@ -161,6 +163,7 @@ export class AggregateRepository extends BaseRepository {
       aggregateType: 'GenericAlias',
       displayName: 'Aliases',
       ordinal: 3,
+      isTable: ENTITY_AGGREGATES['generic_aliases'].isTable,
       rows: rows
     };
 
@@ -200,6 +203,7 @@ export class AggregateRepository extends BaseRepository {
       aggregateType: 'GenericManuDrugs',
       displayName: 'Manufactured Drugs',
       ordinal: 4,
+      isTable: ENTITY_AGGREGATES['generic_manu_drugs'].isTable,
       rows: rows
     };
 

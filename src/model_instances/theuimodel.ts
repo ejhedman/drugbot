@@ -13,6 +13,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
     aggregateType: 'GenericAlias',
     displayName: 'Generic Alias',
     ordinal: 3,
+    isTable: true,
     propertyDefs: [
       {
         propertyName: 'uid',
@@ -63,6 +64,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
     aggregateType: 'GenericRoute',
     displayName: 'Drug Route & Dosing',
     ordinal: 2,
+    isTable: true,
     propertyDefs: [
       {
         propertyName: 'uid',
@@ -180,6 +182,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
     aggregateType: 'GenericApproval',
     displayName: 'Drug Approval',
     ordinal: 1,
+    isTable: true,
     propertyDefs: [
       {
         propertyName: 'uid',
@@ -254,6 +257,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
     aggregateType: 'GenericManuDrugs',
     displayName: 'Manufactured Drugs',
     ordinal: 4,
+    isTable: true,
     propertyDefs: [
       {
         propertyName: 'uid',
@@ -347,6 +351,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
 // Main entity schemas (only contains the actual entities, not sub-collections)
 export const ENTITIES: Record<string, UIEntityMeta> = {
   generic_drugs: {
+    entityType: 'generic_drugs',
     displayName: 'Generic Drug',
     pluralName: 'Generic Drugs',
     propertyDefs: [
@@ -374,7 +379,7 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
       },{
         propertyName: 'generic_name',
         ordinal: 23,
-        isEditable: false,
+        isEditable: true,
         isVisible: true,
         isRequired: true,
         isKey: false,
@@ -428,27 +433,27 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
         placeholder: 'Enter drug target (e.g., TNFi)'
       }
     ],
-    aggregateDefs: [
+    aggregateRefs: [
       {
-        displayName: 'Aliases',
         aggregateType: 'GenericAlias',
-        ordinal: 1
+        displayName: 'Aliases',
+        ordinal: 3
       },
       {
-        displayName: 'Routes & Dosing',
         aggregateType: 'GenericRoute',
+        displayName: 'Drug Route & Dosing',
         ordinal: 2
       },
       {
         aggregateType: 'GenericApproval',
-        displayName: 'Approvals',
-        ordinal: 3
+        displayName: 'Drug Approval',
+        ordinal: 1
       },
       {
+        aggregateType: 's',
         displayName: 'Manufactured Drugs',
-        aggregateType: 'GenericManuDrugs',
         ordinal: 4
-      },
+      }
     ]
   },
 
