@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '../lib/supabase-server';
 import { DBTable } from '@/model_defs/DBModel';
 import { UIProperty, UIEntityRef } from '@/model_defs';
+import { theUIModel, ENTITY_AGGREGATES } from '@/model_instances';
 
 /**
  * Base repository class containing common utilities used by all repositories
@@ -25,6 +26,71 @@ export class BaseRepository {
   // ============================================================================
   // PROPERTY GENERATION UTILITIES
   // ============================================================================
+
+  /**
+   * Get property metadata from UI schema
+   * @param tableName - The database table name
+   * @param propertyName - The property name to look up
+   * @param isChildEntity - Whether this is a child entity
+   */
+  protected getPropertyMetaFromSchema(tableName: string, propertyName: string, isChildEntity: boolean = false) {
+    // Map table names to entity/aggregate types
+    const entityTypeMap: Record<string, string> = {
+      'generic_drugs': 'generic_drugs',
+      'manu_drugs': 'manu_drugs'
+    };
+
+    const entityType = entityTypeMap[tableName];
+    if (!entityType) {
+      // Return secure defaults if no schema mapping found - hide everything not explicitly defined
+      return {
+        isVisible: false,
+        isEditable: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
+        controlType: 'text'
+      };
+    }
+
+    // Get the schema definition
+    const schema = theUIModel.getEntity(entityType);
+    if (!schema || !schema.propertyDefs) {
+      // Return secure defaults if no schema found - hide everything not explicitly defined
+      return {
+        isVisible: false,
+        isEditable: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
+        controlType: 'text'
+      };
+    }
+
+    // Find the property definition
+    const propertyDef = schema.propertyDefs.find(prop => prop.propertyName === propertyName);
+    if (propertyDef) {
+      return {
+        isVisible: propertyDef.isVisible,
+        isEditable: propertyDef.isEditable,
+        controlType: propertyDef.controlType,
+        isRequired: propertyDef.isRequired,
+        isId: propertyDef.isId,
+        displayName: propertyDef.displayName,
+        ordinal: propertyDef.ordinal
+      };
+    }
+
+    // Return secure defaults if property not found in schema - hide everything not explicitly defined
+    return {
+      isVisible: false,
+      isEditable: false,
+      isRequired: false,
+      isKey: false,
+      isId: false,
+      controlType: 'text'
+    };
+  }
 
   /**
    * Generate UIEntity properties dynamically from table fields and row data
@@ -52,27 +118,25 @@ export class BaseRepository {
       throw new Error(`No ${entityType} key field found in table ${table.name}`);
     }
 
-    // Define default fields to exclude from editing
-    const defaultExcludeFromEditing = [
-      keyField.name,
-      'generic_key',
-      'generic_uid',
-      ...excludeFromEditing
-    ];
-
     return table.fields
       .filter(field => field.name !== 'uid' && field.name !== 'row') // Skip system fields
-      .map((field, index) => ({
-        propertyName: field.name,
-        propertyValue: rowData[field.name] || '',
-        ordinal: index + 1,
-        isEditable: !field.is_primary_key && !defaultExcludeFromEditing.includes(field.name),
-        isVisible: true,
-        isKey: field.name === keyField.name, 
-        isId: false,                          // EJH: FIX THIS: isId
-        controlType: 'text',                  // EJH: FIX THIS: controlType
-        isRequired: false,                    // EJH: FIX THIS: isRequired
-      }));
+      .map((field, index) => {
+        // Get metadata from UI schema
+        const metadata = this.getPropertyMetaFromSchema(table.name, field.name, isChildEntity);
+        
+        return {
+          propertyName: field.name,
+          propertyValue: rowData[field.name] || '',
+          ordinal: metadata.ordinal || (index + 1),
+          isEditable: metadata.isEditable,
+          isVisible: metadata.isVisible,
+          isKey: field.name === keyField.name, 
+          isId: metadata.isId,
+          controlType: (metadata.controlType as UIProperty['controlType']) || 'text',
+          isRequired: metadata.isRequired,
+          ...(metadata.displayName && { displayName: metadata.displayName })
+        };
+      });
   }
 
   /**

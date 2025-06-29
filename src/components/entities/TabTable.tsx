@@ -109,6 +109,31 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     return field?.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  // Check if a field is editable using schema metadata
+  const isFieldEditable = (fieldName: string): boolean => {
+    if (!schemaEntityName) {
+      // If no schema name provided, assume editable unless it's a key/id field
+      return !fieldName.endsWith('_key') && !fieldName.endsWith('_uid') && fieldName !== 'uid';
+    }
+    
+    // First try to find in main entity schemas
+    let schema = theUIModel.getEntity(schemaEntityName);
+    
+    // If not found in main schemas, try sub-collections
+    if (!schema) {
+      schema = ENTITY_AGGREGATES[schemaEntityName];
+    }
+    
+    if (!schema || !schema.propertyDefs) {
+      // If no schema found, assume editable unless it's a key/id field
+      return !fieldName.endsWith('_key') && !fieldName.endsWith('_uid') && fieldName !== 'uid';
+    }
+    
+    // Check editability based on schema
+    const propertyDef = schema.propertyDefs.find((f: UIProperty) => f.propertyName === fieldName);
+    return propertyDef ? propertyDef.isEditable : true; // Assume editable if no definition found
+  };
+
   const handleEdit = (index: number) => {
     setEditingRow(index);
     setEditedData({ ...flatTableData[index] });
@@ -223,7 +248,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       
       // Add to original tableData format
       if (isUsingUIEntityData) {
-        // Create a new UIEntity structure
+        // Create a new UIEntity structure using schema metadata
         const newEntity = {
           entityUid: crypto.randomUUID(),
           entity_key: 'new-item',
@@ -232,8 +257,8 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
             propertyName: propName,
             propertyValue: newItemData[propName] || '',
             ordinal: index + 1,
-            isEditable: true,
-            isVisible: true,
+            isEditable: isFieldEditable(propName),
+            isVisible: true, // Columns are already filtered to visible only
             isKey: false
           })),
           aggregates: []
@@ -377,32 +402,34 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
           <form onSubmit={(e) => { e.preventDefault(); handleSubmitAdd(); }} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {isUsingUIEntityData ? (
-                <>
-                  <div className="space-y-2">
-                    <label className="label">Display Name</label>
-                    <input
-                      type="text"
-                      value={newItemData.displayName || ''}
-                      onChange={(e) => handleNewItemInputChange('displayName', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                      placeholder="Enter Display Name"
-                    />
-                  </div>
-                  {propertyColumns.map((propName) => (
-                    <div key={propName} className="space-y-2">
-                      <label className="label">{getFieldDisplayName(propName)}</label>
-                      <input
-                        type="text"
-                        value={newItemData[propName] || ''}
-                        onChange={(e) => handleNewItemInputChange(propName, e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                        placeholder={`Enter ${getFieldDisplayName(propName)}`}
-                      />
-                    </div>
-                  ))}
+                                  <>
+                    {isFieldEditable('displayName') && (
+                      <div className="space-y-2">
+                        <label className="label">Display Name</label>
+                        <input
+                          type="text"
+                          value={newItemData.displayName || ''}
+                          onChange={(e) => handleNewItemInputChange('displayName', e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
+                          placeholder="Enter Display Name"
+                        />
+                      </div>
+                    )}
+                                      {propertyColumns.filter(propName => isFieldEditable(propName)).map((propName) => (
+                      <div key={propName} className="space-y-2">
+                        <label className="label">{getFieldDisplayName(propName)}</label>
+                        <input
+                          type="text"
+                          value={newItemData[propName] || ''}
+                          onChange={(e) => handleNewItemInputChange(propName, e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
+                          placeholder={`Enter ${getFieldDisplayName(propName)}`}
+                        />
+                      </div>
+                    ))}
                 </>
               ) : (
-                Object.keys(newItemData).map((key) => (
+                Object.keys(newItemData).filter(key => isFieldEditable(key)).map((key) => (
                   <div key={key} className="space-y-2">
                     <label className="label">{getFieldDisplayName(key)}</label>
                     <input
@@ -475,17 +502,21 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                       {isUsingUIEntityData && (
                         <td className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
                           {editingRow === idx ? (
-                            <input
-                              type="text"
-                              value={editedData?.displayName?.toString() || ''}
-                              onChange={(e) => {
-                                setEditedData((prev: any) => ({
-                                  ...prev,
-                                  displayName: e.target.value
-                                }));
-                              }}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
-                            />
+                            isFieldEditable('displayName') ? (
+                              <input
+                                type="text"
+                                value={editedData?.displayName?.toString() || ''}
+                                onChange={(e) => {
+                                  setEditedData((prev: any) => ({
+                                    ...prev,
+                                    displayName: e.target.value
+                                  }));
+                                }}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
+                              />
+                            ) : (
+                              <span className="text-gray-500 italic">{row.displayName?.toString() || ''}</span>
+                            )
                           ) : (
                             row.displayName?.toString() || ''
                           )}
@@ -496,17 +527,21 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                         propertyColumns.map((propName, index) => (
                           <td key={propName} className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
                             {editingRow === idx ? (
-                              <input
-                                type="text"
-                                value={editedData?.[propName]?.toString() || ''}
-                                onChange={(e) => {
-                                  setEditedData((prev: any) => ({
-                                    ...prev,
-                                    [propName]: e.target.value
-                                  }));
-                                }}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
-                              />
+                              isFieldEditable(propName) ? (
+                                <input
+                                  type="text"
+                                  value={editedData?.[propName]?.toString() || ''}
+                                  onChange={(e) => {
+                                    setEditedData((prev: any) => ({
+                                      ...prev,
+                                      [propName]: e.target.value
+                                    }));
+                                  }}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
+                                />
+                              ) : (
+                                <span className="text-gray-500 italic">{row[propName]?.toString() || ''}</span>
+                              )
                             ) : (
                               row[propName]?.toString() || ''
                             )}
@@ -516,17 +551,21 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                         Object.keys(row).map((key, index, array) => (
                           <td key={key} className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
                             {editingRow === idx ? (
-                              <input
-                                type="text"
-                                value={editedData?.[key]?.toString() || ''}
-                                onChange={(e) => {
-                                  setEditedData((prev: any) => ({
-                                    ...prev,
-                                    [key]: e.target.value
-                                  }));
-                                }}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
-                              />
+                              isFieldEditable(key) ? (
+                                <input
+                                  type="text"
+                                  value={editedData?.[key]?.toString() || ''}
+                                  onChange={(e) => {
+                                    setEditedData((prev: any) => ({
+                                      ...prev,
+                                      [key]: e.target.value
+                                    }));
+                                  }}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
+                                />
+                              ) : (
+                                <span className="text-gray-500 italic">{row[key]?.toString() || ''}</span>
+                              )
                             ) : (
                               row[key]?.toString() || ''
                             )}

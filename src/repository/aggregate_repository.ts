@@ -4,6 +4,7 @@ import {
   UIAggregate,
   UIProperty,
 } from '@/model_defs';
+import { ENTITY_AGGREGATES } from '@/model_instances/TheUIModel';
 
 /**
  * Repository for aggregate operations
@@ -31,6 +32,27 @@ export class AggregateRepository extends BaseRepository {
       controlType: field.controlType as any,
     }));
   }
+
+  /**
+   * Get field definitions from UIModel schema
+   */
+  private getFieldsFromSchema(aggregateKey: string): Array<{name: string, ordinal: number, isEditable: boolean, isVisible: boolean, isKey: boolean, isId: boolean, isRequired: boolean, controlType: string}> {
+    const aggregateDef = ENTITY_AGGREGATES[aggregateKey];
+    if (!aggregateDef || !aggregateDef.propertyDefs) {
+      throw new Error(`Aggregate definition not found: ${aggregateKey}`);
+    }
+
+    return aggregateDef.propertyDefs.map((prop: any) => ({
+      name: prop.propertyName,
+      ordinal: prop.ordinal,
+      isEditable: prop.isEditable,
+      isVisible: prop.isVisible,
+      isKey: prop.isKey,
+      isId: prop.isId,
+      isRequired: prop.isRequired,
+      controlType: prop.controlType
+    }));
+  }
   
   // ============================================================================
   // GENERIC ROUTES
@@ -50,18 +72,8 @@ export class AggregateRepository extends BaseRepository {
       throw new Error(`Failed to fetch entity aggregates: ${error.message}`);
     }
 
-    // Define field structure for generic routes
-    const routeFields = [
-      { name: 'route_type', ordinal: 1, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'load_dose', ordinal: 2, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'maintain_dose', ordinal: 3, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'load_measure', ordinal: 4, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'maintain_measure', ordinal: 5, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'load_reg', ordinal: 6, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'maintain_reg', ordinal: 7, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'montherapy', ordinal: 8, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'half_life', ordinal: 9, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' }
-    ];
+    // Get field definitions from UIModel schema instead of hardcoding
+    const routeFields = this.getFieldsFromSchema('generic_routes');
 
     // Convert each database row to a row of properties
     const rows: UIProperty[][] = data.map(row => this.createPropertiesFromRow(row, routeFields));
@@ -99,20 +111,8 @@ export class AggregateRepository extends BaseRepository {
       throw new Error(`Failed to fetch generic approval aggregates: ${error.message}`);
     }
 
-    // Define field structure for generic approvals
-    const approvalFields = [
-      { name: 'uid', ordinal: 1, isEditable: false, isVisible: false, isKey: true, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'generic_key', ordinal: 2, isEditable: false, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'generic_uid', ordinal: 3, isEditable: false, isVisible: false, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'route_type', ordinal: 4, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'country', ordinal: 5, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'indication', ordinal: 6, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'populations', ordinal: 7, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'approval_date', ordinal: 8, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'discon_date', ordinal: 9, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'box_warning', ordinal: 10, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'box_warning_date', ordinal: 11, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' }
-    ];
+    // Get field definitions from UIModel schema instead of hardcoding
+    const approvalFields = this.getFieldsFromSchema('generic_approvals');
 
     // Convert each database row to a row of properties
     const rows: UIProperty[][] = data.map(row => this.createPropertiesFromRow(row, approvalFields));
@@ -150,14 +150,8 @@ export class AggregateRepository extends BaseRepository {
       throw new Error(`Failed to fetch generic alias aggregates: ${error.message}`);
     }
 
-    // Define field structure for generic aliases
-    const aliasFields = [
-      { name: 'uid', ordinal: 1, isEditable: false, isVisible: false, isKey: true, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'row', ordinal: 2, isEditable: false, isVisible: false, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'generic_key', ordinal: 3, isEditable: false, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'generic_uid', ordinal: 4, isEditable: false, isVisible: false, isKey: false, isId: false, isRequired: true, controlType: 'text' },
-      { name: 'alias', ordinal: 5, isEditable: true, isVisible: true, isKey: false, isId: false, isRequired: true, controlType: 'text' }
-    ];
+    // Get field definitions from UIModel schema instead of hardcoding
+    const aliasFields = this.getFieldsFromSchema('generic_aliases');
 
     // Convert each database row to a row of properties
     const rows: UIProperty[][] = data.map(row => this.createPropertiesFromRow(row, aliasFields));
@@ -171,6 +165,45 @@ export class AggregateRepository extends BaseRepository {
     };
 
     this.log('GET_BY_ENTITY_KEY_SUCCESS', 'GENERIC_ALIAS_AGGREGATES', { 
+      entityKey, 
+      recordCount: rows.length 
+    });
+    return aggregate;
+  }
+
+  // ============================================================================
+  // GENERIC MANUFACTURED DRUGS AGGREGATES
+  // ============================================================================
+  async getGenericManuDrugsAggregatesByEntityKey(entityKey: string): Promise<UIAggregate> {
+    this.log('GET_BY_ENTITY_KEY', 'GENERIC_MANU_DRUGS_AGGREGATES', { entityKey });
+    const supabase = await createServerSupabaseClient();
+    
+    const { data, error } = await supabase
+      .from('manu_drugs')
+      .select('*')
+      .eq('generic_key', entityKey)
+      .order('drug_name');
+
+    if (error) {
+      this.log('GET_BY_ENTITY_KEY_ERROR', 'GENERIC_MANU_DRUGS_AGGREGATES', { entityKey, error: error.message });
+      throw new Error(`Failed to fetch generic manufactured drugs aggregates: ${error.message}`);
+    }
+
+    // Get field definitions from UIModel schema instead of hardcoding
+    const manuDrugFields = this.getFieldsFromSchema('generic_manu_drugs');
+
+    // Convert each database row to a row of properties
+    const rows: UIProperty[][] = data.map(row => this.createPropertiesFromRow(row, manuDrugFields));
+
+    const aggregate: UIAggregate = {
+      entityUid: entityKey,
+      aggregateType: 'GenericManuDrugs',
+      displayName: 'Manufactured Drugs',
+      ordinal: 4,
+      rows: rows
+    };
+
+    this.log('GET_BY_ENTITY_KEY_SUCCESS', 'GENERIC_MANU_DRUGS_AGGREGATES', { 
       entityKey, 
       recordCount: rows.length 
     });

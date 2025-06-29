@@ -42,6 +42,7 @@ export function EntityDetailPage({
   const [aliasesList, setAliasesList] = useState<UIAggregate | null>(null);
   const [routesList, setRoutesList] = useState<UIAggregate | null>(null);
   const [approvalsList, setApprovalsList] = useState<UIAggregate | null>(null);
+  const [manuDrugsList, setManuDrugsList] = useState<UIAggregate | null>(null);
 
   const operations = useEntityOperations();
 
@@ -58,6 +59,7 @@ export function EntityDetailPage({
       setAliasesList(null);
       setRoutesList(null);
       setApprovalsList(null);
+      setManuDrugsList(null);
     }
   }, [entityKey, childKey]);
 
@@ -103,11 +105,12 @@ export function EntityDetailPage({
   const fetchEntityCollections = async (entityKey: string) => {
     try {
       setCollectionsLoading(true);
-      // Fetch all three collections for the entity
-      const [routesData, aliasesRes, approvalsRes] = await Promise.all([
+      // Fetch all four collections for the entity
+      const [routesData, aliasesRes, approvalsRes, manuDrugsRes] = await Promise.all([
         fetchRoutes(entityKey),
         fetch(`/api/generic-aliases?entityKey=${encodeURIComponent(entityKey)}`), // aliases (generic_aliases)
-        fetch(`/api/generic-approvals?entityKey=${encodeURIComponent(entityKey)}`) // approvals (generic_approvals)
+        fetch(`/api/generic-approvals?entityKey=${encodeURIComponent(entityKey)}`), // approvals (generic_approvals)
+        fetch(`/api/generic-manu-drugs?entityKey=${encodeURIComponent(entityKey)}`) // manufactured drugs (manu_drugs)
       ]);
 
       // Set routes data (already processed by fetchRoutes)
@@ -128,10 +131,19 @@ export function EntityDetailPage({
       } else {
         setApprovalsList(null);
       }
+
+      // Fetch manufactured drugs (now returns single UIAggregate)
+      if (manuDrugsRes.ok) {
+        const manuDrugs: UIAggregate = await manuDrugsRes.json();
+        setManuDrugsList(manuDrugs);
+      } else {
+        setManuDrugsList(null);
+      }
     } catch (error) {
       setAliasesList(null);
       setRoutesList(null);
       setApprovalsList(null);
+      setManuDrugsList(null);
     } finally {
       setCollectionsLoading(false);
     }
@@ -283,7 +295,10 @@ export function EntityDetailPage({
     return uiEntities.map(uiEntity => {
       const obj: Record<string, any> = {};
       uiEntity.properties?.forEach(prop => {
-        obj[prop.propertyName] = prop.propertyValue;
+        // Only include properties that are marked as visible
+        if (prop.isVisible) {
+          obj[prop.propertyName] = prop.propertyValue;
+        }
       });
       return obj;
     });
@@ -300,7 +315,10 @@ export function EntityDetailPage({
       return uiAggregate.rows.map(row => {
         const obj: Record<string, any> = {};
         row.forEach(prop => {
-          obj[prop.propertyName] = prop.propertyValue;
+          // Only include properties that are marked as visible
+          if (prop.isVisible) {
+            obj[prop.propertyName] = prop.propertyValue;
+          }
         });
         return obj;
       });
@@ -358,6 +376,15 @@ export function EntityDetailPage({
           emptyMessage: 'No approval information for this generic drug.',
           type: 'auto' as const,
           schemaEntityName: 'generic_approvals',
+        },
+        {
+          key: 'manufactured-drugs',
+          label: 'Manufactured Drugs',
+          icon: <Database className="w-4 h-4" />,
+          data: convertUIAggregateToTabData(manuDrugsList),
+          emptyMessage: 'No manufactured drugs for this generic drug.',
+          type: 'auto' as const,
+          schemaEntityName: 'generic_manu_drugs',
         },
       ]
     : [];

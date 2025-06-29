@@ -44,6 +44,31 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
     return field?.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  // Check if a field is editable using schema metadata
+  const isFieldEditable = (fieldName: string): boolean => {
+    if (!schemaEntityName) {
+      // If no schema name provided, assume editable unless it's a key/id field
+      return !fieldName.endsWith('_key') && !fieldName.endsWith('_uid') && fieldName !== 'uid';
+    }
+    
+    // First try to find in main entity schemas
+    let schema = theUIModel.getEntity(schemaEntityName);
+    
+    // If not found in main schemas, try sub-collections
+    if (!schema) {
+      schema = ENTITY_AGGREGATES[schemaEntityName];
+    }
+    
+    if (!schema || !schema.propertyDefs) {
+      // If no schema found, assume editable unless it's a key/id field
+      return !fieldName.endsWith('_key') && !fieldName.endsWith('_uid') && fieldName !== 'uid';
+    }
+    
+    // Check editability based on schema
+    const propertyDef = schema.propertyDefs.find((f: UIProperty) => f.propertyName === fieldName);
+    return propertyDef ? propertyDef.isEditable : true; // Assume editable if no definition found
+  };
+
   const handleEdit = () => {
     setIsEditing(true);
     setEditedData({ ...data });
@@ -85,7 +110,34 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
     );
   }
 
-  const properties = Object.entries(data);
+  // Filter properties based on visibility from schema metadata
+  const getVisibleProperties = (data: Record<string, any>): [string, any][] => {
+    if (!schemaEntityName) {
+      // If no schema name provided, show all properties
+      return Object.entries(data);
+    }
+    
+    // First try to find in main entity schemas
+    let schema = theUIModel.getEntity(schemaEntityName);
+    
+    // If not found in main schemas, try sub-collections
+    if (!schema) {
+      schema = ENTITY_AGGREGATES[schemaEntityName];
+    }
+    
+    if (!schema || !schema.propertyDefs) {
+      // If no schema found, show all properties
+      return Object.entries(data);
+    }
+    
+    // Filter properties based on isVisible flag in schema
+    return Object.entries(data).filter(([key, value]) => {
+      const propertyDef = schema.propertyDefs?.find((f: UIProperty) => f.propertyName === key);
+      return propertyDef ? propertyDef.isVisible : true; // Show if no definition found
+    });
+  };
+
+  const properties = getVisibleProperties(data);
 
   return (
     <div className="space-y-3">
@@ -138,15 +190,15 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
             <span className="label font-medium min-w-32">{getFieldDisplayName(key)}:</span>
             <div className="flex-1">
               {isEditing ? (
-                key.endsWith('_key') || key.endsWith('_uid') || key === 'uid' ? (
-                  <span className="label">{value}</span>
-                ) : (
+                isFieldEditable(key) ? (
                   <input
                     type="text"
                     value={editedData[key] || ''}
                     onChange={(e) => handleInputChange(key, e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
                   />
+                ) : (
+                  <span className="text-gray-500 italic">{value}</span>
                 )
               ) : (
                 <span className="value">{value}</span>

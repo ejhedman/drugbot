@@ -20,7 +20,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         isEditable: false,
         isVisible: false,
         isRequired: false,
-        isKey: true,
+        isKey: false,
         isId: true,
         displayName: 'ID',
         controlType: 'text'
@@ -37,17 +37,17 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
       },{
         propertyName: 'generic_key',
         ordinal: 3,
-        isEditable: true,
+        isEditable: false,
         isVisible: false,
         isRequired: false,
-        isKey: false,
+        isKey: true,
         isId: false,
         displayName: 'Generic Key',
         controlType: 'text'
       },{
         propertyName: 'alias',
         ordinal: 3,
-        isEditable: false,
+        isEditable: true,
         isVisible: true,
         isRequired: true,
         isKey: false,
@@ -68,9 +68,9 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         propertyName: 'uid',
         ordinal: 1,
         isEditable: false,
-        isVisible: true,
-        isRequired: true,
-        isKey: true,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
         isId: true,
         displayName: 'ID',
         controlType: 'text'
@@ -188,7 +188,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         isVisible: false,
         isRequired: false,
         isKey: false,
-        isId: false,
+        isId: true,
         displayName: 'ID',
         controlType: 'text'
       },{
@@ -248,6 +248,99 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         placeholder: 'Enter black box warning information'
       }
     ],
+  },
+
+  generic_manu_drugs: {
+    aggregateType: 'GenericManuDrugs',
+    displayName: 'Manufactured Drugs',
+    ordinal: 4,
+    propertyDefs: [
+      {
+        propertyName: 'uid',
+        ordinal: 1,
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
+        isId: true,
+        displayName: 'ID',
+        controlType: 'text'
+      },{
+        propertyName: 'manu_drug_key',
+        ordinal: 2,
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isKey: true,
+        isId: false,
+        displayName: 'Product Key',
+        controlType: 'text'
+      },{
+        propertyName: 'generic_uid',
+        ordinal: 3,
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
+        displayName: 'Generic Drug ID',
+        controlType: 'text'
+      },{
+        propertyName: 'drug_name',
+        ordinal: 4,
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
+        displayName: 'Brand Name',
+        controlType: 'text',
+        placeholder: 'Enter brand name'
+      },{
+        propertyName: 'manufacturer',
+        ordinal: 5,
+        isEditable: true,
+        isVisible: true,
+        isRequired: true,
+        isKey: false,
+        isId: false,
+        displayName: 'Manufacturer',
+        controlType: 'text',
+        placeholder: 'Enter manufacturer name'
+      },{
+        propertyName: 'biosimilar',
+        ordinal: 6,
+        isEditable: true,
+        isVisible: true,
+        isRequired: false,
+        isKey: false,
+        isId: false,
+        displayName: 'Biosimilar',
+        controlType: 'checkbox'
+      },{
+        propertyName: 'biosimilar_suffix',
+        ordinal: 7,
+        isEditable: true,
+        isVisible: true,
+        isRequired: false,
+        isKey: false,
+        isId: false,
+        displayName: 'Biosimilar Suffix',
+        controlType: 'text',
+        placeholder: 'Enter FDA suffix (e.g., -aacf)'
+      },{
+        propertyName: 'biosimilar_originator',
+        ordinal: 8,
+        isEditable: true,
+        isVisible: true,
+        isRequired: false,
+        isKey: false,
+        isId: false,
+        displayName: 'Biosimilar Originator',
+        controlType: 'text',
+        placeholder: 'Enter original brand name'
+      }
+    ],
   }
 };
 
@@ -261,9 +354,9 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
         propertyName: 'uid',
         ordinal: 1,
         isEditable: false,
-        isVisible: true,
-        isRequired: true,
-        isKey: true,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
         isId: true,
         displayName: 'ID',
         controlType: 'text'
@@ -351,6 +444,11 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
         displayName: 'Approvals',
         ordinal: 3
       },
+      {
+        displayName: 'Manufactured Drugs',
+        aggregateType: 'GenericManuDrugs',
+        ordinal: 4
+      },
     ]
   },
 
@@ -379,13 +477,23 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
         displayName: 'Product Key',
         controlType: 'text'
       },{
+        propertyName: 'generic_key',
+        ordinal: 3,
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isKey: false,
+        isId: false,
+        displayName: 'Generic Key',
+        controlType: 'text'
+      },{
         propertyName: 'generic_uid',
         ordinal: 30,
         isEditable: false,
-        isVisible: true,
-        isRequired: true,
+        isVisible: false,
+        isRequired: false,
         isKey: false,
-        isId: false,
+        isId: true,
         displayName: 'Generic Drug ID',
         controlType: 'text'
       },{

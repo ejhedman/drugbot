@@ -92,7 +92,8 @@ const genericDrugsMapping: EntityMapping = {
   aggregateReferences: [
     'GenericAlias',
     'GenericRoute', 
-    'GenericApproval'
+    'GenericApproval',
+    'GenericManuDrugs'
   ]
 };
 
@@ -294,6 +295,62 @@ const genericApprovalsMapping: AggregateMapping = {
   ]
 };
 
+/**
+ * Generic Manufactured Drugs Aggregate Mapping
+ * Maps the GenericManuDrugs UI aggregate to the manu_drugs database table
+ */
+const genericManuDrugsMapping: AggregateMapping = {
+  aggregateType: 'GenericManuDrugs',
+  tableName: 'manu_drugs',
+  parentKeyField: 'generic_uid',
+  propertyMappings: [
+    {
+      propertyName: 'uid',
+      tableName: 'manu_drugs',
+      fieldName: 'uid'
+    },
+    {
+      propertyName: 'manu_drug_key',
+      tableName: 'manu_drugs',
+      fieldName: 'manu_drug_key'
+    },
+    {
+      propertyName: 'generic_uid',
+      tableName: 'manu_drugs',
+      fieldName: 'generic_uid'
+    },
+    {
+      propertyName: 'drug_name',
+      tableName: 'manu_drugs',
+      fieldName: 'drug_name'
+    },
+    {
+      propertyName: 'manufacturer',
+      tableName: 'manu_drugs',
+      fieldName: 'manufacturer'
+    },
+    {
+      propertyName: 'biosimilar',
+      tableName: 'manu_drugs',
+      fieldName: 'biosimilar',
+      transform: {
+        fromDB: 'integerToBoolean',
+        toDB: 'booleanToInteger'
+      }
+    },
+    {
+      propertyName: 'biosimilar_suffix',
+      tableName: 'manu_drugs',
+      fieldName: 'biosimilar_suffix'
+    },
+    {
+      propertyName: 'biosimilar_originator',
+      tableName: 'manu_drugs',
+      fieldName: 'biosimilar_originator'
+    }
+  ]
+};
+
 // ============================================================================
 // COMPLETE MODEL MAP
 // ============================================================================
@@ -317,7 +374,8 @@ export const drugBotModelMap: ModelMap = {
   aggregateMappings: {
     GenericAlias: genericAliasesMapping,
     GenericRoute: genericRoutesMapping,
-    GenericApproval: genericApprovalsMapping
+    GenericApproval: genericApprovalsMapping,
+    GenericManuDrugs: genericManuDrugsMapping
   }
 };
 
