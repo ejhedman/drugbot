@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { entityRepository, childEntityRepository } from '@/repository';
 import { UIEntity } from '@/model_defs';
 import { CreateChildEntityRequest } from '@/model_defs/DBModel';
-import { genericDrugsTable, manuDrugsTable } from '@/repository/thedb';
+import { genericDrugsTable, manuDrugsTable } from '@/model_instances/TheDBModel';
 
 export async function GET(request: NextRequest) {
   try {

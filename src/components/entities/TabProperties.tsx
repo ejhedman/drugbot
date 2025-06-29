@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { Edit, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TabContentSkeleton } from '@/components/ui/skeleton';
-import { MetadataRepository } from '@/model_instances/metadata-repository';
-import { ENTITY_AGGREGATES } from '@/model_instances/theuimodel';
+import { theUIModel, ENTITY_AGGREGATES } from '@/model_instances';
 import { UIProperty } from '@/model_defs/UIModel';
 
 interface TabPropertiesProps {
@@ -22,8 +21,6 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Record<string, any>>({});
   
-  const metadataRepo = new MetadataRepository();
-  
   // Get display name for a field using schema metadata
   const getFieldDisplayName = (fieldName: string): string => {
     if (!schemaEntityName) {
@@ -32,7 +29,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
     }
     
     // First try to find in main entity schemas
-    let schema = metadataRepo.getEntitySchema(schemaEntityName);
+    let schema = theUIModel.getEntity(schemaEntityName);
     
     // If not found in main schemas, try sub-collections
     if (!schema) {
@@ -43,7 +40,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
       return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
     
-    const field = (schema.properties || []).find((f: UIProperty) => (f as any).name === fieldName || f.propertyName === fieldName);
+    const field = (schema.propertyDefs || []).find((f: UIProperty) => f.propertyName === fieldName);
     return field?.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 

@@ -5,7 +5,7 @@ import {
   CreateEntityRequest,
   UpdateEntityRequest
 } from '@/model_defs/DBModel';
-import { manuDrugsTable, genericDrugsTable } from './thedb';
+import { manuDrugsTable, genericDrugsTable } from '../model_instances/TheDBModel';
 
 /**
  * Repository for Entity operations (generic_drugs table)

@@ -10,7 +10,7 @@
 // ============================================================================
 
 export type { UIProperty, UIAggregate, UIEntity, UIEntityRef } from './UIModel';
-export { isUIProperty, isUIAggregate, isUIEntity } from './UIModel';
+// export { isUIProperty, isUIAggregate, isUIEntity } from './UIModel';
 
 // ============================================================================
 // CORE DATABASE TYPES (imported from separate file)
@@ -26,3 +26,26 @@ export {
   getPrimaryKeyFields, 
   getForeignKeyFields 
 } from './DBModel';
+
+// ============================================================================
+// MODEL MAPPING TYPES (imported from separate file)
+// ============================================================================
+
+export type { 
+  PropertyMapping, 
+  EntityMapping, 
+  AggregateMapping, 
+  ModelMap, 
+  MappingContext, 
+  MappingResult 
+} from './ModelMap';
+
+export { 
+  isPropertyMapping, 
+  isEntityMapping, 
+  isAggregateMapping, 
+  isModelMap, 
+  findPropertyMapping, 
+  findAggregatePropertyMapping, 
+  getReferencedTables 
+} from './ModelMap';

@@ -5,7 +5,7 @@
  * Generated from ddl/00_table_ddl.sql
  */
 
-import { DBSchema, DBTable } from '../model_defs/DBModel';
+import { DBSchema, DBTable, DBModel } from '../model_defs/DBModel';
 
 // ============================================================================
 // LOOKUP TABLES
@@ -602,4 +602,27 @@ export {
   genericApprovalsTable,
   manuDrugsTable,
   entityRelationshipsTable
-}; 
+};
+
+// ============================================================================
+// DATABASE MODEL WRAPPER INSTANCE
+// ============================================================================
+
+/**
+ * The complete database model wrapper instance for the DrugBot application
+ * 
+ * This is the primary interface for accessing database model information.
+ * Instead of working directly with the schema and tables, consumers should
+ * use this wrapper instance which provides convenient methods for querying
+ * the database model.
+ * 
+ * Usage Examples:
+ * - theDBModel.getTable('generic_drugs')
+ * - theDBModel.getTableField('generic_drugs', 'generic_name')
+ * - theDBModel.getPrimaryKeyFields('generic_drugs')
+ * - theDBModel.getForeignKeyFields('generic_aliases')
+ */
+export const theDBModel = new DBModel(drugBotDBSchema);
+
+// Export as default for convenience
+export default theDBModel; 

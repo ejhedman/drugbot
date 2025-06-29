@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { entityRepository, childEntityRepository } from '@/repository';
 import { UpdateChildEntityRequest } from '@/model_defs/DBModel';
-import { manuDrugsTable } from '@/repository/thedb';
+import { manuDrugsTable } from '@/model_instances/TheDBModel';
 
 export async function GET(
   request: NextRequest,

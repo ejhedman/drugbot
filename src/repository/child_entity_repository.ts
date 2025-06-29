@@ -5,7 +5,7 @@ import {
   UpdateChildEntityRequest
 } from '@/model_defs/DBModel';
 import { DBTable } from '@/model_defs/DBModel';
-import { genericDrugsTable } from './thedb';
+import { genericDrugsTable } from '../model_instances/TheDBModel';
 
 /**
  * Repository for Child Entity operations (manu_drugs table)

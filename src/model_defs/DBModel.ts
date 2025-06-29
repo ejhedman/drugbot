@@ -238,5 +238,463 @@ export interface UpdateChildUIAggregateRequest {
   }[];
 }
 
+/**
+ * DBModelWrapper - Encapsulates database model definitions with utility methods
+ * 
+ * This class provides a unified interface for accessing database model metadata,
+ * including tables, fields, and their properties. It includes all the utility 
+ * functions needed to work with the database schema.
+ */
+export class DBModel {
+  private tables: Map<string, DBTable>;
+  private schema: DBSchema;
+
+  constructor(schema: DBSchema) {
+    this.schema = schema;
+    this.tables = new Map();
+    
+    // Index tables by name for fast lookup
+    for (const table of schema.tables) {
+      this.tables.set(table.name, table);
+    }
+  }
+
+  // ============================================================================
+  // SCHEMA OPERATIONS
+  // ============================================================================
+
+  /**
+   * Get the complete schema definition
+   */
+  getSchema(): DBSchema {
+    return { ...this.schema };
+  }
+
+  /**
+   * Get schema name
+   */
+  getSchemaName(): string {
+    return this.schema.name;
+  }
+
+  /**
+   * Get schema version
+   */
+  getSchemaVersion(): string {
+    return this.schema.version;
+  }
+
+  /**
+   * Get schema description
+   */
+  getSchemaDescription(): string | undefined {
+    return this.schema.description;
+  }
+
+  // ============================================================================
+  // TABLE OPERATIONS
+  // ============================================================================
+
+  /**
+   * Get a table by name
+   */
+  getTable(tableName: string): DBTable | undefined {
+    return this.tables.get(tableName);
+  }
+
+  /**
+   * Get all table names
+   */
+  getTableNames(): string[] {
+    return Array.from(this.tables.keys());
+  }
+
+  /**
+   * Get all tables
+   */
+  getAllTables(): DBTable[] {
+    return Array.from(this.tables.values());
+  }
+
+  /**
+   * Check if a table exists
+   */
+  hasTable(tableName: string): boolean {
+    return this.tables.has(tableName);
+  }
+
+  /**
+   * Get table description
+   */
+  getTableDescription(tableName: string): string | undefined {
+    const table = this.getTable(tableName);
+    return table?.description;
+  }
+
+  /**
+   * Get tables that match a pattern
+   */
+  findTablesByPattern(pattern: RegExp): DBTable[] {
+    return this.getAllTables().filter(table => pattern.test(table.name));
+  }
+
+  // ============================================================================
+  // FIELD OPERATIONS
+  // ============================================================================
+
+  /**
+   * Get all fields for a table
+   */
+  getTableFields(tableName: string): DBField[] {
+    const table = this.getTable(tableName);
+    return table ? [...table.fields] : [];
+  }
+
+  /**
+   * Get a specific field from a table
+   */
+  getTableField(tableName: string, fieldName: string): DBField | undefined {
+    const table = this.getTable(tableName);
+    if (!table) return undefined;
+    
+    return table.fields.find(field => field.name === fieldName);
+  }
+
+  /**
+   * Check if a field exists in a table
+   */
+  hasTableField(tableName: string, fieldName: string): boolean {
+    return this.getTableField(tableName, fieldName) !== undefined;
+  }
+
+  /**
+   * Get field names for a table
+   */
+  getTableFieldNames(tableName: string): string[] {
+    const fields = this.getTableFields(tableName);
+    return fields.map(field => field.name);
+  }
+
+  /**
+   * Find fields by name across all tables
+   */
+  findFieldsByName(fieldName: string): Array<{ table: string; field: DBField }> {
+    const results: Array<{ table: string; field: DBField }> = [];
+    
+    for (const table of this.getAllTables()) {
+      const field = table.fields.find(f => f.name === fieldName);
+      if (field) {
+        results.push({ table: table.name, field });
+      }
+    }
+    
+    return results;
+  }
+
+  /**
+   * Find fields by data type across all tables
+   */
+  findFieldsByDataType(datatype: string): Array<{ table: string; field: DBField }> {
+    const results: Array<{ table: string; field: DBField }> = [];
+    
+    for (const table of this.getAllTables()) {
+      const matchingFields = table.fields.filter(f => f.datatype === datatype);
+      for (const field of matchingFields) {
+        results.push({ table: table.name, field });
+      }
+    }
+    
+    return results;
+  }
+
+  // ============================================================================
+  // PRIMARY KEY OPERATIONS
+  // ============================================================================
+
+  /**
+   * Get primary key fields for a table
+   */
+  getPrimaryKeyFields(tableName: string): DBField[] {
+    const fields = this.getTableFields(tableName);
+    return fields.filter(field => field.is_primary_key);
+  }
+
+  /**
+   * Get the primary key field names for a table
+   */
+  getPrimaryKeyFieldNames(tableName: string): string[] {
+    const pkFields = this.getPrimaryKeyFields(tableName);
+    return pkFields.map(field => field.name);
+  }
+
+  /**
+   * Check if a table has a primary key
+   */
+  hasPrimaryKey(tableName: string): boolean {
+    return this.getPrimaryKeyFields(tableName).length > 0;
+  }
+
+  /**
+   * Get the single primary key field (assumes single-column primary key)
+   */
+  getPrimaryKeyField(tableName: string): DBField | undefined {
+    const pkFields = this.getPrimaryKeyFields(tableName);
+    return pkFields.length === 1 ? pkFields[0] : undefined;
+  }
+
+  // ============================================================================
+  // FOREIGN KEY OPERATIONS
+  // ============================================================================
+
+  /**
+   * Get foreign key fields for a table
+   */
+  getForeignKeyFields(tableName: string): DBField[] {
+    const fields = this.getTableFields(tableName);
+    return fields.filter(field => field.is_foreign_key);
+  }
+
+  /**
+   * Get foreign key field names for a table
+   */
+  getForeignKeyFieldNames(tableName: string): string[] {
+    const fkFields = this.getForeignKeyFields(tableName);
+    return fkFields.map(field => field.name);
+  }
+
+  /**
+   * Check if a table has foreign keys
+   */
+  hasForeignKeys(tableName: string): boolean {
+    return this.getForeignKeyFields(tableName).length > 0;
+  }
+
+  /**
+   * Find all foreign key relationships (field name must end with '_uid' or '_id')
+   */
+  findForeignKeyRelationships(): Array<{
+    fromTable: string;
+    fromField: string;
+    toTable?: string;
+    toField?: string;
+  }> {
+    const relationships: Array<{
+      fromTable: string;
+      fromField: string;
+      toTable?: string;
+      toField?: string;
+    }> = [];
+
+    for (const table of this.getAllTables()) {
+      const fkFields = this.getForeignKeyFields(table.name);
+      
+      for (const field of fkFields) {
+        relationships.push({
+          fromTable: table.name,
+          fromField: field.name,
+          // Simple heuristic: if field ends with _uid, try to find matching table
+          toTable: this.inferReferencedTable(field.name),
+          toField: 'uid' // Most of our tables use 'uid' as primary key
+        });
+      }
+    }
+
+    return relationships;
+  }
+
+  /**
+   * Infer referenced table from foreign key field name
+   * This is a simple heuristic based on naming conventions
+   */
+  private inferReferencedTable(fieldName: string): string | undefined {
+    // If field is generic_uid, try to find generic_drugs table
+    if (fieldName.endsWith('_uid')) {
+      const prefix = fieldName.replace('_uid', '');
+      const possibleTableNames = [
+        prefix,
+        `${prefix}s`,
+        `${prefix}_table`,
+        `${prefix}_tables`
+      ];
+      
+      for (const tableName of possibleTableNames) {
+        if (this.hasTable(tableName)) {
+          return tableName;
+        }
+      }
+    }
+    
+    return undefined;
+  }
+
+  // ============================================================================
+  // FIELD TYPE OPERATIONS
+  // ============================================================================
+
+  /**
+   * Get nullable fields for a table
+   */
+  getNullableFields(tableName: string): DBField[] {
+    const fields = this.getTableFields(tableName);
+    return fields.filter(field => field.is_nullable);
+  }
+
+  /**
+   * Get non-nullable fields for a table
+   */
+  getNonNullableFields(tableName: string): DBField[] {
+    const fields = this.getTableFields(tableName);
+    return fields.filter(field => !field.is_nullable);
+  }
+
+  /**
+   * Get fields with default values for a table
+   */
+  getFieldsWithDefaults(tableName: string): DBField[] {
+    const fields = this.getTableFields(tableName);
+    return fields.filter(field => field.default_value !== undefined);
+  }
+
+  /**
+   * Get string fields for a table
+   */
+  getStringFields(tableName: string): DBField[] {
+    const fields = this.getTableFields(tableName);
+    return fields.filter(field => 
+      field.datatype === 'VARCHAR' || 
+      field.datatype === 'TEXT' || 
+      field.datatype === 'CHAR'
+    );
+  }
+
+  /**
+   * Get numeric fields for a table
+   */
+  getNumericFields(tableName: string): DBField[] {
+    const fields = this.getTableFields(tableName);
+    return fields.filter(field => 
+      field.datatype === 'INTEGER' || 
+      field.datatype === 'DECIMAL' || 
+      field.datatype === 'NUMERIC' ||
+      field.datatype === 'FLOAT' ||
+      field.datatype === 'DOUBLE'
+    );
+  }
+
+  /**
+   * Get date fields for a table
+   */
+  getDateFields(tableName: string): DBField[] {
+    const fields = this.getTableFields(tableName);
+    return fields.filter(field => 
+      field.datatype === 'DATE' || 
+      field.datatype === 'TIMESTAMP' || 
+      field.datatype === 'TIMESTAMP WITH TIME ZONE'
+    );
+  }
+
+  // ============================================================================
+  // UTILITY OPERATIONS
+  // ============================================================================
+
+  /**
+   * Get a summary of the database model
+   */
+  getModelSummary(): {
+    schemaName: string;
+    schemaVersion: string;
+    tableCount: number;
+    totalFieldCount: number;
+    tables: Array<{
+      name: string;
+      fieldCount: number;
+      hasPrimaryKey: boolean;
+      foreignKeyCount: number;
+    }>;
+  } {
+    const tables = this.getAllTables();
+    
+    return {
+      schemaName: this.schema.name,
+      schemaVersion: this.schema.version,
+      tableCount: tables.length,
+      totalFieldCount: tables.reduce((sum, table) => sum + table.fields.length, 0),
+      tables: tables.map(table => ({
+        name: table.name,
+        fieldCount: table.fields.length,
+        hasPrimaryKey: this.hasPrimaryKey(table.name),
+        foreignKeyCount: this.getForeignKeyFields(table.name).length
+      }))
+    };
+  }
+
+  /**
+   * Validate the database model for common issues
+   */
+  validateModel(): { isValid: boolean; errors: string[]; warnings: string[] } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    for (const table of this.getAllTables()) {
+      // Check for primary keys
+      if (!this.hasPrimaryKey(table.name)) {
+        warnings.push(`Table '${table.name}' has no primary key`);
+      }
+
+      // Check for duplicate field names (should not happen, but good to check)
+      const fieldNames = table.fields.map(f => f.name);
+      const uniqueFieldNames = new Set(fieldNames);
+      if (fieldNames.length !== uniqueFieldNames.size) {
+        errors.push(`Table '${table.name}' has duplicate field names`);
+      }
+
+      // Check for fields with no datatype
+      for (const field of table.fields) {
+        if (!field.datatype || field.datatype.trim() === '') {
+          errors.push(`Field '${field.name}' in table '${table.name}' has no datatype`);
+        }
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }
+
+  /**
+   * Generate SQL CREATE TABLE statement for a table (basic implementation)
+   */
+  generateCreateTableSQL(tableName: string): string | undefined {
+    const table = this.getTable(tableName);
+    if (!table) return undefined;
+
+    const fieldDefinitions = table.fields.map(field => {
+      let definition = `  ${field.name} ${field.datatype}`;
+      
+      if (field.max_length) {
+        definition += `(${field.max_length})`;
+      }
+      
+      if (!field.is_nullable) {
+        definition += ' NOT NULL';
+      }
+      
+      if (field.default_value !== undefined) {
+        definition += ` DEFAULT ${field.default_value}`;
+      }
+      
+      return definition;
+    });
+
+    const primaryKeyFields = this.getPrimaryKeyFieldNames(tableName);
+    if (primaryKeyFields.length > 0) {
+      fieldDefinitions.push(`  PRIMARY KEY (${primaryKeyFields.join(', ')})`);
+    }
+
+    return `CREATE TABLE ${tableName} (\n${fieldDefinitions.join(',\n')}\n);`;
+  }
+} 
 
  

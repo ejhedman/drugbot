@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { Trash2, Edit, X, Check, SquarePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TableSkeleton } from '@/components/ui/skeleton';
-import { MetadataRepository } from '@/model_instances/metadata-repository';
-import { ENTITY_AGGREGATES } from '@/model_instances/theuimodel';
+import { theUIModel, ENTITY_AGGREGATES } from '@/model_instances';
 import { UIProperty } from '@/model_defs/UIModel';
 import { ConfirmDialog, useConfirmDialog } from '@/components/ui/confirm-dialog';
 
@@ -28,7 +27,6 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newItemData, setNewItemData] = useState<any>({});
 
-  const metadataRepo = new MetadataRepository();
   const confirmDialog = useConfirmDialog();
 
   // Update local state when data prop changes
@@ -96,7 +94,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     }
     
     // First try to find in main entity schemas
-    let schema = metadataRepo.getEntitySchema(schemaEntityName);
+    let schema = theUIModel.getEntity(schemaEntityName);
     
     // If not found in main schemas, try sub-collections
     if (!schema) {
@@ -107,7 +105,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
     
-    const field = (schema.properties || []).find((f: UIProperty) => (f as any).name === fieldName || f.propertyName === fieldName);
+    const field = (schema.propertyDefs || []).find((f: UIProperty) => f.propertyName === fieldName);
     return field?.displayName || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 

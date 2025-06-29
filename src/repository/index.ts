@@ -10,7 +10,7 @@
 // ============================================================================
 export { BaseRepository } from './base_repository';
 
-export { drugBotDBSchema  } from './thedb';
+export { drugBotDBSchema  } from '../model_instances/TheDBModel';
 
 // ============================================================================
 // ENTITY REPOSITORIES

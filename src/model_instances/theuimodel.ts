@@ -1,7 +1,7 @@
 // Drug Database Schema - Refined from DDL
 // This file defines the complete metadata for the drug database
 
-import { UIAggregateMeta, UIEntityMeta } from '../model_defs/UIModel';
+import { UIAggregateMeta, UIEntityMeta, UIModel } from '../model_defs/UIModel';
 
 // ============================================================================
 // SUB-COLLECTION SCHEMAS (for tabs/aggregates)
@@ -446,3 +446,27 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
     ],
   }
 };
+
+// ============================================================================
+// UI MODEL WRAPPER INSTANCE
+// ============================================================================
+
+/**
+ * The complete UI model wrapper instance for the DrugBot application
+ * 
+ * This is the primary interface for accessing UI model information.
+ * Instead of working directly with the ENTITIES and ENTITY_AGGREGATES constants,
+ * consumers should use this wrapper instance which provides convenient methods
+ * for querying the UI model.
+ * 
+ * Usage Examples:
+ * - theUIModel.getEntity('generic_drugs')
+ * - theUIModel.getEntityVisibleProperties('generic_drugs')
+ * - theUIModel.getAggregate('GenericRoute')
+ * - theUIModel.getAggregateEditableProperties('GenericRoute')
+ * - theUIModel.findEntityProperty('generic_drugs', 'generic_name')
+ */
+export const theUIModel = new UIModel(ENTITIES, ENTITY_AGGREGATES);
+
+// Export as default for convenience
+export default theUIModel;

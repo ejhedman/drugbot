@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { entityRepository } from '@/repository';
-import { genericDrugsTable } from '@/repository/thedb';
+import { genericDrugsTable } from '@/model_instances/TheDBModel';
 import { UpdateEntityRequest } from '@/model_defs/DBModel';
 
 export async function GET(
