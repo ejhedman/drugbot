@@ -66,6 +66,7 @@ export interface PropertyMapping {
  * - keyField: The database field that serves as the business key
  * - displayNameField: The database field used for display names
  * - propertyMappings: Array of property mappings for this entity's properties
+ * - aggregateReferences: Array of aggregate types that belong to this entity
  */
 export interface EntityMapping {
   /** UI entity type identifier (matches UIEntity.entityType if present) */
@@ -82,6 +83,9 @@ export interface EntityMapping {
   
   /** Property mappings for all properties belonging to this entity */
   propertyMappings: PropertyMapping[];
+  
+  /** Array of aggregate types that belong to this entity (references to AggregateMapping keys) */
+  aggregateReferences?: string[];
 }
 
 /**
@@ -202,7 +206,8 @@ export function isEntityMapping(obj: any): obj is EntityMapping {
     typeof obj.keyField === 'string' &&
     typeof obj.displayNameField === 'string' &&
     Array.isArray(obj.propertyMappings) &&
-    obj.propertyMappings.every((mapping: any) => isPropertyMapping(mapping));
+    obj.propertyMappings.every((mapping: any) => isPropertyMapping(mapping)) &&
+    (obj.aggregateReferences === undefined || Array.isArray(obj.aggregateReferences));
 }
 
 /**

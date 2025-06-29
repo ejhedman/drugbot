@@ -10,6 +10,31 @@
  * - Transform data between UI representation and database storage
  * - Generate queries based on UI model requests
  * - Validate UI model changes against database constraints
+ * - Map entities to their contained aggregates for complete data retrieval
+ * - Build dynamic queries that include all tables needed to render an entity
+ * 
+ * Key Features:
+ * - Entity Mappings: Map UI entities to primary database tables and their properties
+ * - Aggregate Mappings: Map UI aggregates (sub-collections) to database tables
+ * - Aggregate References: Connect entities to their contained aggregates
+ * - Complete Query Info: Generate comprehensive query information for API endpoints
+ * 
+ * Usage Example:
+ * ```typescript
+ * // Get complete query information for a generic drug entity
+ * const queryInfo = getEntityCompleteQueryInfo('generic_drugs');
+ * // Result includes main table, aggregate tables, and relationships
+ * // {
+ * //   entityTable: 'generic_drugs',
+ * //   entityKeyField: 'generic_key',
+ * //   aggregates: [
+ * //     { aggregateType: 'GenericAlias', tableName: 'generic_aliases', parentKeyField: 'generic_uid' },
+ * //     { aggregateType: 'GenericRoute', tableName: 'generic_routes', parentKeyField: 'generic_uid' },
+ * //     { aggregateType: 'GenericApproval', tableName: 'generic_approvals', parentKeyField: 'generic_uid' }
+ * //   ],
+ * //   allTables: ['generic_drugs', 'generic_aliases', 'generic_routes', 'generic_approvals']
+ * // }
+ * ```
  */
 
 import { ModelMap, EntityMapping, AggregateMapping, PropertyMapping } from '../model_defs/ModelMap';
@@ -63,6 +88,11 @@ const genericDrugsMapping: EntityMapping = {
       tableName: 'generic_drugs',
       fieldName: 'target'
     }
+  ],
+  aggregateReferences: [
+    'GenericAlias',
+    'GenericRoute', 
+    'GenericApproval'
   ]
 };
 
@@ -120,7 +150,8 @@ const manuDrugsMapping: EntityMapping = {
       tableName: 'manu_drugs',
       fieldName: 'biosimilar_originator'
     }
-  ]
+  ],
+  aggregateReferences: []
 };
 
 // ============================================================================
@@ -374,6 +405,94 @@ export function getEntityKeyField(entityType: string): string | undefined {
 export function getAggregateParentKeyField(aggregateType: string): string | undefined {
   const aggregateMapping = getAggregateMapping(aggregateType);
   return aggregateMapping?.parentKeyField;
+}
+
+// ============================================================================
+// AGGREGATE REFERENCE UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Get all aggregate mappings for a specific entity
+ */
+export function getEntityAggregateMappings(entityType: string): AggregateMapping[] {
+  const entityMapping = getEntityMapping(entityType);
+  if (!entityMapping || !entityMapping.aggregateReferences) {
+    return [];
+  }
+  
+  return entityMapping.aggregateReferences
+    .map(aggregateType => getAggregateMapping(aggregateType))
+    .filter((mapping): mapping is AggregateMapping => mapping !== undefined);
+}
+
+/**
+ * Get all aggregate types for a specific entity
+ */
+export function getEntityAggregateTypes(entityType: string): string[] {
+  const entityMapping = getEntityMapping(entityType);
+  return entityMapping?.aggregateReferences || [];
+}
+
+/**
+ * Get all table names that need to be queried for a complete entity (entity table + aggregate tables)
+ */
+export function getEntityAllTableNames(entityType: string): string[] {
+  const entityTableName = getEntityTableName(entityType);
+  const aggregateMappings = getEntityAggregateMappings(entityType);
+  const aggregateTableNames = aggregateMappings.map(mapping => mapping.tableName);
+  
+  const allTables = entityTableName ? [entityTableName, ...aggregateTableNames] : aggregateTableNames;
+  return Array.from(new Set(allTables)); // Remove duplicates
+}
+
+/**
+ * Get complete query information for an entity, including all tables, key fields, and relationships
+ */
+export function getEntityCompleteQueryInfo(entityType: string): {
+  entityTable: string;
+  entityKeyField: string;
+  entityDisplayField: string;
+  aggregates: Array<{
+    aggregateType: string;
+    tableName: string;
+    parentKeyField: string;
+  }>;
+  allTables: string[];
+} | undefined {
+  const entityMapping = getEntityMapping(entityType);
+  if (!entityMapping) {
+    return undefined;
+  }
+  
+  const aggregateMappings = getEntityAggregateMappings(entityType);
+  
+  return {
+    entityTable: entityMapping.tableName,
+    entityKeyField: entityMapping.keyField,
+    entityDisplayField: entityMapping.displayNameField,
+    aggregates: aggregateMappings.map(mapping => ({
+      aggregateType: mapping.aggregateType,
+      tableName: mapping.tableName,
+      parentKeyField: mapping.parentKeyField
+    })),
+    allTables: getEntityAllTableNames(entityType)
+  };
+}
+
+/**
+ * Check if an entity has any aggregates
+ */
+export function entityHasAggregates(entityType: string): boolean {
+  const aggregateTypes = getEntityAggregateTypes(entityType);
+  return aggregateTypes.length > 0;
+}
+
+/**
+ * Check if a specific aggregate belongs to an entity
+ */
+export function entityHasAggregate(entityType: string, aggregateType: string): boolean {
+  const aggregateTypes = getEntityAggregateTypes(entityType);
+  return aggregateTypes.includes(aggregateType);
 }
 
 // Export the main model map as default

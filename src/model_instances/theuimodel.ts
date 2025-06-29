@@ -343,11 +343,11 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
       },
       {
         displayName: 'Routes & Dosing',
-        aggregateType: 'generic_routes',
+        aggregateType: 'GenericRoute',
         ordinal: 2
       },
       {
-        aggregateType: 'generic_approvals',
+        aggregateType: 'GenericApproval',
         displayName: 'Approvals',
         ordinal: 3
       },
