@@ -20,6 +20,7 @@
  * - is_foreign_key: Whether this field is a foreign key reference
  * - max_length: Maximum length for string types (optional)
  * - default_value: Default value for the field (optional)
+ * - forExport: Whether this field should be included in exports (defaults to true)
  */
 export interface DBField {
   name: string;
@@ -29,6 +30,7 @@ export interface DBField {
   is_foreign_key: boolean;
   max_length?: number;
   default_value?: any;
+  forExport?: boolean;
 }
 
 /**
@@ -38,11 +40,13 @@ export interface DBField {
  * - name: The name of the database table
  * - fields: Array of field definitions in this table
  * - description: Optional description of the table's purpose
+ * - forExport: Whether this table should be included in exports (defaults to true)
  */
 export interface DBTable {
   name: string;
   fields: DBField[];
   description?: string;
+  forExport?: boolean;
 }
 
 /**
@@ -694,6 +698,62 @@ export class DBModel {
     }
 
     return `CREATE TABLE ${tableName} (\n${fieldDefinitions.join(',\n')}\n);`;
+  }
+
+  // ============================================================================
+  // EXPORT OPERATIONS
+  // ============================================================================
+
+  /**
+   * Get tables that should be included in exports
+   */
+  getExportableTables(): DBTable[] {
+    return this.getAllTables().filter(table => table.forExport !== false);
+  }
+
+  /**
+   * Get exportable table names
+   */
+  getExportableTableNames(): string[] {
+    return this.getExportableTables().map(table => table.name);
+  }
+
+  /**
+   * Get fields that should be included in exports for a specific table
+   */
+  getExportableFields(tableName: string): DBField[] {
+    const table = this.getTable(tableName);
+    if (!table) return [];
+    
+    return table.fields.filter(field => field.forExport !== false);
+  }
+
+  /**
+   * Get exportable field names for a specific table
+   */
+  getExportableFieldNames(tableName: string): string[] {
+    return this.getExportableFields(tableName).map(field => field.name);
+  }
+
+  /**
+   * Get export configuration for all tables
+   */
+  getExportConfiguration(): {
+    tables: Array<{
+      name: string;
+      forExport: boolean;
+      fieldCount: number;
+      exportableFieldCount: number;
+    }>;
+  } {
+    return {
+      tables: this.getAllTables().map(table => ({
+        name: table.name,
+        forExport: table.forExport !== false,
+        fieldCount: table.fields.length,
+        exportableFieldCount: this.getExportableFields(table.name).length
+      }))
+    };
   }
 } 
 

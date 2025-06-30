@@ -14,6 +14,7 @@ import { DBSchema, DBTable, DBModel } from '../model_defs/DBModel';
 const drugClassesTable: DBTable = {
   name: 'drug_classes',
   description: 'Lookup table for drug class/type classifications',
+  forExport: false,
   fields: [
     {
       name: 'uid',
@@ -21,7 +22,8 @@ const drugClassesTable: DBTable = {
       is_nullable: false,
       is_primary_key: true,
       is_foreign_key: false,
-      default_value: 'gen_random_uuid()'
+      default_value: 'gen_random_uuid()',
+      forExport: false
     },
     {
       name: 'value',
@@ -29,7 +31,8 @@ const drugClassesTable: DBTable = {
       is_nullable: false,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: false
     }
   ]
 };
@@ -37,6 +40,7 @@ const drugClassesTable: DBTable = {
 const routeTypesTable: DBTable = {
   name: 'route_types',
   description: 'Lookup table for drug administration routes',
+  forExport: false,
   fields: [
     {
       name: 'uid',
@@ -44,7 +48,8 @@ const routeTypesTable: DBTable = {
       is_nullable: false,
       is_primary_key: true,
       is_foreign_key: false,
-      default_value: 'gen_random_uuid()'
+      default_value: 'gen_random_uuid()',
+      forExport: false
     },
     {
       name: 'value',
@@ -52,7 +57,8 @@ const routeTypesTable: DBTable = {
       is_nullable: false,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: false
     }
   ]
 };
@@ -60,6 +66,7 @@ const routeTypesTable: DBTable = {
 const countriesTable: DBTable = {
   name: 'countries',
   description: 'Lookup table for countries where drugs are approved',
+  forExport: false,
   fields: [
     {
       name: 'uid',
@@ -67,7 +74,8 @@ const countriesTable: DBTable = {
       is_nullable: false,
       is_primary_key: true,
       is_foreign_key: false,
-      default_value: 'gen_random_uuid()'
+      default_value: 'gen_random_uuid()',
+      forExport: false
     },
     {
       name: 'value',
@@ -75,7 +83,8 @@ const countriesTable: DBTable = {
       is_nullable: false,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: false
     }
   ]
 };
@@ -87,6 +96,7 @@ const countriesTable: DBTable = {
 const genericDrugsTable: DBTable = {
   name: 'generic_drugs',
   description: 'Generic drug information including mechanism of action and classification',
+  forExport: true,
   fields: [
     {
       name: 'uid',
@@ -94,14 +104,16 @@ const genericDrugsTable: DBTable = {
       is_nullable: false,
       is_primary_key: true,
       is_foreign_key: false,
-      default_value: 'gen_random_uuid()'
+      default_value: 'gen_random_uuid()',
+      forExport: false
     },
     {
       name: 'row',
       datatype: 'INTEGER',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'generic_key',
@@ -109,7 +121,8 @@ const genericDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'generic_name',
@@ -117,14 +130,16 @@ const genericDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'biologic',
       datatype: 'TEXT',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'mech_of_action',
@@ -132,7 +147,8 @@ const genericDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'class_or_type',
@@ -140,7 +156,8 @@ const genericDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'target',
@@ -148,7 +165,8 @@ const genericDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     }
   ]
 };
@@ -156,6 +174,7 @@ const genericDrugsTable: DBTable = {
 const genericAliasesTable: DBTable = {
   name: 'generic_aliases',
   description: 'Alternative names and aliases for generic drugs',
+  forExport: true,
   fields: [
     {
       name: 'uid',
@@ -163,14 +182,16 @@ const genericAliasesTable: DBTable = {
       is_nullable: false,
       is_primary_key: true,
       is_foreign_key: false,
-      default_value: 'gen_random_uuid()'
+      default_value: 'gen_random_uuid()',
+      forExport: false
     },
     {
       name: 'row',
       datatype: 'INTEGER',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'generic_key',
@@ -178,14 +199,16 @@ const genericAliasesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'generic_uid',
       datatype: 'UUID',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: true
+      is_foreign_key: true,
+      forExport: false
     },
     {
       name: 'alias',
@@ -193,7 +216,8 @@ const genericAliasesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     }
   ]
 };
@@ -201,6 +225,7 @@ const genericAliasesTable: DBTable = {
 const genericRoutesTable: DBTable = {
   name: 'generic_routes',
   description: 'Drug administration routes and dosing information',
+  forExport: true,
   fields: [
     {
       name: 'uid',
@@ -208,14 +233,16 @@ const genericRoutesTable: DBTable = {
       is_nullable: false,
       is_primary_key: true,
       is_foreign_key: false,
-      default_value: 'gen_random_uuid()'
+      default_value: 'gen_random_uuid()',
+      forExport: false
     },
     {
       name: 'row',
       datatype: 'INTEGER',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'route_key',
@@ -223,7 +250,8 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'generic_key',
@@ -231,14 +259,16 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'generic_uid',
       datatype: 'UUID',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: true
+      is_foreign_key: true,
+      forExport: false
     },
     {
       name: 'route_type',
@@ -246,7 +276,8 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'load_measure',
@@ -254,7 +285,8 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'load_dose',
@@ -262,7 +294,8 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'load_measure_2',
@@ -270,7 +303,8 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'load_reg',
@@ -278,7 +312,8 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'maintain_dose',
@@ -286,7 +321,8 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'maintain_measure',
@@ -294,7 +330,8 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'maintain_reg',
@@ -302,7 +339,8 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'montherapy',
@@ -310,14 +348,16 @@ const genericRoutesTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'half_life',
       datatype: 'TEXT',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     }
   ]
 };
@@ -325,6 +365,7 @@ const genericRoutesTable: DBTable = {
 const genericApprovalsTable: DBTable = {
   name: 'generic_approvals',
   description: 'Drug approval information by country and route',
+  forExport: true,
   fields: [
     {
       name: 'uid',
@@ -332,14 +373,16 @@ const genericApprovalsTable: DBTable = {
       is_nullable: false,
       is_primary_key: true,
       is_foreign_key: false,
-      default_value: 'gen_random_uuid()'
+      default_value: 'gen_random_uuid()',
+      forExport: true
     },
     {
       name: 'row',
       datatype: 'INTEGER',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'generic_key',
@@ -347,14 +390,16 @@ const genericApprovalsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'generic_uid',
       datatype: 'UUID',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: true
+      is_foreign_key: true,
+      forExport: false
     },
     {
       name: 'route_type',
@@ -362,7 +407,8 @@ const genericApprovalsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'country',
@@ -370,49 +416,56 @@ const genericApprovalsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'indication',
       datatype: 'TEXT',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'populations',
       datatype: 'TEXT',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'approval_date',
       datatype: 'DATE',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'discon_date',
       datatype: 'TEXT',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'box_warning',
       datatype: 'TEXT',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'box_warning_date',
       datatype: 'TEXT',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     }
   ]
 };
@@ -420,6 +473,7 @@ const genericApprovalsTable: DBTable = {
 const manuDrugsTable: DBTable = {
   name: 'manu_drugs',
   description: 'Manufactured drug products including brand names and biosimilar information',
+  forExport: true,
   fields: [
     {
       name: 'uid',
@@ -427,14 +481,16 @@ const manuDrugsTable: DBTable = {
       is_nullable: false,
       is_primary_key: true,
       is_foreign_key: false,
-      default_value: 'gen_random_uuid()'
+      default_value: 'gen_random_uuid()',
+      forExport: false
     },
     {
       name: 'row',
       datatype: 'INTEGER',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'manu_drug_key',
@@ -442,7 +498,8 @@ const manuDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'generic_key',
@@ -450,14 +507,16 @@ const manuDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'generic_uid',
       datatype: 'UUID',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: true
+      is_foreign_key: true,
+      forExport: false
     },
     {
       name: 'drug_name',
@@ -465,7 +524,8 @@ const manuDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'manufacturer',
@@ -473,7 +533,8 @@ const manuDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'brandkey',
@@ -481,7 +542,8 @@ const manuDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'biosimilar_suffix',
@@ -489,14 +551,16 @@ const manuDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     },
     {
       name: 'biosimilar',
       datatype: 'INTEGER',
       is_nullable: true,
       is_primary_key: false,
-      is_foreign_key: false
+      is_foreign_key: false,
+      forExport: true
     },
     {
       name: 'biosimilar_originator',
@@ -504,7 +568,8 @@ const manuDrugsTable: DBTable = {
       is_nullable: true,
       is_primary_key: false,
       is_foreign_key: false,
-      max_length: 255
+      max_length: 255,
+      forExport: true
     }
   ]
 };
@@ -515,6 +580,7 @@ const manuDrugsTable: DBTable = {
 
 const entityRelationshipsTable: DBTable = {
   name: 'entity_relationships',
+  forExport: false,
   description: 'Tracks hierarchical relationships between entities (ancestors and children)',
   fields: [
     {

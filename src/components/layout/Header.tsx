@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 
 interface HeaderProps {
@@ -26,6 +27,8 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Get display name and avatar from GitHub user data
@@ -57,7 +60,7 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
     );
     
     if (xlsxFiles.length === 0) {
-      alert('Please drop only Excel files (.xlsx or .xls)');
+      alert('Please select only Excel files (.xlsx or .xls)');
       return;
     }
 
@@ -150,6 +153,32 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
     setUploadSuccess(false);
     setUploadedFiles([]);
   };
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await fetch('/api/export');
+      if (!response.ok) throw new Error('Failed to download file');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'drugbot_export.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      handleCloseDownloadDialog();
+    } catch (err) {
+      alert('Failed to download file');
+      setIsDownloading(false);
+    }
+  };
+
+  const handleCloseDownloadDialog = () => {
+    setIsDownloadDialogOpen(false);
+    setIsDownloading(false);
+  };
   
   return (
     <header className="bg-slate-200 px-6 flex justify-between items-center border-b border-slate-200 shadow-sm" style={{ minHeight: '100px' }}>
@@ -171,7 +200,13 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
           <>
             <div className="flex items-center gap-3">
               {/* Export Icon */}
-              <Dialog>
+              <Dialog
+                open={isDownloadDialogOpen}
+                onOpenChange={(open) => {
+                  setIsDownloadDialogOpen(open);
+                  if (open) setIsDownloading(false);
+                }}
+              >
                 <DialogTrigger asChild>
                   <button
                     className="text-slate-600 hover:text-slate-800 transition-colors"
@@ -184,9 +219,24 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
                   <DialogHeader>
                     <DialogTitle>Export Data</DialogTitle>
                     <DialogDescription>
-                      Coming soon - feature to export data to xlsx
+                      Export your data to Excel format
                     </DialogDescription>
                   </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      variant="default"
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                    >
+                      {isDownloading ? 'Downloading...' : 'Download'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleCloseDownloadDialog}
+                    >
+                      Cancel
+                    </Button>
+                  </DialogFooter>
                 </DialogContent>
               </Dialog>
 
