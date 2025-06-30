@@ -59,10 +59,10 @@ export function AuthenticatedContent() {
   };
 
   return (
-    <div className={getBorderClasses("flex flex-col flex-1 min-h-0 bg-gray-50", "border-4 border-purple-500")}>
-      <div className="flex-1 min-h-0 grid grid-cols-12">
+    <div className={getBorderClasses("flex flex-col flex-1 min-h-0 bg-gray-50", "border-6 border-purple-500")}>
+      <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden">
         {/* Column 1: Entity Tree List */}
-        <div className={getBorderClasses("col-span-3 h-full min-h-0 flex flex-col", "border-2 border-accent-active shadow-accent-md")}>
+        <div className={getBorderClasses("col-span-3 h-full min-h-0 flex flex-col overflow-hidden", "border-6 border-blue-500")}>
           <EntityTreeList
             selectedEntityKey={selectedEntityKey}
             selectedChildKey={selectedChildKey}
@@ -74,7 +74,7 @@ export function AuthenticatedContent() {
         </div>
 
         {/* Column 2: Detail View */}
-        <div className={getBorderClasses("col-span-9 h-full min-h-0 flex flex-col", "border-4 border-yellow-500")}>
+        <div className={getBorderClasses("col-span-9 h-full min-h-0 flex flex-col overflow-hidden", "border-6 border-yellow-500")}>
           <DetailView
             entityKey={selectedEntityKey}
             childKey={selectedChildKey}

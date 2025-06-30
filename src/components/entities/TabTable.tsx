@@ -7,6 +7,7 @@ import { TableSkeleton } from '@/components/ui/skeleton';
 import { theUIModel, ENTITY_AGGREGATES } from '@/model_instances';
 import { UIProperty } from '@/model_defs/UIModel';
 import { ConfirmDialog, useConfirmDialog } from '@/components/ui/confirm-dialog';
+import { getBorderClasses } from '@/lib/borderUtils';
 
 interface TabTableProps {
   data: any[];
@@ -290,9 +291,9 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
 
   if (!flatTableData || flatTableData.length === 0) {
     return (
-      <div>
+      <div className="flex flex-col h-full">
         {title && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-200 rounded-t-lg">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-200 rounded-t-lg flex-shrink-0">
             <div className="flex items-center gap-2">
               {icon && <span className="text-slate-700">{icon}</span>}
               <span className="section-title text-slate-700">{title}</span>
@@ -309,7 +310,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
           </div>
         )}
         {isAddingNew ? (
-          <div className="p-4 rounded-b-lg">
+          <div className="p-4 rounded-b-lg flex-1 min-h-0 overflow-y-auto overflow-x-auto scrollbar-always-visible">
             <form onSubmit={(e) => { e.preventDefault(); handleSubmitAdd(); }} className="space-y-4">
               <div className="text-sm text-gray-600 mb-4">Add the first item to this collection:</div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -372,61 +373,61 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
             </form>
           </div>
         ) : (
-          <div className="p-4 label rounded-b-lg">{emptyMessage || `No data.`}</div>
+          <div className="p-4 label rounded-b-lg flex-1 flex items-center justify-center">{emptyMessage || `No data.`}</div>
         )}
       </div>
     );
   }
 
   return (
-    <div>
-              {title && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-200 rounded-t-lg">
-            <div className="flex items-center gap-2">
-              {icon && <span className="text-slate-700">{icon}</span>}
-              <span className="section-title text-slate-700">{title}</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleAddNew}
-              className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl"
-              title="Add new item"
-            >
-              <SquarePlus className="w-4 h-4" />
-            </Button>
+    <div className="flex flex-col h-full">
+      {title && (
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-200 rounded-t-lg flex-shrink-0">
+          <div className="flex items-center gap-2">
+            {icon && <span className="text-slate-700">{icon}</span>}
+            <span className="section-title text-slate-700">{title}</span>
           </div>
-        )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleAddNew}
+            className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl"
+            title="Add new item"
+          >
+            <SquarePlus className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
       {isAddingNew ? (
-        <div className="p-4 rounded-b-lg">
+        <div className="p-4 rounded-b-lg flex-1 min-h-0 overflow-y-auto overflow-x-auto scrollbar-always-visible">
           <form onSubmit={(e) => { e.preventDefault(); handleSubmitAdd(); }} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {isUsingUIEntityData ? (
-                                  <>
-                    {isFieldEditable('displayName') && (
-                      <div className="space-y-2">
-                        <label className="label">Display Name</label>
-                        <input
-                          type="text"
-                          value={newItemData.displayName || ''}
-                          onChange={(e) => handleNewItemInputChange('displayName', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                          placeholder="Enter Display Name"
-                        />
-                      </div>
-                    )}
-                                      {propertyColumns.filter(propName => isFieldEditable(propName)).map((propName) => (
-                      <div key={propName} className="space-y-2">
-                        <label className="label">{getFieldDisplayName(propName)}</label>
-                        <input
-                          type="text"
-                          value={newItemData[propName] || ''}
-                          onChange={(e) => handleNewItemInputChange(propName, e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                          placeholder={`Enter ${getFieldDisplayName(propName)}`}
-                        />
-                      </div>
-                    ))}
+                <>
+                  {isFieldEditable('displayName') && (
+                    <div className="space-y-2">
+                      <label className="label">Display Name</label>
+                      <input
+                        type="text"
+                        value={newItemData.displayName || ''}
+                        onChange={(e) => handleNewItemInputChange('displayName', e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
+                        placeholder="Enter Display Name"
+                      />
+                    </div>
+                  )}
+                  {propertyColumns.filter(propName => isFieldEditable(propName)).map((propName) => (
+                    <div key={propName} className="space-y-2">
+                      <label className="label">{getFieldDisplayName(propName)}</label>
+                      <input
+                        type="text"
+                        value={newItemData[propName] || ''}
+                        onChange={(e) => handleNewItemInputChange(propName, e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
+                        placeholder={`Enter ${getFieldDisplayName(propName)}`}
+                      />
+                    </div>
+                  ))}
                 </>
               ) : (
                 Object.keys(newItemData).filter(key => isFieldEditable(key)).map((key) => (
@@ -462,169 +463,167 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
           </form>
         </div>
       ) : (
-        <div>
-          <div className="border-l border-r border-b rounded-b-lg overflow-hidden">
-            {/* Single table with sticky header for perfect column alignment */}
-            <div className="overflow-auto max-h-96">
-              <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10">
-                  <tr>
-                    {/* Display Name column first */}
-                    {isUsingUIEntityData && (
-                      <th className="px-4 py-3 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
-                        Display Name
+        <div className="flex-1 min-h-0 border-l border-r border-b rounded-b-lg overflow-hidden">
+          {/* Table container with fixed height that works */}
+          <div className="h-full max-h-128 overflow-y-auto overflow-x-auto scrollbar-always-visible">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 z-10">
+                <tr>
+                  {/* Display Name column first */}
+                  {isUsingUIEntityData && (
+                    <th className="px-4 py-3 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
+                      Display Name
+                    </th>
+                  )}
+                  {/* Property columns or regular object keys */}
+                  {isUsingUIEntityData ? (
+                    propertyColumns.map((propName, index) => (
+                      <th key={propName} className="px-4 py-3 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
+                        {getFieldDisplayName(propName)}
                       </th>
+                    ))
+                  ) : (
+                    Object.keys(flatTableData[0]).map((key, index, array) => (
+                      <th key={key} className="px-4 py-3 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
+                        {getFieldDisplayName(key)}
+                      </th>
+                    ))
+                  )}
+                  {/* Actions column last */}
+                  <th className="px-4 py-3 bg-slate-600 text-left font-semibold text-white w-24">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className={getBorderClasses("", "border-6 border-blue-500")}>
+                {flatTableData.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50 border-b last:border-b-0">
+                    {/* Display Name column first for UIEntity data */}
+                    {isUsingUIEntityData && (
+                      <td className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
+                        {editingRow === idx ? (
+                          isFieldEditable('displayName') ? (
+                            <input
+                              type="text"
+                              value={editedData?.displayName?.toString() || ''}
+                              onChange={(e) => {
+                                setEditedData((prev: any) => ({
+                                  ...prev,
+                                  displayName: e.target.value
+                                }));
+                              }}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
+                            />
+                          ) : (
+                            <span className="text-gray-500 italic">{row.displayName?.toString() || ''}</span>
+                          )
+                        ) : (
+                          row.displayName?.toString() || ''
+                        )}
+                      </td>
                     )}
                     {/* Property columns or regular object keys */}
                     {isUsingUIEntityData ? (
                       propertyColumns.map((propName, index) => (
-                        <th key={propName} className="px-4 py-3 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
-                          {getFieldDisplayName(propName)}
-                        </th>
-                      ))
-                    ) : (
-                      Object.keys(flatTableData[0]).map((key, index, array) => (
-                        <th key={key} className="px-4 py-3 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
-                          {getFieldDisplayName(key)}
-                        </th>
-                      ))
-                    )}
-                    {/* Actions column last */}
-                    <th className="px-4 py-3 bg-slate-600 text-left font-semibold text-white w-24">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {flatTableData.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50 border-b last:border-b-0">
-                      {/* Display Name column first for UIEntity data */}
-                      {isUsingUIEntityData && (
-                        <td className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
+                        <td key={propName} className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
                           {editingRow === idx ? (
-                            isFieldEditable('displayName') ? (
+                            isFieldEditable(propName) ? (
                               <input
                                 type="text"
-                                value={editedData?.displayName?.toString() || ''}
+                                value={editedData?.[propName]?.toString() || ''}
                                 onChange={(e) => {
                                   setEditedData((prev: any) => ({
                                     ...prev,
-                                    displayName: e.target.value
+                                    [propName]: e.target.value
                                   }));
                                 }}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                               />
                             ) : (
-                              <span className="text-gray-500 italic">{row.displayName?.toString() || ''}</span>
+                              <span className="text-gray-500 italic">{row[propName]?.toString() || ''}</span>
                             )
                           ) : (
-                            row.displayName?.toString() || ''
+                            row[propName]?.toString() || ''
                           )}
                         </td>
-                      )}
-                      {/* Property columns or regular object keys */}
-                      {isUsingUIEntityData ? (
-                        propertyColumns.map((propName, index) => (
-                          <td key={propName} className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
-                            {editingRow === idx ? (
-                              isFieldEditable(propName) ? (
-                                <input
-                                  type="text"
-                                  value={editedData?.[propName]?.toString() || ''}
-                                  onChange={(e) => {
-                                    setEditedData((prev: any) => ({
-                                      ...prev,
-                                      [propName]: e.target.value
-                                    }));
-                                  }}
-                                  className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
-                                />
-                              ) : (
-                                <span className="text-gray-500 italic">{row[propName]?.toString() || ''}</span>
-                              )
-                            ) : (
-                              row[propName]?.toString() || ''
-                            )}
-                          </td>
-                        ))
-                      ) : (
-                        Object.keys(row).map((key, index, array) => (
-                          <td key={key} className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
-                            {editingRow === idx ? (
-                              isFieldEditable(key) ? (
-                                <input
-                                  type="text"
-                                  value={editedData?.[key]?.toString() || ''}
-                                  onChange={(e) => {
-                                    setEditedData((prev: any) => ({
-                                      ...prev,
-                                      [key]: e.target.value
-                                    }));
-                                  }}
-                                  className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
-                                />
-                              ) : (
-                                <span className="text-gray-500 italic">{row[key]?.toString() || ''}</span>
-                              )
-                            ) : (
-                              row[key]?.toString() || ''
-                            )}
-                          </td>
-                        ))
-                      )}
-                      {/* Actions column last */}
-                      <td className="px-4 py-3 text-gray-900 w-24">
-                        <div className="flex items-center gap-2">
+                      ))
+                    ) : (
+                      Object.keys(row).map((key, index, array) => (
+                        <td key={key} className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
                           {editingRow === idx ? (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleSave(idx)}
-                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl"
-                                title="Save"
-                              >
-                                <Check className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleCancel}
-                                className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-xl"
-                                title="Cancel"
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            </>
+                            isFieldEditable(key) ? (
+                              <input
+                                type="text"
+                                value={editedData?.[key]?.toString() || ''}
+                                onChange={(e) => {
+                                  setEditedData((prev: any) => ({
+                                    ...prev,
+                                    [key]: e.target.value
+                                  }));
+                                }}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
+                              />
+                            ) : (
+                              <span className="text-gray-500 italic">{row[key]?.toString() || ''}</span>
+                            )
                           ) : (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEdit(idx)}
-                                className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl"
-                                title="Edit"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDelete(idx)}
-                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </>
+                            row[key]?.toString() || ''
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </td>
+                      ))
+                    )}
+                    {/* Actions column last */}
+                    <td className="px-4 py-3 text-gray-900 w-24">
+                      <div className="flex items-center gap-2">
+                        {editingRow === idx ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSave(idx)}
+                              className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl"
+                              title="Save"
+                            >
+                              <Check className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleCancel}
+                              className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-xl"
+                              title="Cancel"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(idx)}
+                              className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl"
+                              title="Edit"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(idx)}
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

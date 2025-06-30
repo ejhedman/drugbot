@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { SquarePlus, Search, Pill, Tag, ChevronRight, ChevronDown } from 'lucide-react';
 // import { shouldShowBorders } from '@/lib/borderUtils';
 import { EntityListSkeleton, ChildEntitySkeleton } from '@/components/ui/skeleton';
+import { getBorderClasses } from '@/lib/borderUtils';
 
 interface EntityTreeListProps {
   selectedEntityKey: string | null;
@@ -113,7 +114,7 @@ export function EntityTreeList({
   const children = (entityKey: string) => childrenMap[entityKey] || [];
 
       return (
-      <div className="flex-1 min-h-0 h-full flex flex-col bg-white shadow-accent-md rounded-xl m-4">
+      <div className={getBorderClasses("flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl p-4", "border-6 border-orange-500")}>
       {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-200 rounded-t-xl">
                   <h2 className="section-title text-white">Entities</h2>
@@ -144,7 +145,7 @@ export function EntityTreeList({
       </div>
 
       {/* Entity Tree List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-scroll scrollbar-always-visible">
         {loading ? (
           <EntityListSkeleton />
         ) : entities.length === 0 ? (

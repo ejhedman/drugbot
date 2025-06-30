@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TabTable } from './TabTable';
 import { TabProperties } from './TabProperties';
+import { getBorderClasses } from '@/lib/borderUtils';
 
 export interface TabConfig {
   key: string;
@@ -90,9 +91,9 @@ export function CollectionTabSet({
   }
 
   return (
-    <div className={className}>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex w-full bg-transparent rounded-t-2xl">
+    <div className={`${className} flex flex-col`}>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className={getBorderClasses("flex flex-col flex-1 min-h-0", "border-6 border-red-500")}>
+        <TabsList className="flex w-full bg-transparent rounded-t-2xl flex-shrink-0">
           {tabs.map((tab) => (
             <TabsTrigger
               key={tab.key}
@@ -104,7 +105,7 @@ export function CollectionTabSet({
           ))}
         </TabsList>
         {tabs.map((tab) => (
-          <TabsContent key={tab.key} value={tab.key} className="pt-4 pb-4">
+          <TabsContent key={tab.key} value={tab.key} className={getBorderClasses("flex-1 min-h-0 overflow-hidden", "border-6 border-green-500")}>
             {renderTabContent(tab)}
           </TabsContent>
         ))}

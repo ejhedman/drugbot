@@ -113,8 +113,8 @@ export function DetailView({
   const childFormFields: FormField[] = generateFormFields('ManuDrugs');
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-xl shadow-accent-md m-4">
-      <div className="flex-1 min-h-0">
+    <div className="h-full flex flex-col bg-white rounded-xl">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {!entityKey && !childKey && !isAddingEntity && !isAddingChild ? (
           <div className="h-full flex items-center justify-center">
             <div className="text-center label">

@@ -16,6 +16,7 @@ import { CollectionTabSet, TabConfig, TabCallbacks } from './CollectionTabSet';
 import { useEntityOperations } from '@/hooks/useEntityOperations';
 import { EntityDetailSkeleton } from '@/components/ui/skeleton';
 import { theUIModel } from '@/model_instances/TheUIModel';
+import { getBorderClasses } from '@/lib/borderUtils';
 
 interface EntityDetailPageProps {
   entityKey: string | null;
@@ -395,8 +396,8 @@ export function EntityDetailPage({
   }
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-xl shadow-accent-md m-4">
-      <div className="flex-1 min-h-0 flex flex-col">
+    <div className={getBorderClasses("flex-1 min-h-0 flex flex-col bg-white rounded-xl overflow-hidden", "border-6 border-orange-500")}>
+      <div className="flex-1 min-h-0 flex flex-col p-4 overflow-hidden">
         <DetailCardProperties
           subtitle={child ? 'Child Entity Detail' : 'Entity Detail'}
           icon={child ? <Tag className="w-4 h-4 text-emerald-500" /> : <Pill className="w-4 h-4 text-indigo-600" />}
@@ -406,13 +407,12 @@ export function EntityDetailPage({
         />
 
         {tabConfigs.length > 0 && (
-          <div className="flex-1 min-h-0">
-            <CollectionTabSet
-              tabs={tabConfigs}
-              loading={collectionsLoading}
-              callbacks={tabCallbacks}
-            />
-          </div>
+          <CollectionTabSet
+            tabs={tabConfigs}
+            loading={collectionsLoading}
+            callbacks={tabCallbacks}
+            className={getBorderClasses("bg-white mt-4 shadow-accent flex-1 min-h-0", "border-6 border-yellow-500")}
+          />
         )}
       </div>
     </div>
