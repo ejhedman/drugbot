@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import { BookOpen } from 'lucide-react';
 
 export interface HelpFeedbackFormData {
   message: string;
@@ -21,6 +23,7 @@ interface HelpFeedbackPageProps {
 
 export function HelpFeedbackPage({ onSubmit, onCancel }: HelpFeedbackPageProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const [formData, setFormData] = useState<HelpFeedbackFormData>({
     message: '',
   });
@@ -85,6 +88,10 @@ export function HelpFeedbackPage({ onSubmit, onCancel }: HelpFeedbackPageProps) 
     }
   };
 
+  const handleDocsClick = () => {
+    router.push('/docs');
+  };
+
   return (
     <div className="h-full flex flex-col bg-white">
       <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 bg-gray-50">
@@ -95,13 +102,24 @@ export function HelpFeedbackPage({ onSubmit, onCancel }: HelpFeedbackPageProps) 
               We&apos;d love to hear from you! Send us your questions, suggestions, or feedback.
             </p>
           </div>
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-            disabled={isSubmitting}
-          >
-            ← Back to Detail View
-          </button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDocsClick}
+              className="flex items-center gap-2"
+            >
+              <BookOpen className="h-4 w-4" />
+              Documentation
+            </Button>
+            <button
+              onClick={onCancel}
+              className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+              disabled={isSubmitting}
+            >
+              ← Back to Detail View
+            </button>
+          </div>
         </div>
       </div>
 

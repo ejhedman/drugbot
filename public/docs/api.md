@@ -1,117 +1,193 @@
-# API Specification
+# DrugBot API Specification
 
-This document describes the complete API for the Repository System, including all endpoints, operations, and data types.
+This document describes the complete RESTful API for DrugBot, including all endpoints, data types, and operations for managing pharmaceutical data.
 
 ## Base URL
 
-All API endpoints are relative to the base URL of your application (e.g., `http://localhost:3000`).
+All API endpoints are relative to the base URL of your DrugBot application (e.g., `http://localhost:3000`).
+
+## Authentication
+
+Currently, DrugBot uses simulated authentication. In production, endpoints would require proper authentication headers:
+
+```http
+Authorization: Bearer <access_token>
+```
 
 ## Data Types
 
-### Core Entities
+### Core UI Types
 
-#### Entity
-The primary entity type representing main business objects.
+#### UIProperty
+Represents a single property/field of an entity with metadata and optional value.
 
 ```typescript
-interface Entity {
-  entity_key: string;        // Unique identifier (primary key)
-  entity_name: string;       // Human-readable name
-  entity_property1: string;  // Additional metadata
+interface UIProperty {
+  propertyName: string;           // Internal field name
+  controlType: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'boolean';
+  isEditable: boolean;            // Whether users can modify this property
+  isVisible: boolean;             // Whether this property should be shown in UI
+  isKey: boolean;                 // Whether this property serves as a business key
+  isId: boolean;                  // Whether this property is a primary key
+  isRequired: boolean;            // Whether this property must have a value
+  ordinal: number;                // Display order
+  selectValues?: string[];        // Available options for select controls
+  displayName?: string;           // Human-readable label
+  placeholder?: string;           // Hint text for form fields
+  propertyValue?: any;            // The actual value (for runtime instances)
+  validation?: {
+    min?: number;
+    max?: number;
+    pattern?: string;
+    custom?: string;
+  };
 }
 ```
 
-#### ChildEntity
-Child entities that belong to a parent Entity.
+#### UIAggregate
+Represents a collection of related data rows (like a table or sub-collection).
 
 ```typescript
-interface ChildEntity {
-  child_entity_key: string;        // Unique identifier (primary key)
-  entity_key: string;              // Foreign key to parent Entity
-  child_entity_name: string;       // Human-readable name
-  child_entity_property1: string;  // Additional metadata
+interface UIAggregate {
+  aggregateType: string;          // Type identifier (e.g., "GenericRoute")
+  displayName: string;            // Human-readable name
+  isTable: boolean;               // Whether to display as table
+  propertyDefs?: UIProperty[];    // Schema definitions for properties
+  entityUid?: string;             // Entity this aggregate belongs to
+  rows?: UIProperty[][];          // Data rows (2D array)
 }
 ```
 
-### Collections
-
-#### EntityColl1
-Collection data associated with Entity.
+#### UIEntity
+Represents a complete business object with properties and aggregates.
 
 ```typescript
-interface EntityColl1 {
-  entity_key: string;      // Foreign key to parent Entity
-  coll1_property1: string; // String property
-  coll1_property2: string; // String property
-  coll1_property3: number; // Numeric property
+interface UIEntity {
+  entityUid?: string;             // Unique GUID identifier
+  entityKey?: string;             // Business key for URLs/API calls
+  entityType?: string;            // Type identifier
+  displayName: string;            // Human-readable name
+  pluralName?: string;            // Plural form of entity name
+  propertyDefs?: UIProperty[];    // Schema definitions
+  properties?: UIProperty[];      // Runtime property values
+  aggregates?: UIAggregate[];     // Related data collections
+  ancestors?: UIEntityRef[];      // Parent entities for navigation
+  children?: UIEntityRef[];       // Child entities for navigation
+  aggregateRefs?: AggregateRef[]; // References to available aggregates
 }
 ```
 
-#### ChildEntityColl1
-Collection data associated with ChildEntity.
+#### UIEntityRef
+Lightweight reference to an entity for hierarchical navigation.
 
 ```typescript
-interface ChildEntityColl1 {
-  child_entity_key: string; // Foreign key to parent ChildEntity
-  coll1_property1: string;  // String property
-  coll1_property2: number;  // Numeric property
+interface UIEntityRef {
+  entityUid?: string;             // Unique identifier
+  displayName: string;            // Human-readable name
+  ancestors: UIEntityRef[];       // Ancestor entities
+  children: UIEntityRef[];        // Child entities
 }
 ```
 
-#### ChildEntityColl2
-Additional collection data associated with ChildEntity.
+### Request/Response Types
 
+#### CreateEntityRequest
 ```typescript
-interface ChildEntityColl2 {
-  child_entity_key: string; // Foreign key to parent ChildEntity
-  coll2_property1: string;  // String property
-  coll2_property2: boolean; // Boolean property
+interface CreateEntityRequest {
+  displayName: string;            // Required: Human-readable name
+  properties?: Record<string, any>; // Optional: Additional properties
+}
+```
+
+#### UpdateEntityRequest
+```typescript
+interface UpdateEntityRequest {
+  displayName?: string;           // Optional: Updated name
+  properties?: Record<string, any>; // Optional: Updated properties
+}
+```
+
+#### CreateChildRequest
+```typescript
+interface CreateChildRequest {
+  parent_entity_key: string;      // Required: Parent entity key
+  displayName: string;            // Required: Human-readable name
+  properties?: Record<string, any>; // Optional: Additional properties
 }
 ```
 
 ## API Endpoints
 
-### Entities
+### Generic Drugs (Entities)
 
 #### GET /api/entities
-Retrieve all entities or search entities by name/property.
+Retrieve all generic drugs or search by criteria.
 
 **Query Parameters:**
-- `search` (optional): Search term to filter entities by name or property1
+- `search` (optional): Search term to filter drugs by name, class, target, etc.
+- `format` (optional): Response format - `ui` for UI entities, `db` for database format
 
-**Response:**
+**Response:** `200 OK`
 ```json
 [
   {
-    "entity_key": "entity_001",
-    "entity_name": "Acetaminophen",
-    "entity_property1": "Pain reliever and fever reducer"
+    "entityUid": "uuid-123",
+    "entityKey": "adalimumab",
+    "displayName": "Adalimumab",
+    "properties": [
+      {
+        "propertyName": "generic_name",
+        "displayName": "Generic Name",
+        "propertyValue": "Adalimumab",
+        "isEditable": true,
+        "isVisible": true
+      },
+      {
+        "propertyName": "target",
+        "displayName": "Target",
+        "propertyValue": "TNFi",
+        "isEditable": true,
+        "isVisible": true
+      }
+    ],
+    "aggregates": [
+      {
+        "aggregateType": "GenericManuDrugs",
+        "displayName": "Manufactured Drugs",
+        "rows": []
+      }
+    ]
   }
 ]
 ```
 
 **Example:**
 ```bash
-curl "http://localhost:3000/api/entities?search=acetaminophen"
+curl "http://localhost:3000/api/entities?search=adalimumab&format=ui"
 ```
 
 #### POST /api/entities
-Create a new entity.
+Create a new generic drug.
 
 **Request Body:**
 ```json
 {
-  "entity_name": "New Entity",
-  "entity_property1": "Description of the entity"
+  "displayName": "New Drug",
+  "properties": {
+    "generic_name": "New Drug",
+    "target": "TNFi",
+    "class_or_type": "Biologic"
+  }
 }
 ```
 
 **Response:** `201 Created`
 ```json
 {
-  "entity_key": "entity_1703123456789_abc123def",
-  "entity_name": "New Entity",
-  "entity_property1": "Description of the entity"
+  "entityUid": "uuid-456",
+  "entityKey": "new-drug",
+  "displayName": "New Drug",
+  "properties": [...]
 }
 ```
 
@@ -119,55 +195,60 @@ Create a new entity.
 ```bash
 curl -X POST "http://localhost:3000/api/entities" \
   -H "Content-Type: application/json" \
-  -d '{"entity_name": "New Entity", "entity_property1": "Description"}'
+  -d '{"displayName": "New Drug", "properties": {"generic_name": "New Drug"}}'
 ```
 
 #### GET /api/entities/{key}
-Retrieve a specific entity by its key.
+Retrieve a specific generic drug by its key.
 
-**Response:**
+**Response:** `200 OK`
 ```json
 {
-  "entity_key": "entity_001",
-  "entity_name": "Acetaminophen",
-  "entity_property1": "Pain reliever and fever reducer"
+  "entityUid": "uuid-123",
+  "entityKey": "adalimumab",
+  "displayName": "Adalimumab",
+  "properties": [...],
+  "aggregates": [...]
 }
 ```
 
 **Example:**
 ```bash
-curl "http://localhost:3000/api/entities/entity_001"
+curl "http://localhost:3000/api/entities/adalimumab"
 ```
 
 #### PATCH /api/entities/{key}
-Update a specific entity.
+Update a specific generic drug.
 
 **Request Body:**
 ```json
 {
-  "entity_name": "Updated Entity Name",
-  "entity_property1": "Updated description"
+  "displayName": "Updated Drug Name",
+  "properties": {
+    "target": "Updated Target"
+  }
 }
 ```
 
-**Response:**
+**Response:** `200 OK`
 ```json
 {
-  "entity_key": "entity_001",
-  "entity_name": "Updated Entity Name",
-  "entity_property1": "Updated description"
+  "entityUid": "uuid-123",
+  "entityKey": "adalimumab",
+  "displayName": "Updated Drug Name",
+  "properties": [...]
 }
 ```
 
 **Example:**
 ```bash
-curl -X PATCH "http://localhost:3000/api/entities/entity_001" \
+curl -X PATCH "http://localhost:3000/api/entities/adalimumab" \
   -H "Content-Type: application/json" \
-  -d '{"entity_name": "Updated Name"}'
+  -d '{"displayName": "Updated Name"}'
 ```
 
 #### DELETE /api/entities/{key}
-Delete a specific entity.
+Delete a specific generic drug.
 
 **Response:** `200 OK`
 ```json
@@ -178,61 +259,81 @@ Delete a specific entity.
 
 **Example:**
 ```bash
-curl -X DELETE "http://localhost:3000/api/entities/entity_001"
+curl -X DELETE "http://localhost:3000/api/entities/adalimumab"
 ```
 
-### Child Entities
+### Manufactured Drugs (Children)
 
 #### GET /api/children
-Retrieve all child entities, filter by parent entity, or search.
+Retrieve manufactured drug variants, optionally filtered by parent generic drug.
 
 **Query Parameters:**
-- `entityKey` (optional): Filter children by parent entity key
-- `search` (optional): Search term to filter children by name or property1
+- `entityKey` (optional): Filter by parent generic drug key
+- `search` (optional): Search term to filter by brand name, manufacturer, etc.
+- `format` (optional): Response format - `ui` for UI entities, `db` for database format
 
-**Response:**
+**Response:** `200 OK`
 ```json
 [
   {
-    "child_entity_key": "child_001",
-    "entity_key": "entity_001",
-    "child_entity_name": "Tylenol",
-    "child_entity_property1": "Brand name for acetaminophen"
+    "entityUid": "uuid-789",
+    "entityKey": "humira",
+    "displayName": "Humira",
+    "properties": [
+      {
+        "propertyName": "drug_name",
+        "displayName": "Brand Name",
+        "propertyValue": "Humira",
+        "isEditable": true,
+        "isVisible": true
+      },
+      {
+        "propertyName": "manufacturer",
+        "displayName": "Manufacturer",
+        "propertyValue": "AbbVie",
+        "isEditable": true,
+        "isVisible": true
+      }
+    ],
+    "ancestors": [
+      {
+        "displayName": "Adalimumab",
+        "entityKey": "adalimumab"
+      }
+    ]
   }
 ]
 ```
 
-**Examples:**
+**Example:**
 ```bash
-# Get all children
-curl "http://localhost:3000/api/children"
-
-# Get children for specific entity
-curl "http://localhost:3000/api/children?entityKey=entity_001"
-
-# Search children
-curl "http://localhost:3000/api/children?search=tylenol"
+curl "http://localhost:3000/api/children?entityKey=adalimumab&format=ui"
 ```
 
 #### POST /api/children
-Create a new child entity.
+Create a new manufactured drug variant.
 
 **Request Body:**
 ```json
 {
-  "entity_key": "entity_001",
-  "child_entity_name": "New Child Entity",
-  "child_entity_property1": "Description of the child entity"
+  "parent_entity_key": "adalimumab",
+  "displayName": "New Brand",
+  "properties": {
+    "drug_name": "New Brand",
+    "manufacturer": "Pharma Corp",
+    "biosimilar": false
+  }
 }
 ```
 
 **Response:** `201 Created`
 ```json
 {
-  "child_entity_key": "child_1703123456789_xyz789ghi",
-  "entity_key": "entity_001",
-  "child_entity_name": "New Child Entity",
-  "child_entity_property1": "Description of the child entity"
+  "entityUid": "uuid-999",
+  "entityKey": "new-brand",
+  "displayName": "New Brand",
+  "properties": [...],
+  "ancestors": [...]
 }
 ```
 
@@ -240,57 +341,63 @@ Create a new child entity.
 ```bash
 curl -X POST "http://localhost:3000/api/children" \
   -H "Content-Type: application/json" \
-  -d '{"entity_key": "entity_001", "child_entity_name": "New Child", "child_entity_property1": "Description"}'
+  -d '{"parent_entity_key": "adalimumab", "displayName": "New Brand"}'
 ```
 
 #### GET /api/children/{key}
-Retrieve a specific child entity by its key.
+Retrieve a specific manufactured drug by its key.
 
-**Response:**
+**Query Parameters:**
+- `format` (optional): Response format
+
+**Response:** `200 OK`
 ```json
 {
-  "child_entity_key": "child_001",
-  "entity_key": "entity_001",
-  "child_entity_name": "Tylenol",
-  "child_entity_property1": "Brand name for acetaminophen"
+  "entityUid": "uuid-789",
+  "entityKey": "humira",
+  "displayName": "Humira",
+  "properties": [...],
+  "ancestors": [...]
 }
 ```
 
 **Example:**
 ```bash
-curl "http://localhost:3000/api/children/child_001"
+curl "http://localhost:3000/api/children/humira?format=ui"
 ```
 
 #### PATCH /api/children/{key}
-Update a specific child entity.
+Update a specific manufactured drug.
 
 **Request Body:**
 ```json
 {
-  "child_entity_name": "Updated Child Name",
-  "child_entity_property1": "Updated description"
+  "displayName": "Updated Brand Name",
+  "properties": {
+    "manufacturer": "Updated Manufacturer"
+  }
 }
 ```
 
-**Response:**
+**Response:** `200 OK`
 ```json
 {
-  "child_entity_key": "child_001",
-  "entity_key": "entity_001",
-  "child_entity_name": "Updated Child Name",
-  "child_entity_property1": "Updated description"
+  "entityUid": "uuid-789",
+  "entityKey": "humira",
+  "displayName": "Updated Brand Name",
+  "properties": [...]
 }
 ```
 
 **Example:**
 ```bash
-curl -X PATCH "http://localhost:3000/api/children/child_001" \
+curl -X PATCH "http://localhost:3000/api/children/humira" \
   -H "Content-Type: application/json" \
-  -d '{"child_entity_name": "Updated Name"}'
+  -d '{"displayName": "Updated Brand"}'
 ```
 
 #### DELETE /api/children/{key}
-Delete a specific child entity.
+Delete a specific manufactured drug.
 
 **Response:** `200 OK`
 ```json
@@ -301,360 +408,597 @@ Delete a specific child entity.
 
 **Example:**
 ```bash
-curl -X DELETE "http://localhost:3000/api/children/child_001"
+curl -X DELETE "http://localhost:3000/api/children/humira"
 ```
 
-### Entity Collections (EntityColl1)
+### Drug Routes
 
-#### GET /api/entity-coll1
-Retrieve all entity collection items or filter by entity key.
+#### GET /api/generic-routes
+Retrieve administration routes for a specific generic drug.
 
 **Query Parameters:**
-- `entityKey` (optional): Filter items by entity key
+- `entityKey` (required): Generic drug key to get routes for
 
-**Response:**
+**Response:** `200 OK`
 ```json
-[
-  {
-    "entity_key": "entity_001",
-    "coll1_property1": "Value 1A",
-    "coll1_property2": "Value 1B",
-    "coll1_property3": 123
-  }
-]
+{
+  "aggregateType": "GenericRoute",
+  "displayName": "Drug Route & Dosing",
+  "isTable": true,
+  "propertyDefs": [
+    {
+      "propertyName": "route_type",
+      "displayName": "Route Type",
+      "controlType": "select",
+      "selectValues": ["Subcutaneous", "Intravenous", "Oral"]
+    }
+  ],
+  "rows": [
+    [
+      {
+        "propertyName": "route_type",
+        "propertyValue": "Subcutaneous",
+        "displayName": "Route Type"
+      },
+      {
+        "propertyName": "load_dose",
+        "propertyValue": "160",
+        "displayName": "Loading Dose"
+      },
+      {
+        "propertyName": "load_measure",
+        "propertyValue": "mg",
+        "displayName": "Loading Dose Unit"
+      }
+    ]
+  ]
+}
 ```
 
-**Examples:**
+**Example:**
 ```bash
-# Get all items
-curl "http://localhost:3000/api/entity-coll1"
-
-# Get items for specific entity
-curl "http://localhost:3000/api/entity-coll1?entityKey=entity_001"
+curl "http://localhost:3000/api/generic-routes?entityKey=adalimumab"
 ```
 
-#### POST /api/entity-coll1
-Create a new entity collection item.
+#### POST /api/generic-routes
+Add a new route for a generic drug.
 
 **Request Body:**
 ```json
 {
-  "entity_key": "entity_001",
-  "coll1_property1": "New Value A",
-  "coll1_property2": "New Value B",
-  "coll1_property3": 456
+  "entityKey": "adalimumab",
+  "route_type": "Subcutaneous",
+  "load_dose": "160",
+  "load_measure": "mg",
+  "maintain_dose": "40",
+  "maintain_measure": "mg",
+  "montherapy": "Approved",
+  "half_life": "14 days"
 }
 ```
 
 **Response:** `201 Created`
 ```json
 {
-  "entity_key": "entity_001",
-  "coll1_property1": "New Value A",
-  "coll1_property2": "New Value B",
-  "coll1_property3": 456
+  "message": "Route added successfully",
+  "routeId": "uuid-route-123"
 }
 ```
 
 **Example:**
 ```bash
-curl -X POST "http://localhost:3000/api/entity-coll1" \
+curl -X POST "http://localhost:3000/api/generic-routes" \
   -H "Content-Type: application/json" \
-  -d '{"entity_key": "entity_001", "coll1_property1": "Value A", "coll1_property2": "Value B", "coll1_property3": 456}'
+  -d '{"entityKey": "adalimumab", "route_type": "Subcutaneous"}'
 ```
 
-#### PATCH /api/entity-coll1/{entityKey}/{index}
-Update a specific entity collection item by entity key and index.
+### Drug Approvals
 
-**Request Body:**
-```json
-{
-  "coll1_property1": "Updated Value A",
-  "coll1_property2": "Updated Value B",
-  "coll1_property3": 789
-}
-```
+#### GET /api/generic-approvals
+Retrieve regulatory approvals for a specific generic drug.
 
-**Response:**
-```json
-{
-  "entity_key": "entity_001",
-  "coll1_property1": "Updated Value A",
-  "coll1_property2": "Updated Value B",
-  "coll1_property3": 789
-}
-```
-
-**Example:**
-```bash
-curl -X PATCH "http://localhost:3000/api/entity-coll1/entity_001/0" \
-  -H "Content-Type: application/json" \
-  -d '{"coll1_property1": "Updated Value"}'
-```
-
-#### DELETE /api/entity-coll1/{entityKey}/{index}
-Delete a specific entity collection item by entity key and index.
+**Query Parameters:**
+- `entityKey` (required): Generic drug key to get approvals for
 
 **Response:** `200 OK`
 ```json
 {
-  "message": "Item deleted successfully"
+  "aggregateType": "GenericApproval",
+  "displayName": "Drug Approval",
+  "isTable": true,
+  "propertyDefs": [
+    {
+      "propertyName": "country",
+      "displayName": "Country",
+      "controlType": "select",
+      "selectValues": ["USA", "CAN", "FRA", "UK"]
+    }
+  ],
+  "rows": [
+    [
+      {
+        "propertyName": "country",
+        "propertyValue": "USA",
+        "displayName": "Country"
+      },
+      {
+        "propertyName": "indication",
+        "propertyValue": "Rheumatoid Arthritis",
+        "displayName": "Indication"
+      },
+      {
+        "propertyName": "approval_date",
+        "propertyValue": "2002-12-31",
+        "displayName": "Approval Date"
+      }
+    ]
+  ]
 }
 ```
 
 **Example:**
 ```bash
-curl -X DELETE "http://localhost:3000/api/entity-coll1/entity_001/0"
+curl "http://localhost:3000/api/generic-approvals?entityKey=adalimumab"
 ```
 
-### Child Entity Collections (ChildEntityColl1)
-
-#### GET /api/child-entity-coll1
-Retrieve all child entity collection items or filter by child entity key.
-
-**Query Parameters:**
-- `childKey` (optional): Filter items by child entity key
-
-**Response:**
-```json
-[
-  {
-    "child_entity_key": "child_001",
-    "coll1_property1": "Child1A",
-    "coll1_property2": 10
-  }
-]
-```
-
-**Examples:**
-```bash
-# Get all items
-curl "http://localhost:3000/api/child-entity-coll1"
-
-# Get items for specific child entity
-curl "http://localhost:3000/api/child-entity-coll1?childKey=child_001"
-```
-
-#### POST /api/child-entity-coll1
-Create a new child entity collection item.
+#### POST /api/generic-approvals
+Add a new approval for a generic drug.
 
 **Request Body:**
 ```json
 {
-  "child_entity_key": "child_001",
-  "coll1_property1": "New Child Value",
-  "coll1_property2": 25
+  "entityKey": "adalimumab",
+  "country": "USA",
+  "indication": "Rheumatoid Arthritis",
+  "approval_date": "2002-12-31",
+  "box_warning": "Increased risk of serious infections"
 }
 ```
 
 **Response:** `201 Created`
 ```json
 {
-  "child_entity_key": "child_001",
-  "coll1_property1": "New Child Value",
-  "coll1_property2": 25
+  "message": "Approval added successfully",
+  "approvalId": "uuid-approval-123"
 }
 ```
 
 **Example:**
 ```bash
-curl -X POST "http://localhost:3000/api/child-entity-coll1" \
+curl -X POST "http://localhost:3000/api/generic-approvals" \
   -H "Content-Type: application/json" \
-  -d '{"child_entity_key": "child_001", "coll1_property1": "New Value", "coll1_property2": 25}'
+  -d '{"entityKey": "adalimumab", "country": "USA", "indication": "RA"}'
 ```
 
-#### PATCH /api/child-entity-coll1/{childKey}/{index}
-Update a specific child entity collection item by child entity key and index.
+### Drug Aliases
 
-**Request Body:**
-```json
-{
-  "coll1_property1": "Updated Child Value",
-  "coll1_property2": 30
-}
-```
+#### GET /api/generic-aliases
+Retrieve aliases for a specific generic drug.
 
-**Response:**
-```json
-{
-  "child_entity_key": "child_001",
-  "coll1_property1": "Updated Child Value",
-  "coll1_property2": 30
-}
-```
-
-**Example:**
-```bash
-curl -X PATCH "http://localhost:3000/api/child-entity-coll1/child_001/0" \
-  -H "Content-Type: application/json" \
-  -d '{"coll1_property1": "Updated Value"}'
-```
-
-#### DELETE /api/child-entity-coll1/{childKey}/{index}
-Delete a specific child entity collection item by child entity key and index.
+**Query Parameters:**
+- `entityKey` (required): Generic drug key to get aliases for
 
 **Response:** `200 OK`
 ```json
 {
-  "message": "Item deleted successfully"
+  "aggregateType": "GenericAlias",
+  "displayName": "Generic Alias",
+  "isTable": true,
+  "propertyDefs": [
+    {
+      "propertyName": "alias",
+      "displayName": "Alias Name",
+      "controlType": "text"
+    }
+  ],
+  "rows": [
+    [
+      {
+        "propertyName": "alias",
+        "propertyValue": "D2E7",
+        "displayName": "Alias Name"
+      }
+    ],
+    [
+      {
+        "propertyName": "alias",
+        "propertyValue": "Anti-TNF",
+        "displayName": "Alias Name"
+      }
+    ]
+  ]
 }
 ```
 
 **Example:**
 ```bash
-curl -X DELETE "http://localhost:3000/api/child-entity-coll1/child_001/0"
+curl "http://localhost:3000/api/generic-aliases?entityKey=adalimumab"
 ```
 
-### Child Entity Collections (ChildEntityColl2)
-
-#### GET /api/child-entity-coll2
-Retrieve all child entity collection items or filter by child entity key.
-
-**Query Parameters:**
-- `childKey` (optional): Filter items by child entity key
-
-**Response:**
-```json
-[
-  {
-    "child_entity_key": "child_001",
-    "coll2_property1": "Extra1A",
-    "coll2_property2": true
-  }
-]
-```
-
-**Examples:**
-```bash
-# Get all items
-curl "http://localhost:3000/api/child-entity-coll2"
-
-# Get items for specific child entity
-curl "http://localhost:3000/api/child-entity-coll2?childKey=child_001"
-```
-
-#### POST /api/child-entity-coll2
-Create a new child entity collection item.
+#### POST /api/generic-aliases
+Add a new alias for a generic drug.
 
 **Request Body:**
 ```json
 {
-  "child_entity_key": "child_001",
-  "coll2_property1": "New Extra Value",
-  "coll2_property2": false
+  "entityKey": "adalimumab",
+  "alias": "New Alias"
 }
 ```
 
 **Response:** `201 Created`
 ```json
 {
-  "child_entity_key": "child_001",
-  "coll2_property1": "New Extra Value",
-  "coll2_property2": false
+  "message": "Alias added successfully",
+  "aliasId": "uuid-alias-123"
 }
 ```
 
 **Example:**
 ```bash
-curl -X POST "http://localhost:3000/api/child-entity-coll2" \
+curl -X POST "http://localhost:3000/api/generic-aliases" \
   -H "Content-Type: application/json" \
-  -d '{"child_entity_key": "child_001", "coll2_property1": "New Value", "coll2_property2": false}'
+  -d '{"entityKey": "adalimumab", "alias": "New Alias"}'
 ```
 
-#### PATCH /api/child-entity-coll2/{childKey}/{index}
-Update a specific child entity collection item by child entity key and index.
+### Manufactured Drug Collections
 
-**Request Body:**
-```json
-{
-  "coll2_property1": "Updated Extra Value",
-  "coll2_property2": true
-}
-```
+#### GET /api/generic-manu-drugs
+Retrieve manufactured drug variants for a specific generic drug.
 
-**Response:**
-```json
-{
-  "child_entity_key": "child_001",
-  "coll2_property1": "Updated Extra Value",
-  "coll2_property2": true
-}
-```
-
-**Example:**
-```bash
-curl -X PATCH "http://localhost:3000/api/child-entity-coll2/child_001/0" \
-  -H "Content-Type: application/json" \
-  -d '{"coll2_property1": "Updated Value"}'
-```
-
-#### DELETE /api/child-entity-coll2/{childKey}/{index}
-Delete a specific child entity collection item by child entity key and index.
+**Query Parameters:**
+- `entityKey` (required): Generic drug key to get manufactured variants for
 
 **Response:** `200 OK`
 ```json
 {
-  "message": "Item deleted successfully"
+  "aggregateType": "GenericManuDrugs",
+  "displayName": "Manufactured Drugs",
+  "isTable": true,
+  "propertyDefs": [
+    {
+      "propertyName": "drug_name",
+      "displayName": "Brand Name",
+      "controlType": "text"
+    }
+  ],
+  "rows": [
+    [
+      {
+        "propertyName": "drug_name",
+        "propertyValue": "Humira",
+        "displayName": "Brand Name"
+      },
+      {
+        "propertyName": "manufacturer",
+        "propertyValue": "AbbVie",
+        "displayName": "Manufacturer"
+      },
+      {
+        "propertyName": "biosimilar",
+        "propertyValue": false,
+        "displayName": "Biosimilar"
+      }
+    ]
+  ]
 }
 ```
 
 **Example:**
 ```bash
-curl -X DELETE "http://localhost:3000/api/child-entity-coll2/child_001/0"
+curl "http://localhost:3000/api/generic-manu-drugs?entityKey=adalimumab"
 ```
 
-## Error Responses
+### Data Export
 
-All endpoints may return the following error responses:
+#### GET /api/export
+Export all drug data to Excel format.
 
-### 400 Bad Request
-Invalid request data or missing required fields.
+**Response:** `200 OK`
+- **Content-Type**: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- **Content-Disposition**: `attachment; filename="drugbot_export.xlsx"`
 
+**Example:**
+```bash
+curl "http://localhost:3000/api/export" --output drugbot_export.xlsx
+```
+
+### File Upload
+
+#### POST /api/upload
+Upload Excel files for data import (development feature).
+
+**Request Body:** `multipart/form-data`
+- `file`: Excel file (.xlsx or .xls)
+
+**Response:** `200 OK`
 ```json
 {
-  "error": "entity_name and entity_property1 are required"
+  "message": "File uploaded successfully",
+  "fileName": "upload_2024-01-15T10-30-00-000Z.xlsx",
+  "originalName": "drug_data.xlsx",
+  "size": 1024000
 }
 ```
 
-### 404 Not Found
-The requested resource was not found.
+**Example:**
+```bash
+curl -X POST "http://localhost:3000/api/upload" \
+  -F "file=@drug_data.xlsx"
+```
 
+### User Feedback
+
+#### POST /api/help-feedback
+Submit user feedback or bug reports.
+
+**Request Body:**
 ```json
 {
-  "error": "Entity not found"
+  "type": "bug_report" | "feature_request" | "general_feedback",
+  "subject": "Brief description",
+  "message": "Detailed feedback or bug report",
+  "email": "user@example.com"
 }
 ```
 
-### 500 Internal Server Error
-An unexpected error occurred on the server.
-
+**Response:** `200 OK`
 ```json
 {
-  "error": "Failed to fetch entities"
+  "message": "Feedback submitted successfully"
 }
 ```
 
-## HTTP Status Codes
+**Example:**
+```bash
+curl -X POST "http://localhost:3000/api/help-feedback" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "bug_report", "subject": "Search not working", "message": "Detailed description"}'
+```
 
+### Login Help
+
+#### POST /api/login-help
+Submit login assistance requests.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "issue": "forgot_password" | "account_locked" | "other",
+  "description": "Detailed description of the issue"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "message": "Help request submitted successfully"
+}
+```
+
+**Example:**
+```bash
+curl -X POST "http://localhost:3000/api/login-help" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "issue": "forgot_password"}'
+```
+
+### Admin Endpoints
+
+#### GET /api/admin/approved-users
+Retrieve list of approved users (admin only).
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "uid": "uuid-user-123",
+    "email": "admin@company.com",
+    "role": "admin",
+    "created_at": "2024-01-15T10:30:00Z"
+  }
+]
+```
+
+**Example:**
+```bash
+curl "http://localhost:3000/api/admin/approved-users"
+```
+
+## Error Handling
+
+### Standard Error Response
+All endpoints return consistent error responses:
+
+```json
+{
+  "error": "Error message description",
+  "details": "Additional error details (optional)",
+  "code": "ERROR_CODE (optional)"
+}
+```
+
+### Common HTTP Status Codes
 - `200 OK`: Request successful
 - `201 Created`: Resource created successfully
 - `400 Bad Request`: Invalid request data
+- `401 Unauthorized`: Authentication required
+- `403 Forbidden`: Insufficient permissions
 - `404 Not Found`: Resource not found
 - `500 Internal Server Error`: Server error
 
-## Data Relationships
+### Error Examples
 
-The API supports the following relationships:
+#### 400 Bad Request
+```json
+{
+  "error": "Validation failed",
+  "details": "displayName is required",
+  "code": "VALIDATION_ERROR"
+}
+```
 
-1. **Entity → ChildEntity**: One-to-many (one entity can have multiple child entities)
-2. **Entity → EntityColl1**: One-to-many (one entity can have multiple collection items)
-3. **ChildEntity → ChildEntityColl1**: One-to-many (one child entity can have multiple collection items)
-4. **ChildEntity → ChildEntityColl2**: One-to-many (one child entity can have multiple collection items)
+#### 404 Not Found
+```json
+{
+  "error": "Entity not found",
+  "details": "No entity found with key 'invalid-key'",
+  "code": "ENTITY_NOT_FOUND"
+}
+```
 
-## Notes
+#### 500 Internal Server Error
+```json
+{
+  "error": "Database connection failed",
+  "details": "Unable to connect to database",
+  "code": "DB_CONNECTION_ERROR"
+}
+```
 
-- All collection items are identified by their parent key (entity_key or child_entity_key) and an index within that parent's collection
-- Keys are automatically generated when creating new entities and child entities
-- The API does not support bulk operations at this time
-- All timestamps and IDs are generated server-side
-- Foreign key relationships are validated before creating related records 
+## Rate Limiting
+
+Currently, DrugBot does not implement rate limiting. In production, rate limiting should be implemented to prevent abuse:
+
+- **Default**: 100 requests per minute per IP
+- **Search endpoints**: 50 requests per minute per IP
+- **Export endpoints**: 10 requests per minute per IP
+
+## Pagination
+
+For endpoints that return large datasets, pagination is supported:
+
+**Query Parameters:**
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 50, max: 100)
+
+**Response Headers:**
+- `X-Total-Count`: Total number of items
+- `X-Page-Count`: Total number of pages
+- `X-Current-Page`: Current page number
+
+**Example:**
+```bash
+curl "http://localhost:3000/api/entities?page=2&limit=25"
+```
+
+## Filtering and Sorting
+
+### Search
+Most endpoints support text search across relevant fields:
+
+```bash
+curl "http://localhost:3000/api/entities?search=adalimumab"
+```
+
+### Advanced Filtering (Planned)
+Future versions will support advanced filtering:
+
+```bash
+curl "http://localhost:3000/api/entities?filter[target]=TNFi&filter[class]=Biologic"
+```
+
+### Sorting (Planned)
+Future versions will support sorting:
+
+```bash
+curl "http://localhost:3000/api/entities?sort=displayName&order=asc"
+```
+
+## Webhooks (Planned)
+
+Future versions will support webhooks for real-time notifications:
+
+```bash
+POST /api/webhooks
+{
+  "url": "https://your-app.com/webhook",
+  "events": ["entity.created", "entity.updated", "entity.deleted"],
+  "secret": "webhook_secret"
+}
+```
+
+## SDKs and Libraries
+
+### JavaScript/TypeScript
+```bash
+npm install drugbot-sdk
+```
+
+```typescript
+import { DrugBotClient } from 'drugbot-sdk';
+
+const client = new DrugBotClient({
+  baseUrl: 'http://localhost:3000',
+  apiKey: 'your-api-key'
+});
+
+const drugs = await client.entities.search('adalimumab');
+```
+
+### Python
+```bash
+pip install drugbot-python
+```
+
+```python
+from drugbot import DrugBotClient
+
+client = DrugBotClient(
+    base_url='http://localhost:3000',
+    api_key='your-api-key'
+)
+
+drugs = client.entities.search('adalimumab')
+```
+
+## Testing
+
+### Test Data
+DrugBot includes comprehensive test data for development and testing:
+
+```bash
+# Load test data
+curl "http://localhost:3000/api/test/load-data"
+
+# Reset test data
+curl "http://localhost:3000/api/test/reset-data"
+```
+
+### API Testing
+Use the provided test endpoints to verify API functionality:
+
+```bash
+# Health check
+curl "http://localhost:3000/api/health"
+
+# API status
+curl "http://localhost:3000/api/status"
+```
+
+## Versioning
+
+API versioning is handled through URL paths:
+
+- **Current version**: `/api/v1/` (default)
+- **Future versions**: `/api/v2/`, `/api/v3/`, etc.
+
+**Example:**
+```bash
+curl "http://localhost:3000/api/v1/entities"
+```
+
+## Deprecation Policy
+
+- **Deprecation notice**: 6 months advance notice
+- **Breaking changes**: Only in major version releases
+- **Backward compatibility**: Maintained for at least 12 months
+
+## Support
+
+For API support and questions:
+- **Documentation**: This API specification
+- **Examples**: See the examples in this document
+- **Testing**: Use the test endpoints for validation
+- **Feedback**: Submit through the feedback endpoint 

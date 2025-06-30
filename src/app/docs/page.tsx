@@ -5,45 +5,71 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { BookOpen, Code, Database, Palette, HelpCircle, FileText } from 'lucide-react';
 
 interface DocFile {
   name: string;
   title: string;
   description: string;
   path: string;
+  category: 'overview' | 'technical' | 'user-guide';
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const docFiles: DocFile[] = [
   {
     name: 'README.md',
     title: 'Application Overview',
-    description: 'Complete guide to the Drug Database Application including features, architecture, and getting started instructions.',
-    path: '/docs/README.md'
+    description: 'Complete guide to DrugBot including features, technology stack, data model, and getting started instructions.',
+    path: '/docs/README.md',
+    category: 'overview',
+    icon: BookOpen
+  },
+  {
+    name: 'faq.md',
+    title: 'User Guide & FAQ',
+    description: 'Comprehensive user guide with step-by-step instructions, troubleshooting, and answers to common questions.',
+    path: '/docs/faq.md',
+    category: 'user-guide',
+    icon: HelpCircle
   },
   {
     name: 'api.md',
     title: 'API Specification',
-    description: 'Complete API reference with endpoints, data types, request/response examples, and authentication details.',
-    path: '/docs/api.md'
+    description: 'Complete RESTful API reference with endpoints, data types, request/response examples, and authentication details.',
+    path: '/docs/api.md',
+    category: 'technical',
+    icon: Code
   },
   {
-    name: 'KEY_UID_DESIGN.md',
-    title: 'Database Design',
-    description: 'Technical documentation covering database schema, key/UID design decisions, and relationship mapping.',
-    path: '/docs/KEY_UID_DESIGN.md'
+    name: 'architecture.md',
+    title: 'System Architecture',
+    description: 'Technical architecture documentation covering system design, database schema, and deployment considerations.',
+    path: '/docs/architecture.md',
+    category: 'technical',
+    icon: Database
   },
   {
-    name: 'questions.md',
-    title: 'FAQ & Questions',
-    description: 'Common questions and answers about the system, troubleshooting, and usage guidelines.',
-    path: '/docs/questions.md'
+    name: 'design.md',
+    title: 'Design System',
+    description: 'UI/UX design documentation including design principles, component system, and user experience patterns.',
+    path: '/docs/design.md',
+    category: 'technical',
+    icon: Palette
   }
 ];
+
+const categories = {
+  overview: { name: 'Overview', description: 'Get started with DrugBot' },
+  'user-guide': { name: 'User Guide', description: 'Learn how to use DrugBot' },
+  technical: { name: 'Technical', description: 'Developer and technical documentation' }
+};
 
 export default function DocsPage() {
   const [selectedDoc, setSelectedDoc] = useState<DocFile | null>(null);
   const [markdownContent, setMarkdownContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('overview');
   const router = useRouter();
 
   const fetchMarkdown = async (docPath: string) => {
@@ -65,8 +91,29 @@ export default function DocsPage() {
 
   const handleDocSelect = (doc: DocFile) => {
     setSelectedDoc(doc);
+    setSelectedCategory(doc.category);
     fetchMarkdown(doc.path);
   };
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    // Select the first document in the category
+    const firstDocInCategory = docFiles.find(doc => doc.category === category);
+    if (firstDocInCategory) {
+      setSelectedDoc(firstDocInCategory);
+      fetchMarkdown(firstDocInCategory.path);
+    }
+  };
+
+  // Auto-select first document on page load
+  useEffect(() => {
+    if (!selectedDoc && docFiles.length > 0) {
+      const firstDoc = docFiles[0];
+      setSelectedDoc(firstDoc);
+      setSelectedCategory(firstDoc.category);
+      fetchMarkdown(firstDoc.path);
+    }
+  }, []);
 
   const renderMarkdown = (content: string) => {
     const lines = content.split('\n');
@@ -257,6 +304,8 @@ export default function DocsPage() {
     return elements;
   };
 
+  const filteredDocs = docFiles.filter(doc => doc.category === selectedCategory);
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-8">
@@ -265,24 +314,58 @@ export default function DocsPage() {
           <div className="lg:w-1/4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl">Documentation</CardTitle>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Documentation
+                </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* Category Navigation */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Categories</h3>
+                  <div className="space-y-2">
+                    {Object.entries(categories).map(([key, category]) => (
+                      <button
+                        key={key}
+                        onClick={() => handleCategorySelect(key)}
+                        className={`w-full text-left p-2 rounded-md transition-colors text-sm ${
+                          selectedCategory === key
+                            ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                            : 'hover:bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        <div className="font-medium">{category.name}</div>
+                        <div className="text-xs text-slate-500">{category.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator className="my-4" />
+
+                {/* Document Navigation */}
                 <div className="space-y-2">
-                  {docFiles.map((doc) => (
-                    <button
-                      key={doc.name}
-                      onClick={() => handleDocSelect(doc)}
-                      className={`w-full text-left p-3 rounded-md transition-colors ${
-                        selectedDoc?.name === doc.name
-                          ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-                          : 'hover:bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      <div className="font-medium">{doc.title}</div>
-                      <div className="text-sm text-slate-500 mt-1">{doc.description}</div>
-                    </button>
-                  ))}
+                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Documents</h3>
+                  {filteredDocs.map((doc) => {
+                    const IconComponent = doc.icon;
+                    return (
+                      <button
+                        key={doc.name}
+                        onClick={() => handleDocSelect(doc)}
+                        className={`w-full text-left p-3 rounded-md transition-colors ${
+                          selectedDoc?.name === doc.name
+                            ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                            : 'hover:bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <IconComponent className="h-4 w-4" />
+                          <div className="font-medium">{doc.title}</div>
+                        </div>
+                        <div className="text-sm text-slate-500">{doc.description}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -293,9 +376,16 @@ export default function DocsPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl">
-                    {selectedDoc ? selectedDoc.title : 'Documentation'}
-                  </CardTitle>
+                  <div className="flex items-center gap-3">
+                    {selectedDoc && (
+                      <>
+                        <selectedDoc.icon className="h-6 w-6 text-indigo-600" />
+                        <CardTitle className="text-2xl">
+                          {selectedDoc.title}
+                        </CardTitle>
+                      </>
+                    )}
+                  </div>
                   <Button
                     variant="outline"
                     onClick={() => router.push('/')}
@@ -308,28 +398,63 @@ export default function DocsPage() {
                 {!selectedDoc ? (
                   <div className="text-center py-12">
                     <h2 className="text-2xl font-semibold text-slate-700 mb-4">
-                      Welcome to the Documentation
+                      Welcome to DrugBot Documentation
                     </h2>
                     <p className="text-slate-600 mb-8">
-                      Select a document from the sidebar to get started. The documentation covers everything from getting started to advanced API usage.
+                      Select a category and document from the sidebar to get started. The documentation covers everything from getting started to advanced technical details.
                     </p>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {docFiles.map((doc) => (
-                        <Card key={doc.name} className="cursor-pointer hover:shadow-md transition-shadow">
-                          <CardContent className="p-4">
-                            <h3 className="font-semibold text-slate-800 mb-2">{doc.title}</h3>
-                            <p className="text-sm text-slate-600">{doc.description}</p>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="mt-3"
-                              onClick={() => handleDocSelect(doc)}
-                            >
-                              Read More
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      ))}
+                    
+                    {/* Category Cards */}
+                    <div className="grid md:grid-cols-3 gap-6 mb-8">
+                      {Object.entries(categories).map(([key, category]) => {
+                        const categoryDocs = docFiles.filter(doc => doc.category === key);
+                        return (
+                          <Card key={key} className="cursor-pointer hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                              <h3 className="font-semibold text-slate-800 mb-2">{category.name}</h3>
+                              <p className="text-sm text-slate-600 mb-4">{category.description}</p>
+                              <div className="space-y-2">
+                                {categoryDocs.map((doc) => {
+                                  const IconComponent = doc.icon;
+                                  return (
+                                    <button
+                                      key={doc.name}
+                                      onClick={() => handleDocSelect(doc)}
+                                      className="w-full text-left p-2 rounded hover:bg-slate-50 flex items-center gap-2 text-sm"
+                                    >
+                                      <IconComponent className="h-4 w-4 text-slate-500" />
+                                      {doc.title}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+
+                    {/* Quick Start Guide */}
+                    <div className="bg-indigo-50 p-6 rounded-lg">
+                      <h3 className="font-semibold text-indigo-900 mb-3">Quick Start</h3>
+                      <div className="grid md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <h4 className="font-medium text-indigo-800 mb-2">For Users</h4>
+                          <ul className="space-y-1 text-indigo-700">
+                            <li>• Read the Application Overview</li>
+                            <li>• Check the User Guide & FAQ</li>
+                            <li>• Learn about data management</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-indigo-800 mb-2">For Developers</h4>
+                          <ul className="space-y-1 text-indigo-700">
+                            <li>• Review the API Specification</li>
+                            <li>• Study the System Architecture</li>
+                            <li>• Understand the Design System</li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : (

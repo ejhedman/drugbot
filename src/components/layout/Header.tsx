@@ -26,7 +26,10 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
   const router = useRouter();
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [processingResults, setProcessingResults] = useState<any[]>([]);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,7 +67,9 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
       return;
     }
 
+    setIsProcessing(true);
     const successFiles: string[] = [];
+    const allProcessingResults: any[] = [];
 
     // Upload each file
     for (const file of xlsxFiles) {
@@ -83,8 +88,13 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
         }
 
         const result = await response.json();
-        console.log('File uploaded successfully:', result);
+        console.log('File uploaded and processed successfully:', result);
         successFiles.push(file.name);
+        
+        // Add processing results
+        if (result.processedFiles) {
+          allProcessingResults.push(...result.processedFiles);
+        }
         
       } catch (error) {
         console.error('Upload error:', error);
@@ -92,8 +102,10 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
       }
     }
 
+    setIsProcessing(false);
     if (successFiles.length > 0) {
       setUploadedFiles(successFiles);
+      setProcessingResults(allProcessingResults);
       setUploadSuccess(true);
     }
   }, []);
@@ -111,7 +123,9 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
       return;
     }
 
+    setIsProcessing(true);
     const successFiles: string[] = [];
+    const allProcessingResults: any[] = [];
 
     // Upload each file
     for (const file of xlsxFiles) {
@@ -130,8 +144,13 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
         }
 
         const result = await response.json();
-        console.log('File uploaded successfully:', result);
+        console.log('File uploaded and processed successfully:', result);
         successFiles.push(file.name);
+        
+        // Add processing results
+        if (result.processedFiles) {
+          allProcessingResults.push(...result.processedFiles);
+        }
         
       } catch (error) {
         console.error('Upload error:', error);
@@ -139,8 +158,10 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
       }
     }
 
+    setIsProcessing(false);
     if (successFiles.length > 0) {
       setUploadedFiles(successFiles);
+      setProcessingResults(allProcessingResults);
       setUploadSuccess(true);
     }
   }, []);
@@ -151,7 +172,11 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
 
   const handleCloseUpload = () => {
     setUploadSuccess(false);
+    setIsProcessing(false);
     setUploadedFiles([]);
+    setProcessingResults([]);
+    setIsDragOver(false);
+    setIsUploadDialogOpen(false);
   };
 
   const handleDownload = async () => {
@@ -185,7 +210,7 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
       <div className="flex items-center">
         <div className="h-24 rounded-xl overflow-hidden">
           <Image 
-            src="/Mapissimo.png" 
+            src="/drugissimo.png" 
             alt="Entity Manager Logo" 
             width={0}
             height={0}
@@ -241,7 +266,7 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
               </Dialog>
 
               {/* Upload Icon */}
-              <Dialog>
+              <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
                 <DialogTrigger asChild>
                   <button
                     className="text-slate-600 hover:text-slate-800 transition-colors"
@@ -251,75 +276,132 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
                   </button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {uploadSuccess ? 'Upload Complete' : 'Upload Excel File'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {uploadSuccess 
-                        ? `${uploadedFiles.length} file(s) uploaded successfully`
-                        : 'Drag and drop an Excel file (.xlsx or .xls) to upload'
-                      }
-                    </DialogDescription>
-                  </DialogHeader>
-                  
                   {uploadSuccess ? (
-                    <div className="text-center py-8">
-                      <div className="mx-auto h-12 w-12 text-green-500 mb-4">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Files Uploaded Successfully!
-                      </h3>
-                      <div className="text-sm text-gray-600 mb-6">
-                        {uploadedFiles.map((fileName, index) => (
-                          <div key={index} className="py-1">
-                            ✓ {fileName}
+                    // Status/Results View
+                    <>
+                      <DialogHeader>
+                        <DialogTitle>Upload Complete</DialogTitle>
+                        <DialogDescription>
+                          {uploadedFiles.length} file(s) uploaded and processed successfully
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="text-center py-8">
+                        <div className="mx-auto h-12 w-12 text-green-500 mb-4">
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Files Uploaded and Processed Successfully!
+                        </h3>
+                        <div className="text-sm text-gray-600 mb-6">
+                          {uploadedFiles.map((fileName, index) => (
+                            <div key={index} className="py-1">
+                              ✓ {fileName}
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Processing Results */}
+                        {processingResults.length > 0 && (
+                          <div className="text-left mb-6">
+                            <h4 className="font-medium text-gray-900 mb-3">Processing Results:</h4>
+                            <div className="space-y-3 max-h-60 overflow-y-auto">
+                              {processingResults.map((result, index) => (
+                                <div key={index} className="bg-gray-50 p-3 rounded-md">
+                                  <div className="font-medium text-gray-800 mb-1">
+                                    {result.worksheetName}
+                                  </div>
+                                  <div className="text-sm text-gray-600 space-y-1">
+                                    <div>Total rows: {result.totalRows}</div>
+                                    <div className="flex gap-4">
+                                      <span className="text-green-600">New: {result.newRows}</span>
+                                      <span className="text-blue-600">Existing: {result.existingRows}</span>
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      CSV saved to: {result.csvPath.split('/').pop()}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        ))}
+                        )}
+                        
+                        <button
+                          onClick={handleCloseUpload}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                          Close
+                        </button>
                       </div>
-                      <button
-                        onClick={handleCloseUpload}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                      >
-                        Close
-                      </button>
-                    </div>
+                    </>
+                  ) : isProcessing ? (
+                    // Processing View
+                    <>
+                      <DialogHeader>
+                        <DialogTitle>Processing Files</DialogTitle>
+                        <DialogDescription>
+                          Please wait while your files are being uploaded and processed...
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="text-center py-12">
+                        <div className="mx-auto h-12 w-12 text-blue-500 mb-4">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Processing...
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Extracting worksheets, comparing with database, and generating CSV files.
+                        </p>
+                      </div>
+                    </>
                   ) : (
-                    <div
-                      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                        isDragOver 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                    >
-                      <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                      <p className="text-sm text-gray-600">
-                        {isDragOver ? 'Drop your file here' : 'Drag and drop your Excel file here'}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2 mb-4">
-                        Supports .xlsx and .xls files
-                      </p>
-                      <button
-                        onClick={handleClickUpload}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                    // Upload Zone View
+                    <>
+                      <DialogHeader>
+                        <DialogTitle>Upload Excel File</DialogTitle>
+                        <DialogDescription>
+                          Drag and drop an Excel file (.xlsx or .xls) to upload and process
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div
+                        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                          isDragOver 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
                       >
-                        Or click to select files
-                      </button>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".xlsx,.xls"
-                        multiple
-                        onChange={(e) => handleFileSelect(e.target.files)}
-                        className="hidden"
-                      />
-                    </div>
+                        <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                        <p className="text-sm text-gray-600">
+                          {isDragOver ? 'Drop your file here' : 'Drag and drop your Excel file here'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2 mb-4">
+                          Supports .xlsx and .xls files
+                        </p>
+                        <button
+                          onClick={handleClickUpload}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                        >
+                          Or click to select files
+                        </button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".xlsx,.xls"
+                          multiple
+                          onChange={(e) => handleFileSelect(e.target.files)}
+                          className="hidden"
+                        />
+                      </div>
+                    </>
                   )}
                 </DialogContent>
               </Dialog>
