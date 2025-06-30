@@ -9,10 +9,10 @@ import { UIAggregateMeta, UIEntityMeta, UIModel } from '../model_defs/UIModel';
 
 // Sub-collection schemas (separate from main entities)
 export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
-  generic_aliases: {
+  GenericAlias: {
     aggregateType: 'GenericAlias',
     displayName: 'Generic Alias',
-    ordinal: 3,
+    // ordinal: 3,
     isTable: true,
     propertyDefs: [
       {
@@ -60,10 +60,10 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
     ],
   },
 
-  generic_routes: {
+  GenericRoute: {
     aggregateType: 'GenericRoute',
     displayName: 'Drug Route & Dosing',
-    ordinal: 2,
+    // ordinal: 2,
     isTable: true,
     propertyDefs: [
       {
@@ -178,10 +178,10 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
     ],
   },
 
-  generic_approvals: {
+  GenericApproval: {
     aggregateType: 'GenericApproval',
     displayName: 'Drug Approval',
-    ordinal: 1,
+    // ordinal: 1,
     isTable: true,
     propertyDefs: [
       {
@@ -253,10 +253,10 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
     ],
   },
 
-  generic_manu_drugs: {
+  GenericManuDrugs: {
     aggregateType: 'GenericManuDrugs',
     displayName: 'Manufactured Drugs',
-    ordinal: 4,
+    // ordinal: 4,
     isTable: true,
     propertyDefs: [
       {
@@ -350,8 +350,8 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
 
 // Main entity schemas (only contains the actual entities, not sub-collections)
 export const ENTITIES: Record<string, UIEntityMeta> = {
-  generic_drugs: {
-    entityType: 'generic_drugs',
+  GenericDrugs: {
+    entityType: 'GenericDrugs',
     displayName: 'Generic Drug',
     pluralName: 'Generic Drugs',
     propertyDefs: [
@@ -435,9 +435,9 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
     ],
     aggregateRefs: [
       {
-        aggregateType: 'GenericAlias',
-        displayName: 'Aliases',
-        ordinal: 3
+        aggregateType: 'GenericManuDrugs',
+        displayName: 'Manufactured Drugs',
+        ordinal: 1
       },
       {
         aggregateType: 'GenericRoute',
@@ -447,17 +447,18 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
       {
         aggregateType: 'GenericApproval',
         displayName: 'Drug Approval',
-        ordinal: 1
+        ordinal: 3
       },
       {
-        aggregateType: 's',
-        displayName: 'Manufactured Drugs',
+        aggregateType: 'GenericAlias',
+        displayName: 'Aliases',
         ordinal: 4
-      }
+      },
     ]
   },
 
-  manu_drugs: {
+  ManuDrugs: {
+    entityType: 'ManuDrugs',
     displayName: 'Manufactured Drug',
     pluralName: 'Manufactured Drugs',
     propertyDefs: [
@@ -573,11 +574,11 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
  * for querying the UI model.
  * 
  * Usage Examples:
- * - theUIModel.getEntity('generic_drugs')
- * - theUIModel.getEntityVisibleProperties('generic_drugs')
+ * - theUIModel.getEntity('GenericDrugs')
+ * - theUIModel.getEntityVisibleProperties('GenericDrugs')
  * - theUIModel.getAggregate('GenericRoute')
  * - theUIModel.getAggregateEditableProperties('GenericRoute')
- * - theUIModel.findEntityProperty('generic_drugs', 'generic_name')
+ * - theUIModel.findEntityProperty('GenericDrugs', 'generic_name')
  */
 export const theUIModel = new UIModel(ENTITIES, ENTITY_AGGREGATES);
 

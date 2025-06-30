@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { entityRepository, childEntityRepository } from '@/repository';
+import { entityRepository } from '@/repository';
 import { UpdateChildEntityRequest } from '@/model_defs/DBModel';
 import { manuDrugsTable } from '@/model_instances/TheDBModel';
 
@@ -32,7 +32,7 @@ export async function PATCH(
     const { key } = await params;
     const body: UpdateChildEntityRequest = await request.json();
     
-    const updatedChild = await childEntityRepository.updateChildEntityAsUIEntity(key, body, manuDrugsTable);
+    const updatedChild = await entityRepository.updateChildEntityAsUIEntity(key, body, manuDrugsTable);
     
     if (!updatedChild) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });

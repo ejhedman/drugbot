@@ -32,7 +32,7 @@ export { ENTITIES, ENTITY_AGGREGATES } from './TheUIModel';
 // DATABASE SCHEMA INSTANCES
 // ============================================================================
 export { 
-  drugBotDBSchema,
+  theDBSchema,
   genericDrugsTable,
   genericAliasesTable,
   genericRoutesTable,

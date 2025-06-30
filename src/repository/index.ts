@@ -10,13 +10,12 @@
 // ============================================================================
 export { BaseRepository } from './base_repository';
 
-export { drugBotDBSchema  } from '../model_instances/TheDBModel';
+export { theDBSchema  } from '../model_instances/TheDBModel';
 
 // ============================================================================
 // ENTITY REPOSITORIES
 // ============================================================================
 export { EntityRepository } from './entity_repository';
-export { ChildEntityRepository } from './child_entity_repository';
 export { AggregateRepository } from './aggregate_repository';
 
 // ============================================================================
@@ -25,18 +24,15 @@ export { AggregateRepository } from './aggregate_repository';
 
 // Import classes for instantiation
 import { EntityRepository } from './entity_repository';
-import { ChildEntityRepository } from './child_entity_repository';
 import { AggregateRepository } from './aggregate_repository';
 
 // Create individual repository instances
 const entityRepository = new EntityRepository();
-const childEntityRepository = new ChildEntityRepository();
 const aggregateRepository = new AggregateRepository();
 
 // Export individual instances for direct use
 export { 
   entityRepository,
-  childEntityRepository,
   aggregateRepository
 };
 
@@ -50,12 +46,10 @@ export {
  */
 export class UnifiedRepository {
   public readonly entities: EntityRepository;
-  public readonly childEntities: ChildEntityRepository;
   public readonly aggregates: AggregateRepository;
 
   constructor() {
     this.entities = entityRepository;
-    this.childEntities = childEntityRepository;
     this.aggregates = aggregateRepository;
   }
 }

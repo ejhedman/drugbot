@@ -34,10 +34,10 @@ export class BaseRepository {
    * @param isChildEntity - Whether this is a child entity
    */
   protected getPropertyMetaFromSchema(tableName: string, propertyName: string, isChildEntity: boolean = false) {
-    // Map table names to entity/aggregate types
+    // Map table names to entity types that match UIModel keys
     const entityTypeMap: Record<string, string> = {
-      'generic_drugs': 'generic_drugs',
-      'manu_drugs': 'manu_drugs'
+      'generic_drugs': 'GenericDrugs',
+      'manu_drugs': 'ManuDrugs'
     };
 
     const entityType = entityTypeMap[tableName];

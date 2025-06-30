@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'entityKey parameter is required' }, { status: 400 });
     }
 
-    // Use the new AggregateRepository method
-    const routes: UIAggregate = await aggregateRepository.getGenericRouteAggregatesByEntityKey(entityKey);
+    // Use the new unified aggregate method
+    const routes: UIAggregate = await aggregateRepository.getAggregateByEntityKey(entityKey, 'GenericRoute');
 
     return NextResponse.json(routes);
   } catch (error) {

@@ -15,6 +15,7 @@ import { DetailCardProperties } from './DetailCardProperties';
 import { CollectionTabSet, TabConfig, TabCallbacks } from './CollectionTabSet';
 import { useEntityOperations } from '@/hooks/useEntityOperations';
 import { EntityDetailSkeleton } from '@/components/ui/skeleton';
+import { theUIModel } from '@/model_instances/TheUIModel';
 
 interface EntityDetailPageProps {
   entityKey: string | null;
@@ -332,20 +333,24 @@ export function EntityDetailPage({
   // Get entity key for legacy API compatibility
   const entityKeyForAPI = entity?.entityKey || '';
   
+  // Get the aggregateRefs from the UI model to determine tab order
+  const entityAggregateRefs = entity ? theUIModel.getEntity('GenericDrugs')?.aggregateRefs || [] : [];
+  
   // Prepare tab configurations - use schema-driven approach for generic_drugs entities
   const tabConfigs: TabConfig[] = child
     ? [] // Child entities have no collections/tabs
     : entity
     ? [
-        // Schema-driven tab structure using API responses
+        // Schema-driven tab structure using API responses and aggregateRefs for ordering
         {
-          key: 'aliases',
-          label: 'Aliases',
-          icon: <Tag className="w-4 h-4" />,
-          data: convertUIAggregateToTabData(aliasesList),
-          emptyMessage: 'No aliases for this generic drug.',
-          schemaEntityName: 'generic_aliases',
-          isTable: aliasesList?.isTable ?? true, // Use isTable from API response
+          key: 'manufactured-drugs',
+          label: 'Manufactured Drugs',
+          icon: <Database className="w-4 h-4" />,
+          data: convertUIAggregateToTabData(manuDrugsList),
+          emptyMessage: 'No manufactured drugs for this generic drug.',
+          schemaEntityName: 'generic_manu_drugs',
+          isTable: manuDrugsList?.isTable ?? true,
+          ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericManuDrugs')?.ordinal ?? 4,
         },
         {
           key: 'routes',
@@ -354,7 +359,8 @@ export function EntityDetailPage({
           data: convertUIAggregateToTabData(routesList),
           emptyMessage: 'No routes & dosing information for this generic drug.',
           schemaEntityName: 'generic_routes',
-          isTable: routesList?.isTable ?? true, // Use isTable from API response
+          isTable: routesList?.isTable ?? true,
+          ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericRoute')?.ordinal ?? 2,
         },
         {
           key: 'approvals',
@@ -363,18 +369,20 @@ export function EntityDetailPage({
           data: convertUIAggregateToTabData(approvalsList),
           emptyMessage: 'No approval information for this generic drug.',
           schemaEntityName: 'generic_approvals',
-          isTable: approvalsList?.isTable ?? true, // Use isTable from API response
+          isTable: approvalsList?.isTable ?? true,
+          ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericApproval')?.ordinal ?? 3,
         },
         {
-          key: 'manufactured-drugs',
-          label: 'Manufactured Drugs',
-          icon: <Database className="w-4 h-4" />,
-          data: convertUIAggregateToTabData(manuDrugsList),
-          emptyMessage: 'No manufactured drugs for this generic drug.',
-          schemaEntityName: 'generic_manu_drugs',
-          isTable: manuDrugsList?.isTable ?? true, // Use isTable from API response
+          key: 'aliases',
+          label: 'Aliases',
+          icon: <Tag className="w-4 h-4" />,
+          data: convertUIAggregateToTabData(aliasesList),
+          emptyMessage: 'No aliases for this generic drug.',
+          schemaEntityName: 'generic_aliases',
+          isTable: aliasesList?.isTable ?? true,
+          ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericAlias')?.ordinal ?? 1,
         },
-      ]
+      ].sort((a, b) => a.ordinal - b.ordinal) // Sort tabs by ordinal
     : [];
 
   // Create callback map for tabs
@@ -383,6 +391,7 @@ export function EntityDetailPage({
     tabCallbacks['aliases'] = createTabCallbacks('generic-aliases', entityKeyForAPI);
     tabCallbacks['routes'] = createTabCallbacks('generic-routes', entityKeyForAPI);
     tabCallbacks['approvals'] = createTabCallbacks('generic-approvals', entityKeyForAPI);
+    tabCallbacks['manufactured-drugs'] = createTabCallbacks('generic-manu-drugs', entityKeyForAPI);
   }
 
   return (

@@ -48,7 +48,7 @@ import { ModelMap, EntityMapping, AggregateMapping, PropertyMapping } from '../m
  * Maps the generic_drugs UI entity to the generic_drugs database table
  */
 const genericDrugsMapping: EntityMapping = {
-  entityType: 'generic_drugs',
+  entityType: 'GenericDrugs',
   tableName: 'generic_drugs',
   keyField: 'generic_key',
   displayNameField: 'generic_name',
@@ -102,7 +102,7 @@ const genericDrugsMapping: EntityMapping = {
  * Maps the manu_drugs UI entity to the manu_drugs database table
  */
 const manuDrugsMapping: EntityMapping = {
-  entityType: 'manu_drugs',
+  entityType: 'ManuDrugs',
   tableName: 'manu_drugs',
   keyField: 'manu_drug_key',
   displayNameField: 'drug_name',
@@ -367,8 +367,8 @@ export const drugBotModelMap: ModelMap = {
   version: '1.0.0',
   
   entityMappings: {
-    generic_drugs: genericDrugsMapping,
-    manu_drugs: manuDrugsMapping
+    GenericDrugs: genericDrugsMapping,
+    ManuDrugs: manuDrugsMapping
   },
   
   aggregateMappings: {

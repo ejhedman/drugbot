@@ -190,6 +190,10 @@ export function DetailCardProperties({
             <h4 className="section-title mb-2">Collections</h4>
             <div className="text-sm text-gray-600">
               {entity.aggregates
+                .map(aggregate => {
+                  const ref = entity.aggregateRefs?.find(ref => ref.aggregateType === aggregate.aggregateType);
+                  return { ...aggregate, ordinal: ref?.ordinal ?? 0 };
+                })
                 .sort((a, b) => a.ordinal - b.ordinal)
                 .map(collection => collection.displayName)
                 .join(', ')}

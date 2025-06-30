@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { entityRepository, childEntityRepository } from '@/repository';
+import { entityRepository } from '@/repository';
 import { UIEntity } from '@/model_defs';
 import { CreateChildEntityRequest } from '@/model_defs/DBModel';
 import { genericDrugsTable, manuDrugsTable } from '@/model_instances/TheDBModel';
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     let children: UIEntity[];
     if (entityKey) {
-      children = await childEntityRepository.getChildrenAsUIEntitiesByEntityKey(entityKey, manuDrugsTable);
+      children = await entityRepository.getChildUIEntitiesByEntityKey(entityKey, manuDrugsTable);
     } else if (search) {
       // Use the unified searchEntities method from entityRepository
       children = await entityRepository.searchEntities(search, manuDrugsTable);
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const child = await childEntityRepository.createChildEntityAsUIEntity(body, manuDrugsTable);
+    const child = await entityRepository.createChildEntityAsUIEntity(body, manuDrugsTable);
     
     return NextResponse.json(child, { status: 201 });
   } catch (error) {

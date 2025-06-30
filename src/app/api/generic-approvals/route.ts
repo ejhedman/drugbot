@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'entityKey parameter is required' }, { status: 400 });
     }
 
-    // Use the new AggregateRepository method
-    const approvals: UIAggregate = await aggregateRepository.getGenericApprovalAggregatesByEntityKey(entityKey);
+    // Use the new unified aggregate method
+    const approvals: UIAggregate = await aggregateRepository.getAggregateByEntityKey(entityKey, 'GenericApproval');
 
     return NextResponse.json(approvals);
   } catch (error) {

@@ -160,8 +160,8 @@ export interface UIAggregateMeta {
   /** Property schema definitions for this aggregate (defines the "columns" of the collection) */
   propertyDefs?: UIPropertyMeta[];
   
-  /** Display order when multiple aggregates are present (lower numbers appear first) */
-  ordinal: number;
+  // /** Display order when multiple aggregates are present (lower numbers appear first) */
+  // ordinal: number;
 
   /** Whether this aggregate should be displayed as a table (true) or as properties (false) */
   isTable: boolean;

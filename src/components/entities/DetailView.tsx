@@ -107,10 +107,10 @@ export function DetailView({
   };
 
   // Entity form fields configuration - dynamically generated
-  const entityFormFields: FormField[] = generateFormFields('generic_drugs');
+  const entityFormFields: FormField[] = generateFormFields('GenericDrugs');
 
   // Child entity form fields configuration - dynamically generated  
-  const childFormFields: FormField[] = generateFormFields('manu_drugs');
+  const childFormFields: FormField[] = generateFormFields('ManuDrugs');
 
   return (
     <div className="h-full flex flex-col bg-white rounded-xl shadow-accent-md m-4">

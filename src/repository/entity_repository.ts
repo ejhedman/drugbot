@@ -3,7 +3,9 @@ import { UIEntity, UIEntityRef } from '@/model_defs';
 import { 
   DBTable,
   CreateEntityRequest,
-  UpdateEntityRequest
+  UpdateEntityRequest,
+  CreateChildEntityRequest,
+  UpdateChildEntityRequest
 } from '@/model_defs/DBModel';
 import { manuDrugsTable, genericDrugsTable } from '../model_instances/TheDBModel';
 
@@ -84,6 +86,7 @@ export class EntityRepository extends BaseRepository {
       throw new Error(`No name field found in table ${tableName}`);
     }
 
+    // Query by key field to get the entity data
     const { data, error } = await supabase
       .from(tableName)
       .select('*')
@@ -107,22 +110,23 @@ export class EntityRepository extends BaseRepository {
     }
 
     const displayName = data[nameField.name];
+    const entityUid = data.uid; // Get the UID for relationship queries
     
-    // Always try to fetch both children and ancestors
+    // Always try to fetch both children and ancestors using UIDs
     let children: UIEntityRef[] = [];
     let ancestors: UIEntityRef[] = [];
     
     try {
       if (isChildEntity) {
-        // For child entities, fetch ancestors from the parent table
-        ancestors = await this.fetchAncestorsForEntity(data.uid, parentTable);
+        // For child entities, fetch ancestors from the parent table using UID
+        ancestors = await this.fetchAncestorsForEntity(entityUid, parentTable);
         // Child entities typically don't have children, but we'll check anyway
-        children = await this.fetchChildrenForEntity(data.uid, childTable);
+        children = await this.fetchChildrenForEntity(entityUid, childTable);
       } else {
-        // For parent entities, fetch children from the child table
-        children = await this.fetchChildrenForEntity(data.uid, childTable);
+        // For parent entities, fetch children from the child table using UID
+        children = await this.fetchChildrenForEntity(entityUid, childTable);
         // Parent entities typically don't have ancestors, but we'll check anyway
-        ancestors = await this.fetchAncestorsForEntity(data.uid, parentTable);
+        ancestors = await this.fetchAncestorsForEntity(entityUid, parentTable);
       }
     } catch (error) {
       // Log the error but don't fail the whole request if relationships fail
@@ -130,7 +134,7 @@ export class EntityRepository extends BaseRepository {
     }
     
     const entity: UIEntity = {
-      entityUid: data.uid,
+      entityUid: entityUid,
       entityKey: data[keyField.name],
       displayName: displayName,
       properties: this.generatePropertiesFromTable(table, data, { isChildEntity }),
@@ -141,6 +145,7 @@ export class EntityRepository extends BaseRepository {
 
     this.log('GET_BY_KEY_AS_UI_ENTITY_SUCCESS', isChildEntity ? 'CHILD_ENTITIES' : 'ENTITIES', { 
       entityKey, 
+      entityUid,
       tableName, 
       entityName: entity.displayName, 
       childrenCount: children.length,
@@ -379,4 +384,251 @@ export class EntityRepository extends BaseRepository {
     });
     return true;
   }
+
+  async getChildUIEntitiesByEntityKey(entityKey: string, table: DBTable): Promise<UIEntity[]> {
+    this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY', 'CHILD_ENTITIES', { entityKey, tableName: table.name });
+    const supabase = await this.getSupabaseClient();
+    
+    // Extract table name from the DBTable parameter
+    const tableName = table.name;
+    
+    // Find the key field for the entity table - assume it's the field that contains '_key' and isn't 'generic_key'
+    const keyField = this.findKeyField(table, true);
+    if (!keyField) {
+      throw new Error(`No entity key field found in table ${tableName}`);
+    }
+    
+    // Find the name field - assume it's the field that contains '_name' or 'name'
+    const nameField = this.findNameField(table);
+    if (!nameField) {
+      throw new Error(`No name field found in table ${tableName}`);
+    }
+    
+    // First, get the parent entity UID from the generic_key
+    const { data: parentData, error: parentError } = await supabase
+      .from('generic_drugs')
+      .select('uid')
+      .eq('generic_key', entityKey)
+      .single();
+
+    if (parentError || !parentData) {
+      this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY_PARENT_NOT_FOUND', 'CHILD_ENTITIES', { entityKey, tableName });
+      return [];
+    }
+
+    const parentUid = parentData.uid;
+    
+    // Query child entities using the parent UID (generic_uid)
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('*')
+      .eq('generic_uid', parentUid)
+      .order(nameField.name);
+
+    if (error) {
+      this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY_ERROR', 'CHILD_ENTITIES', { entityKey, parentUid, tableName, error: error.message });
+      throw new Error(`Failed to fetch entity entities: ${error.message}`);
+    }
+
+    if (data.length === 0) {
+      this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY_SUCCESS', 'CHILD_ENTITIES', { 
+        entityKey, 
+        parentUid,
+        tableName,
+        recordCount: 0
+      });
+      return [];
+    }
+
+    // Fetch ancestors for each entity entity using UIDs
+    const children: UIEntity[] = await Promise.all(
+      data.map(async (row) => {
+        const ancestors = await this.fetchAncestorsForEntity(row.uid, genericDrugsTable);
+        
+        return {
+          entityUid: row.uid,
+          entityKey: row[keyField.name],
+          displayName: row[nameField.name],
+          properties: this.generatePropertiesFromTable(table, row, { isChildEntity: true }),
+          aggregates: [],
+          ancestors: ancestors, // Populated from relationships table
+          children: [] // Child entities typically don't have children
+        };
+      })
+    );
+
+    this.log('GET_AS_UI_ENTITIES_BY_ENTITY_KEY_SUCCESS', 'CHILD_ENTITIES', { 
+      entityKey, 
+      parentUid,
+      tableName,
+      recordCount: children.length 
+    });
+    return children;
+  }
+
+  async createChildEntityAsUIEntity(data: CreateChildEntityRequest, table: DBTable): Promise<UIEntity> {
+    this.log('CREATE_AS_UI_ENTITY', 'CHILD_ENTITIES', { data, tableName: table.name });
+    const supabase = await this.getSupabaseClient();
+    
+    // Extract table name and find key/name fields
+    const tableName = table.name;
+    const keyField = this.findKeyField(table, true);
+    const nameField = this.findNameField(table);
+    
+    if (!keyField) {
+      throw new Error(`No entity key field found in table ${tableName}`);
+    }
+    if (!nameField) {
+      throw new Error(`No name field found in table ${tableName}`);
+    }
+
+    // First, find the parent entity UID from the parent_entity_key
+    const { data: parentData, error: parentError } = await supabase
+      .from('generic_drugs')
+      .select('uid')
+      .eq('generic_key', data.parent_entity_key)
+      .single();
+
+    if (parentError || !parentData) {
+      this.log('CREATE_AS_UI_ENTITY_ERROR', 'CHILD_ENTITIES', { 
+        data, 
+        tableName, 
+        error: 'Parent entity not found' 
+      });
+      throw new Error(`Parent entity not found for key: ${data.parent_entity_key}`);
+    }
+    
+    const parentUid = parentData.uid;
+    
+    const newEntity: any = {
+      [keyField.name]: this.generateKey('entity'),
+      generic_uid: parentUid, // Use UID for foreign key relationship
+      [nameField.name]: data.displayName
+    };
+
+    // Add dynamic properties from the request
+    if (data.properties) {
+      Object.entries(data.properties).forEach(([propertyName, propertyValue]) => {
+        // Find the corresponding field in the table
+        const field = table.fields.find(f => 
+          f.name === propertyName && 
+          f.name !== keyField.name && 
+          f.name !== nameField.name && 
+          f.name !== 'uid' &&
+          f.name !== 'generic_key' &&
+          !f.is_primary_key
+        );
+        if (field) {
+          newEntity[field.name] = propertyValue;
+        }
+      });
+    }
+
+    // Insert the new entity entity
+    const { data: inserted, error } = await supabase
+      .from(tableName)
+      .insert(newEntity)
+      .select()
+      .single();
+
+    if (error) {
+      this.log('CREATE_AS_UI_ENTITY_ERROR', 'CHILD_ENTITIES', { data, tableName, error: error.message });
+      throw new Error(`Failed to create entity entity: ${error.message}`);
+    }
+
+    // Create the relationship entry in entity_relationships table
+    await this.createEntityRelationship(parentData.uid, inserted.uid, 'parent_child');
+
+    // Fetch ancestors using the relationship utilities
+    const ancestors = await this.fetchAncestorsForEntity(inserted.uid, genericDrugsTable);
+
+    const entity: UIEntity = {
+      entityUid: inserted.uid,
+      entityKey: inserted[keyField.name],
+      displayName: inserted[nameField.name],
+      properties: this.generatePropertiesFromTable(table, inserted, { isChildEntity: true }),
+      aggregates: [],
+      ancestors: ancestors, // Populated from relationships table
+      children: [] // Child entities typically don't have children
+    };
+
+    this.log('CREATE_AS_UI_ENTITY_SUCCESS', 'CHILD_ENTITIES', { newChild: entity, tableName });
+    return entity;
+  }
+
+  async updateChildEntityAsUIEntity(entityKey: string, data: UpdateChildEntityRequest, table: DBTable): Promise<UIEntity | null> {
+    this.log('UPDATE_AS_UI_ENTITY', 'CHILD_ENTITIES', { childKey: entityKey, data, tableName: table.name });
+    const supabase = await this.getSupabaseClient();
+    
+    // Extract table name and find key/name fields
+    const tableName = table.name;
+    const keyField = this.findKeyField(table, true);
+    const nameField = this.findNameField(table);
+    
+    if (!keyField) {
+      throw new Error(`No entity key field found in table ${tableName}`);
+    }
+    if (!nameField) {
+      throw new Error(`No name field found in table ${tableName}`);
+    }
+    
+    const updateData: any = {};
+    
+    // Update display name if provided
+    if (data.displayName !== undefined) {
+      updateData[nameField.name] = data.displayName;
+    }
+    
+    // Update dynamic properties if provided
+    if (data.properties) {
+      Object.entries(data.properties).forEach(([propertyName, propertyValue]) => {
+        // Find the corresponding field in the table
+        const field = table.fields.find(f => 
+          f.name === propertyName && 
+          f.name !== keyField.name && 
+          f.name !== nameField.name && 
+          f.name !== 'uid' &&
+          f.name !== 'generic_key' &&
+          !f.is_primary_key
+        );
+        if (field) {
+          updateData[field.name] = propertyValue;
+        }
+      });
+    }
+
+    // Update the entity entity
+    const { data: updated, error } = await supabase
+      .from(tableName)
+      .update(updateData)
+      .eq(keyField.name, entityKey)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        this.log('UPDATE_AS_UI_ENTITY_NOT_FOUND', 'CHILD_ENTITIES', { childKey: entityKey, tableName });
+        return null;
+      }
+      this.log('UPDATE_AS_UI_ENTITY_ERROR', 'CHILD_ENTITIES', { childKey: entityKey, data, tableName, error: error.message });
+      throw new Error(`Failed to update entity entity: ${error.message}`);
+    }
+
+    // Fetch ancestors using the relationship utilities
+    const ancestors = await this.fetchAncestorsForEntity(updated.uid, genericDrugsTable);
+
+    const entity: UIEntity = {
+      entityUid: updated.uid,
+      entityKey: updated[keyField.name],
+      displayName: updated[nameField.name],
+      properties: this.generatePropertiesFromTable(table, updated, { isChildEntity: true }),
+      aggregates: [],
+      ancestors: ancestors, // Populated from relationships table
+      children: [] // Child entities typically don't have children
+    };
+
+    this.log('UPDATE_AS_UI_ENTITY_SUCCESS', 'CHILD_ENTITIES', { childKey: entityKey, tableName, updatedChild: entity });
+    return entity;
+  }
+
 } 

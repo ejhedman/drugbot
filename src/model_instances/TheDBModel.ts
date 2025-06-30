@@ -571,7 +571,7 @@ const entityRelationshipsTable: DBTable = {
 // COMPLETE DATABASE SCHEMA
 // ============================================================================
 
-export const drugBotDBSchema: DBSchema = {
+export const theDBSchema: DBSchema = {
   name: 'drugbot_schema',
   version: '1.0.0',
   description: 'Complete database schema for the DrugBot application, including drug information, approvals, routes, and manufacturer data',
@@ -622,7 +622,7 @@ export {
  * - theDBModel.getPrimaryKeyFields('generic_drugs')
  * - theDBModel.getForeignKeyFields('generic_aliases')
  */
-export const theDBModel = new DBModel(drugBotDBSchema);
+export const theDBModel = new DBModel(theDBSchema);
 
 // Export as default for convenience
 export default theDBModel; 
