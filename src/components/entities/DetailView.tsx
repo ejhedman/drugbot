@@ -9,8 +9,8 @@ import { useEntityOperations } from '@/hooks/useEntityOperations';
 import { theUIModel } from '@/model_instances/TheUIModel';
 
 interface DetailViewProps {
-  entityKey: string | null;
-  childKey: string | null;
+  entityUid: string | null;
+  childUid: string | null;
   isAddingEntity?: boolean;
   isAddingChild?: boolean;
   onCancelAddEntity?: () => void;
@@ -19,13 +19,13 @@ interface DetailViewProps {
   onChildCreated?: (child: UIEntity) => void;
   onEntityUpdated?: (entity: UIEntity) => void;
   onChildUpdated?: (child: UIEntity) => void;
-  onEntityDeleted?: (entityKey: string) => void;
-  onChildDeleted?: (childKey: string) => void;
+  onEntityDeleted?: (entityUid: string) => void;
+  onChildDeleted?: (childUid: string) => void;
 }
 
 export function DetailView({
-  entityKey,
-  childKey,
+  entityUid,
+  childUid,
   isAddingEntity = false,
   isAddingChild = false,
   onCancelAddEntity,
@@ -59,7 +59,7 @@ export function DetailView({
 
   // Handle child creation  
   const handleCreateChild = async (data: Record<string, any>) => {
-    if (!entityKey) {
+    if (!entityUid) {
       throw new Error('Entity key is required to create a child entity');
     }
     
@@ -73,7 +73,7 @@ export function DetailView({
     });
 
     const unifiedChild = await operations.createChild({
-      parent_entity_key: entityKey, // Link to parent entity
+      parent_entity_uid: entityUid, // Link to parent entity
       displayName: data.displayName || '',
       properties: Object.keys(properties).length > 0 ? properties : undefined
     });
@@ -115,7 +115,7 @@ export function DetailView({
   return (
     <div className="h-full flex flex-col bg-white rounded-xl">
       <div className="flex-1 min-h-0 overflow-hidden">
-        {!entityKey && !childKey && !isAddingEntity && !isAddingChild ? (
+        {!entityUid && !childUid && !isAddingEntity && !isAddingChild ? (
           <div className="h-full flex items-center justify-center">
             <div className="text-center label">
               Select an entity or child to view details
@@ -132,7 +132,7 @@ export function DetailView({
           />
         ) : isAddingChild ? (
           <FormCard
-            title={`Add New Child Entity to ${entityKey || 'Entity'}`}
+            title={`Add New Child Entity to ${entityUid || 'Entity'}`}
             fields={childFormFields}
             onSubmit={handleCreateChild}
             onCancel={onCancelAddChild || (() => {})}
@@ -141,8 +141,8 @@ export function DetailView({
           />
         ) : (
           <EntityDetailPage
-            entityKey={entityKey}
-            childKey={childKey}
+            entityUid={entityUid}
+            childUid={childUid}
             onEntityUpdated={onEntityUpdated}
             onChildUpdated={onChildUpdated}
             onEntityDeleted={onEntityDeleted}

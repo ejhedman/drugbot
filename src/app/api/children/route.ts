@@ -7,12 +7,12 @@ import { genericDrugsTable, manuDrugsTable } from '@/model_instances/TheDBModel'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const entityKey = searchParams.get('entityKey');
+    const entityUid = searchParams.get('entityUid');
     const search = searchParams.get('search');
 
     let children: UIEntity[];
-    if (entityKey) {
-      children = await entityRepository.getChildUIEntitiesByEntityKey(entityKey, manuDrugsTable);
+    if (entityUid) {
+      children = await entityRepository.getChildUIEntitiesByParentUid(entityUid, manuDrugsTable);
     } else if (search) {
       // Use the unified searchEntities method from entityRepository
       children = await entityRepository.searchEntities(search, manuDrugsTable);
@@ -32,8 +32,17 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    // // Verify that the parent entity exists
+    // const parentEntity = await entityRepository.getEntityByKey(body.parent_entity_key, genericDrugsTable);
+    // if (!parentEntity) {
+    //   return NextResponse.json(
+    //     { error: 'Parent entity not found' }, 
+    //     { status: 404 }
+    //   );
+    // }    
+
     // Verify that the parent entity exists
-    const parentEntity = await entityRepository.getEntityByKey(body.parent_entity_key, genericDrugsTable);
+    const parentEntity = await entityRepository.getEntityByUid(body.parent_entity_uid, genericDrugsTable);
     if (!parentEntity) {
       return NextResponse.json(
         { error: 'Parent entity not found' }, 
@@ -49,7 +58,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const child = await entityRepository.createChildEntityAsUIEntity(body, manuDrugsTable);
+    const child = await entityRepository.createChildEntity(body, manuDrugsTable);
     
     return NextResponse.json(child, { status: 201 });
   } catch (error) {

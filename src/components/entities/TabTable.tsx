@@ -15,7 +15,7 @@ interface TabTableProps {
   icon?: React.ReactNode;
   emptyMessage?: string;
   loading?: boolean;
-  onUpdate?: (index: number, data: any) => Promise<void>;
+  onUpdate?: (id: string | number, data: any) => Promise<void>;
   onDelete?: (id: string | number) => Promise<void>;
   onCreate?: (data: any) => Promise<void>;
   schemaEntityName?: string; // Schema entity name for metadata lookup
@@ -32,15 +32,28 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
 
   // Update local state when data prop changes
   useEffect(() => {
+    console.log('TabTable: Data prop changed, new data length:', data.length);
     setTableData(data);
   }, [data]);
 
   // Check if data contains UIEntity objects (has properties array)
   const isUIEntityData = (data: any[]): boolean => {
-    return data.length > 0 && 
-           data[0].properties && 
-           Array.isArray(data[0].properties) &&
-           data[0].displayName !== undefined;
+    if (data.length === 0) {
+      return false;
+    }
+    if (!data[0]) {
+      return false;
+    }
+    if (!data[0].properties) {
+      return false;
+    }
+    if (!Array.isArray(data[0].properties)) {
+      return false;
+    }
+    if (data[0].displayName === undefined) {
+      return false;
+    }
+    return true;
   };
 
   // Transform UIEntity data to flat row format for table display
@@ -86,6 +99,8 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
   const flatTableData = transformUIEntityData(tableData);
   const isUsingUIEntityData = isUIEntityData(tableData);
   const propertyColumns = getPropertyColumns(tableData);
+  
+
   
   // Get display name for a field using schema metadata
   const getFieldDisplayName = (fieldName: string): string => {
@@ -148,7 +163,12 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
   const handleSave = async (index: number) => {
     try {
       if (onUpdate) {
-        await onUpdate(index, editedData);
+        // For aggregates, pass the uid of the record being updated
+        // For UIEntity data, pass the index as before
+        const idToUpdate = isUsingUIEntityData 
+          ? index
+          : flatTableData[index]?._uid || flatTableData[index]?.uid || index;
+        await onUpdate(idToUpdate, editedData);
       }
       
       // Update the original tableData if this is UIEntity data
@@ -187,14 +207,21 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
   const handleDelete = (index: number) => {
     confirmDialog.openDialog(async () => {
       if (onDelete) {
-        // Use the appropriate id field based on data type
+        // For aggregates, use the _uid field from the flat data (hidden property)
+        // For UIEntity data, use entityUid
         const idToDelete = isUsingUIEntityData 
           ? tableData[index]?.entityUid || index
-          : tableData[index]?.id || index;
+          : flatTableData[index]?._uid || flatTableData[index]?.uid || tableData[index]?.id || index;
+        
         await onDelete(idToDelete);
       }
-      const newData = tableData.filter((_, i) => i !== index);
-      setTableData(newData);
+      
+      // Only update local state for UIEntity data, not for aggregates
+      // Aggregates will be refreshed from the server by the parent component
+      if (isUsingUIEntityData) {
+        const newData = tableData.filter((_, i) => i !== index);
+        setTableData(newData);
+      }
     });
   };
 
@@ -497,7 +524,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
               </thead>
               <tbody className={getBorderClasses("", "border-6 border-blue-500")}>
                 {flatTableData.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50 border-b last:border-b-0">
+                  <tr key={row._uid || row.uid || row.id || idx} className="hover:bg-gray-50 border-b last:border-b-0">
                     {/* Display Name column first for UIEntity data */}
                     {isUsingUIEntityData && (
                       <td className="px-4 py-1 text-gray-900 text-left border-r border-gray-200">
@@ -515,10 +542,10 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                               className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                             />
                           ) : (
-                            <span className="text-gray-500 italic">{row.displayName?.toString() || '--no value--'}</span>
+                            <span className="text-gray-500 italic">{row.displayName?.toString() || '--null--'}</span>
                           )
                         ) : (
-                          row.displayName?.toString() || '--no value--'
+                          row.displayName?.toString() || '--null--'
                         )}
                       </td>
                     )}
@@ -540,10 +567,10 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                                 className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                               />
                             ) : (
-                              <span className="text-gray-500 italic">{row[propName]?.toString() || '--no value--'}</span>
+                              <span className="text-gray-500 italic">{row[propName]?.toString() || '--null--'}</span>
                             )
                           ) : (
-                            row[propName]?.toString() || '--no value--'
+                            row[propName]?.toString() || '--null--'
                           )}
                         </td>
                       ))
@@ -564,10 +591,10 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                                 className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                               />
                             ) : (
-                              <span className="text-gray-500 italic">{row[key]?.toString() || '--no value--'}</span>
+                              <span className="text-gray-500 italic">{row[key]?.toString() || '--null--'}</span>
                             )
                           ) : (
-                            row[key]?.toString() || '--no value--'
+                            row[key]?.toString() || '--null--'
                           )}
                         </td>
                       ))

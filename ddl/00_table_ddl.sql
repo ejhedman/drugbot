@@ -300,6 +300,16 @@ CREATE TABLE entity_relationships (
     CONSTRAINT unique_relationship UNIQUE (ancestor_uid, child_uid, relationship_type)
 );
 
+
+ALTER TABLE entity_relationships 
+    ADD CONSTRAINT fk_entity_relationships_ancestor_uid
+    FOREIGN KEY (ancestor_uid) REFERENCES generic_drugs(uid);
+
+ALTER TABLE entity_relationships 
+    ADD CONSTRAINT fk_entity_relationships_child_uid
+    FOREIGN KEY (child_uid) REFERENCES manu_drugs(uid);
+
+
 -- Create indexes for better query performance
 CREATE INDEX idx_entity_relationships_ancestor ON entity_relationships(ancestor_uid);
 CREATE INDEX idx_entity_relationships_child ON entity_relationships(child_uid);

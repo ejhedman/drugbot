@@ -5,13 +5,13 @@ import { manuDrugsTable } from '@/model_instances/TheDBModel';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const { key } = await params;
+    const { uid } = await params;
     
-    // Use the unified getEntityByKey method with isChildEntity option
-    const child = await entityRepository.getEntityByKey(key, manuDrugsTable, { isChildEntity: true });
+    // Use the unified getEntityByUid method with isChildEntity option
+    const child = await entityRepository.getEntityByUid(uid, manuDrugsTable, { isChildEntity: true });
     
     if (!child) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });
@@ -26,13 +26,13 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const { key } = await params;
+    const { uid } = await params;
     const body: UpdateChildEntityRequest = await request.json();
     
-    const updatedChild = await entityRepository.updateChildEntityAsUIEntity(key, body, manuDrugsTable);
+    const updatedChild = await entityRepository.updateChildEntityByUid(uid, body, manuDrugsTable);
     
     if (!updatedChild) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });
@@ -47,12 +47,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const { key } = await params;
+    const { uid } = await params;
     // Use the unified deleteEntity method with isChildEntity option
-    const deleted = await entityRepository.deleteEntity(key, manuDrugsTable, { isChildEntity: true });
+    const deleted = await entityRepository.deleteEntity(uid, manuDrugsTable, { isChildEntity: true });
     
     if (!deleted) {
       return NextResponse.json({ error: 'Child entity not found' }, { status: 404 });

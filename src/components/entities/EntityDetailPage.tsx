@@ -19,17 +19,17 @@ import { theUIModel } from '@/model_instances/TheUIModel';
 import { getBorderClasses } from '@/lib/borderUtils';
 
 interface EntityDetailPageProps {
-  entityKey: string | null;
-  childKey: string | null;
+  entityUid: string | null;
+  childUid: string | null;
   onEntityUpdated?: (entity: UIEntity) => void;
   onChildUpdated?: (child: UIEntity) => void;
-  onEntityDeleted?: (entityKey: string) => void;
-  onChildDeleted?: (childKey: string) => void;
+  onEntityDeleted?: (entityUid: string) => void;
+  onChildDeleted?: (childUid: string) => void;
 }
 
 export function EntityDetailPage({
-  entityKey,
-  childKey,
+  entityUid,
+  childUid,
   onEntityUpdated,
   onChildUpdated,
   onEntityDeleted,
@@ -49,12 +49,12 @@ export function EntityDetailPage({
   const operations = useEntityOperations();
 
   useEffect(() => {
-    if (childKey) {
+    if (childUid) {
       fetchChild();
       // Child entities (manu_drugs) have no collections, so no fetching needed
-    } else if (entityKey) {
+    } else if (entityUid) {
       fetchEntity();
-      fetchEntityCollections(entityKey);
+      // fetchEntityCollections will be called after entity is loaded
     } else {
       setEntity(null);
       setChild(null);
@@ -63,13 +63,20 @@ export function EntityDetailPage({
       setApprovalsList(null);
       setManuDrugsList(null);
     }
-  }, [entityKey, childKey]);
+  }, [entityUid, childUid]);
+
+  // Fetch collections when entity is loaded
+  useEffect(() => {
+    if (entity && !child) {
+      fetchEntityCollections();
+    }
+  }, [entity, child]);
 
   const fetchEntity = async () => {
-    if (!entityKey) return;
+    if (!entityUid) return;
     try {
       setLoading(true);
-      const response = await fetch(`/api/entities/${encodeURIComponent(entityKey)}`);
+      const response = await fetch(`/api/entities/${encodeURIComponent(entityUid)}`);
       if (response.ok) {
         const unifiedEntity: UIEntity = await response.json();
         setEntity(unifiedEntity);
@@ -83,10 +90,10 @@ export function EntityDetailPage({
   };
 
   const fetchChild = async () => {
-    if (!childKey) return;
+    if (!childUid) return;
     try {
       setLoading(true);
-      const response = await fetch(`/api/children/${encodeURIComponent(childKey)}?format=ui`);
+      const response = await fetch(`/api/children/${encodeURIComponent(childUid)}?format=ui`);
       if (response.ok) {
         const unifiedChild: UIEntity = await response.json();
         setChild(unifiedChild);
@@ -104,15 +111,22 @@ export function EntityDetailPage({
     }
   };
 
-  const fetchEntityCollections = async (entityKey: string) => {
+  const fetchEntityCollections = async () => {
     try {
       setCollectionsLoading(true);
+      // Get the entity UID from the entity object
+      const entityUid = entity?.entityUid;
+      if (!entityUid) {
+        console.error('Entity UID not available for fetching collections');
+        return;
+      }
+      
       // Fetch all four collections for the entity
       const [routesData, aliasesRes, approvalsRes, manuDrugsRes] = await Promise.all([
-        fetchRoutes(entityKey),
-        fetch(`/api/generic-aliases?entityKey=${encodeURIComponent(entityKey)}`), // aliases (generic_aliases)
-        fetch(`/api/generic-approvals?entityKey=${encodeURIComponent(entityKey)}`), // approvals (generic_approvals)
-        fetch(`/api/generic-manu-drugs?entityKey=${encodeURIComponent(entityKey)}`) // manufactured drugs (manu_drugs)
+        fetchRoutes(entityUid),
+        fetch(`/api/generic-aliases?entityUid=${encodeURIComponent(entityUid)}`), // aliases (generic_aliases)
+        fetch(`/api/generic-approvals?entityUid=${encodeURIComponent(entityUid)}`), // approvals (generic_approvals)
+        fetch(`/api/generic-manu-drugs?entityUid=${encodeURIComponent(entityUid)}`) // manufactured drugs (manu_drugs)
       ]);
 
       // Set routes data (already processed by fetchRoutes)
@@ -121,8 +135,10 @@ export function EntityDetailPage({
       // Fetch aliases (now returns single UIAggregate)
       if (aliasesRes.ok) {
         const aliases: UIAggregate = await aliasesRes.json();
+        console.log('EntityDetailPage: Aliases refreshed, count:', aliases.rows?.length || 0);
         setAliasesList(aliases);
       } else {
+        console.log('EntityDetailPage: Failed to fetch aliases');
         setAliasesList(null);
       }
 
@@ -151,8 +167,8 @@ export function EntityDetailPage({
     }
   };
 
-  async function fetchRoutes(entityKey: string): Promise<UIAggregate> {
-    const routesRes = await fetch(`/api/generic-routes?entityKey=${encodeURIComponent(entityKey)}`);
+  async function fetchRoutes(entityUid: string): Promise<UIAggregate> {
+    const routesRes = await fetch(`/api/generic-routes?entityUid=${encodeURIComponent(entityUid)}`);
     if (!routesRes.ok) {
       throw new Error('Failed to fetch routes');
     }
@@ -163,25 +179,28 @@ export function EntityDetailPage({
 
   // Create callback maps for tabs
   const createTabCallbacks = (collectionType: string, parentKey: string): TabCallbacks => ({
-    onUpdate: async (index: number, data: any) => {
-      await operations.updateCollection(collectionType, parentKey, index, data);
+    onUpdate: async (id: string | number, data: any) => {
+      await operations.updateCollection(collectionType, parentKey, id, data);
       // Refresh collections after update (only for entities, not child entities)  
       if (entity && !child) {
-        await fetchEntityCollections(parentKey);
+        await fetchEntityCollections();
       }
     },
     onDelete: async (id: string | number) => {
+      console.log('EntityDetailPage: onDelete called with id:', id, 'collectionType:', collectionType);
       await operations.deleteFromCollection(collectionType, parentKey, id);
       // Refresh collections after delete (only for entities, not child entities)
       if (entity && !child) {
-        await fetchEntityCollections(parentKey);
+        console.log('EntityDetailPage: Refreshing collections after delete');
+        await fetchEntityCollections();
+        console.log('EntityDetailPage: Collections refreshed');
       }
     },
     onCreate: async (data: any) => {
       await operations.createInCollection(collectionType, parentKey, data);
       // Refresh collections after create (only for entities, not child entities)
       if (entity && !child) {
-        await fetchEntityCollections(parentKey);
+        await fetchEntityCollections();
       }
     },
   });
@@ -190,9 +209,9 @@ export function EntityDetailPage({
   const handleUpdate = async (entity: UIEntity, updatedProperties: UIProperty[]) => {
     try {
       // Check if this is a child entity by looking for child_entity_key property
-      const childKeyProp = updatedProperties.find((p: UIProperty) => p.propertyName === 'child_entity_key');
+      const childEntityIndicator = updatedProperties.find((p: UIProperty) => p.propertyName === 'child_entity_key');
       
-      if (childKeyProp) {
+      if (childEntityIndicator) {
         // Handle child entity update - build properties object from updated properties
         const nameProperty = updatedProperties.find(p => p.propertyName === 'child_entity_name');
         
@@ -216,9 +235,12 @@ export function EntityDetailPage({
           properties: Object.keys(properties).length > 0 ? properties : undefined
         };
         
-        const updatedChild = await operations.updateChild(childKeyProp.propertyValue, updateData);
-        setChild(updatedChild);
-        onChildUpdated?.(updatedChild);
+        // Use entityUid for child operations
+        if (entity.entityUid) {
+          const updatedChild = await operations.updateChild(entity.entityUid, updateData);
+          setChild(updatedChild);
+          onChildUpdated?.(updatedChild);
+        }
       } else {
         // Handle main entity update - build properties object from updated properties
         const nameProperty = updatedProperties.find(p => p.propertyName === 'entity_name');
@@ -243,8 +265,8 @@ export function EntityDetailPage({
           properties: Object.keys(properties).length > 0 ? properties : undefined
         };
         
-        if (entity.entityKey) {
-          const updatedEntity = await operations.updateEntity(entity.entityKey, updateData);
+        if (entity.entityUid) {
+          const updatedEntity = await operations.updateEntity(entity.entityUid, updateData);
           setEntity(updatedEntity);
           onEntityUpdated?.(updatedEntity);
         }
@@ -258,17 +280,19 @@ export function EntityDetailPage({
   const handleDelete = async (entity: UIEntity) => {
     try {
       // Check if this is a child entity by looking for child_entity_key property
-      const childKeyProp = entity.properties?.find((p: UIProperty) => p.propertyName === 'child_entity_key');
+      const childEntityIndicator = entity.properties?.find((p: UIProperty) => p.propertyName === 'child_entity_key');
       
-      if (childKeyProp) {
+      if (childEntityIndicator) {
         // Handle child entity delete
-        await operations.deleteChild(childKeyProp.propertyValue);
-        onChildDeleted?.(childKeyProp.propertyValue);
+        if (entity.entityUid) {
+          await operations.deleteChild(entity.entityUid);
+          onChildDeleted?.(childEntityIndicator.propertyValue);
+        }
       } else {
         // Handle main entity delete
-        if (entity.entityKey) {
-          await operations.deleteEntity(entity.entityKey);
-          onEntityDeleted?.(entity.entityKey);
+        if (entity.entityUid) {
+          await operations.deleteEntity(entity.entityUid);
+          onEntityDeleted?.(entity.entityUid || '');
         }
       }
     } catch (error) {
@@ -314,16 +338,30 @@ export function EntityDetailPage({
     
     // Handle new rows structure (2D array)
     if (uiAggregate.rows && uiAggregate.rows.length > 0) {
-      return uiAggregate.rows.map(row => {
+      const result = uiAggregate.rows.map(row => {
         const obj: Record<string, any> = {};
+        let uid: string | undefined;
+        
         row.forEach(prop => {
-          // Only include properties that are marked as visible
-          if (prop.isVisible) {
+          if (prop.propertyName === 'uid') {
+            // Store uid separately for operations but don't include in visible data
+            uid = prop.propertyValue;
+          } else if (prop.isVisible) {
+            // Only include properties that are marked as visible
             obj[prop.propertyName] = prop.propertyValue;
           }
         });
+        
+        // Add uid as a hidden property for operations
+        if (uid) {
+          obj._uid = uid;
+        }
+        
         return obj;
       });
+      
+      console.log('EntityDetailPage: convertUIAggregateToTabData result:', result.length, 'items');
+      return result;
     }
     
 
@@ -332,7 +370,7 @@ export function EntityDetailPage({
   };
 
   // Get entity key for legacy API compatibility
-  const entityKeyForAPI = entity?.entityKey || '';
+  const entityUidForAPI = entity?.entityUid || '';
   
   // Get the aggregateRefs from the UI model to determine tab order
   const entityAggregateRefs = entity ? theUIModel.getEntity('GenericDrugs')?.aggregateRefs || [] : [];
@@ -389,10 +427,10 @@ export function EntityDetailPage({
   // Create callback map for tabs
   const tabCallbacks: Record<string, TabCallbacks> = {};
   if (entity && !child) { // Only entity has collections, child entities have no tabs
-    tabCallbacks['aliases'] = createTabCallbacks('generic-aliases', entityKeyForAPI);
-    tabCallbacks['routes'] = createTabCallbacks('generic-routes', entityKeyForAPI);
-    tabCallbacks['approvals'] = createTabCallbacks('generic-approvals', entityKeyForAPI);
-    tabCallbacks['manufactured-drugs'] = createTabCallbacks('generic-manu-drugs', entityKeyForAPI);
+    tabCallbacks['aliases'] = createTabCallbacks('generic-aliases', entityUidForAPI);
+    tabCallbacks['routes'] = createTabCallbacks('generic-routes', entityUidForAPI);
+    tabCallbacks['approvals'] = createTabCallbacks('generic-approvals', entityUidForAPI);
+    tabCallbacks['manufactured-drugs'] = createTabCallbacks('generic-manu-drugs', entityUidForAPI);
   }
 
   return (

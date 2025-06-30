@@ -17,7 +17,7 @@ export interface TabConfig {
 }
 
 export interface TabCallbacks {
-  onUpdate?: (index: number, data: any) => Promise<void>;
+  onUpdate?: (id: string | number, data: any) => Promise<void>;
   onDelete?: (id: string | number) => Promise<void>;
   onCreate?: (data: any) => Promise<void>;
 }

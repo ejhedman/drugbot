@@ -136,7 +136,7 @@ export interface ModelMap {
   version: string;
   
   /** Entity mappings keyed by entity identifier (e.g., 'generic_drugs') */
-  entityMappings: { [entityKey: string]: EntityMapping };
+  entityMappings: { [entityUid: string]: EntityMapping };
   
   /** Aggregate mappings keyed by aggregate type (e.g., 'GenericRoute') */
   aggregateMappings: { [aggregateType: string]: AggregateMapping };

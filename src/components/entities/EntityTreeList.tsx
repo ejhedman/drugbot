@@ -4,27 +4,29 @@ import { useState, useEffect } from 'react';
 import { UIEntity } from '@/model_defs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { SquarePlus, Search, Pill, Tag, ChevronRight, ChevronDown } from 'lucide-react';
+import { SquarePlus, Search, Pill, Tag, ChevronRight, ChevronDown, RefreshCw } from 'lucide-react';
 // import { shouldShowBorders } from '@/lib/borderUtils';
 import { EntityListSkeleton, ChildEntitySkeleton } from '@/components/ui/skeleton';
 import { getBorderClasses } from '@/lib/borderUtils';
 
 interface EntityTreeListProps {
-  selectedEntityKey: string | null;
-  selectedChildKey: string | null;
-  onEntitySelect: (entityKey: string) => void;
-  onChildSelect: (childKey: string) => void;
+  selectedEntityUid: string | null;
+  selectedChildUid: string | null;
+  onEntitySelect: (entityUid: string) => void;
+  onChildSelect: (childUid: string) => void;
   onAddEntity?: () => void;
-  onAddChild?: (entityKey: string) => void;
+  onAddChild?: (entityUid: string) => void;
+  refreshTrigger?: number; // Add refresh trigger prop
 }
 
 export function EntityTreeList({ 
-  selectedEntityKey, 
-  selectedChildKey, 
+  selectedEntityUid, 
+  selectedChildUid, 
   onEntitySelect, 
   onChildSelect, 
   onAddEntity, 
-  onAddChild 
+  onAddChild,
+  refreshTrigger = 0
 }: EntityTreeListProps) {
   const [entities, setEntities] = useState<UIEntity[]>([]);
   const [childrenMap, setChildrenMap] = useState<Record<string, UIEntity[]>>({});
@@ -34,101 +36,107 @@ export function EntityTreeList({
   const [loadingChildren, setLoadingChildren] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetchEntities();
+    fetchTreeData();
+  }, [refreshTrigger]); // Refresh when refreshTrigger changes
+
+  useEffect(() => {
+    if (searchTerm) {
+      // For search, we'll filter the existing tree data
+      filterTreeData();
+    } else {
+      fetchTreeData();
+    }
   }, [searchTerm]);
 
-  const fetchEntities = async () => {
+  const fetchTreeData = async () => {
     try {
       setLoading(true);
-      const params = searchTerm 
-        ? `?search=${encodeURIComponent(searchTerm)}&format=ui` 
-        : '?format=ui';
-      const response = await fetch(`/api/entities${params}`);
+      const response = await fetch('/api/entities/tree');
       if (response.ok) {
         const data = await response.json();
-        // Add delay to see skeleton loader
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setEntities(data);
+        setEntities(data.ancestors || []);
+        setChildrenMap(data.childrenMap || {});
       }
     } catch (error) {
-      console.error('Error fetching entities:', error);
+      console.error('Error fetching tree data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchChildren = async (entityKey: string) => {
-    if (childrenMap[entityKey]) return; // Already loaded
-    
+  const filterTreeData = async () => {
     try {
-      setLoadingChildren(prev => new Set(prev).add(entityKey));
-      const response = await fetch(`/api/children?entityKey=${encodeURIComponent(entityKey)}&format=ui`);
+      setLoading(true);
+      const response = await fetch(`/api/entities?search=${encodeURIComponent(searchTerm)}&format=ui`);
       if (response.ok) {
         const data = await response.json();
-        // Add delay to see skeleton loader
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setChildrenMap(prev => ({
-          ...prev,
-          [entityKey]: data
-        }));
+        setEntities(data);
+        // Clear children map for search results
+        setChildrenMap({});
       }
     } catch (error) {
-      console.error('Error fetching children:', error);
+      console.error('Error searching entities:', error);
     } finally {
-      setLoadingChildren(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(entityKey);
-        return newSet;
-      });
+      setLoading(false);
     }
   };
 
-  const handleEntityClick = (entityKey: string) => {
-    onEntitySelect(entityKey);
+  const handleRefresh = () => {
+    fetchTreeData();
+  };
+
+  const handleEntityClick = (entityUid: string) => {
+    onEntitySelect(entityUid);
     
     // Toggle expansion
     const newExpanded = new Set(expandedEntities);
-    if (newExpanded.has(entityKey)) {
-      newExpanded.delete(entityKey);
+    if (newExpanded.has(entityUid)) {
+      newExpanded.delete(entityUid);
     } else {
       // Close other expanded entities (only one open at a time)
       newExpanded.clear();
-      newExpanded.add(entityKey);
-      // Fetch children if not already loaded
-      fetchChildren(entityKey);
+      newExpanded.add(entityUid);
     }
     setExpandedEntities(newExpanded);
   };
 
-  const handleChildClick = (childKey: string) => {
-    onChildSelect(childKey);
-  };
 
-  const handleAddChild = (entityKey: string, event: React.MouseEvent) => {
+
+  const handleAddChild = (entityUid: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent entity selection
-    onAddChild?.(entityKey);
+    onAddChild?.(entityUid);
   };
 
-  const isExpanded = (entityKey: string) => expandedEntities.has(entityKey);
-  const isLoadingChildren = (entityKey: string) => loadingChildren.has(entityKey);
-  const children = (entityKey: string) => childrenMap[entityKey] || [];
+  const isExpanded = (entityUid: string) => expandedEntities.has(entityUid);
+  const children = (entityUid: string) => childrenMap[entityUid] || [];
 
-      return (
-      <div className={getBorderClasses("flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl p-4", "border-6 border-orange-500")}>
+  return (
+    <div className={getBorderClasses("flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl p-4", "border-6 border-orange-500")}>
       {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-200 rounded-t-xl">
-                  <h2 className="section-title text-white">Entities</h2>
-        {onAddEntity && (
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-200 rounded-t-xl">
+        <h2 className="section-title text-white">Entities</h2>
+        <div className="flex items-center gap-2">
           <Button
-            onClick={onAddEntity}
+            onClick={handleRefresh}
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-            title="Add New Entity"
+            title="Refresh Tree"
           >
-            <SquarePlus className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
           </Button>
-        )}
+          {onAddEntity && (
+            <Button
+              onClick={onAddEntity}
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+              title="Add New Entity"
+            >
+              <SquarePlus className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Search */}
@@ -155,7 +163,7 @@ export function EntityTreeList({
         ) : (
           <div className="space-y-1 px-2">
             {entities.map((entity, index) => {
-              const entityKey = entity.entityKey || entity.entityUid || `entity-${index}`;
+              const entityUid = entity.entityUid || `entity-${index}`;
               const uniqueKey = entity.entityUid || `entity-${index}`;
               
               return (
@@ -163,15 +171,15 @@ export function EntityTreeList({
                   {/* Entity Row */}
                   <div className="flex items-center gap-2 rounded-xl overflow-hidden">
                     <button
-                      onClick={() => handleEntityClick(entityKey)}
+                      onClick={() => handleEntityClick(entityUid)}
                       className={`flex-1 text-left px-4 py-2 hover:bg-gray-50 transition-colors text-sm rounded-xl ${
-                        selectedEntityKey === entityKey
+                        selectedEntityUid === entityUid
                           ? 'bg-slate-100'
                           : 'hover-accent'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        {isExpanded(entityKey) ? (
+                        {isExpanded(entityUid) ? (
                           <ChevronDown className="w-4 h-4 text-gray-400" />
                         ) : (
                           <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -184,9 +192,9 @@ export function EntityTreeList({
                     </button>
                     
                     {/* Add Child Button */}
-                    {onAddChild && isExpanded(entityKey) && (
+                    {onAddChild && isExpanded(entityUid) && (
                       <Button
-                        onClick={(e) => handleAddChild(entityKey, e)}
+                        onClick={(e) => handleAddChild(entityUid, e)}
                         size="sm"
                         variant="ghost"
                         className="h-8 w-8 p-0 mr-2 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
@@ -198,25 +206,22 @@ export function EntityTreeList({
                   </div>
 
                   {/* Children Section */}
-                  {isExpanded(entityKey) && (
+                  {isExpanded(entityUid) && (
                     <div className="ml-6 space-y-1">
-                      {isLoadingChildren(entityKey) ? (
-                        <ChildEntitySkeleton />
-                      ) : children(entityKey).length === 0 ? (
+                      {children(entityUid).length === 0 ? (
                         <div className="px-4 py-2 text-center label">
                           No children found
                         </div>
                       ) : (
-                        children(entityKey).map((child, childIndex) => {
-                          const childKey = child.entityKey || child.entityUid || `child-${childIndex}`;
-                          const childUniqueKey = child.entityUid || `child-${childIndex}`;
+                        children(entityUid).map((child, childIndex) => {
+                          const childUid = child.entityUid || `child-${childIndex}`;
                           
                           return (
                             <div
-                              key={childUniqueKey}
-                              onClick={() => handleChildClick(childKey)}
+                              key={childUid}
+                              onClick={() => onChildSelect(childUid)}
                               className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors text-sm rounded-xl cursor-pointer ${
-                                selectedChildKey === childKey
+                                selectedChildUid === childUid
                                   ? 'bg-green-50'
                                   : ''
                               }`}

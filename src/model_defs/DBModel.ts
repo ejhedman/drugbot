@@ -159,7 +159,7 @@ export interface UpdateEntityRequest {
  * Data required to create a new ChildEntity
  */
 export interface CreateChildEntityRequest {
-  parent_entity_key: string;
+  parent_entity_uid: string;
   displayName: string;
   properties?: { [key: string]: any };
 }
@@ -180,7 +180,7 @@ export interface UpdateChildEntityRequest {
  * Data required to create a new UIAggregate for entity collections
  */
 export interface CreateUIAggregateRequest {
-  entity_key: string;
+  entity_uid: string;
   displayName: string;
   ordinal: number;
   properties: {
@@ -213,7 +213,7 @@ export interface UpdateUIAggregateRequest {
  * Data required to create a new UIAggregate for child entity collections
  */
 export interface CreateChildUIAggregateRequest {
-  child_entity_key: string;
+  child_entity_uid: string;
   displayName: string;
   ordinal: number;
   properties: {

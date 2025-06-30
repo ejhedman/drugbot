@@ -281,7 +281,7 @@ export interface UIEntityMeta {
  * 
  * RUNTIME INSTANCE USAGE:
  * Used to represent actual entity instances with data values.
- * Contains entityUid, entityKey, properties with values, aggregates with data.
+ * Contains entityUid, properties with values, aggregates with data.
  * Example: A specific drug like "Aspirin" with its actual property values
  * 
  * HIERARCHICAL RELATIONSHIPS:
@@ -299,12 +299,6 @@ export interface UIEntity extends UIEntityMeta {
   
   /** Unique GUID identifier for this specific entity instance (undefined for schema definitions) */
   entityUid?: string;
-  
-  /** 
-   * Business key for this entity instance (used in URLs, API calls, human-readable references)
-   * Example: "aspirin" or "drug_12345"
-   */
-  entityKey?: string;
   
   // ============================================================================
   // RUNTIME INSTANCE DATA
@@ -431,21 +425,21 @@ export class UIModel {
     return properties.filter(prop => prop.isVisible && prop.isEditable && !prop.isId);
   }
 
-  /**
-   * Get key properties for an entity (business keys, not IDs)
-   */
-  getEntityKeyProperties(entityName: string): UIProperty[] {
-    const properties = this.getEntityProperties(entityName);
-    return properties.filter(prop => prop.isKey && !prop.isId);
-  }
+  // /**
+  //  * Get key properties for an entity (business keys, not IDs)
+  //  */
+  // getEntityKeyProperties(entityName: string): UIProperty[] {
+  //   const properties = this.getEntityProperties(entityName);
+  //   return properties.filter(prop => prop.isKey && !prop.isId);
+  // }
 
-  /**
-   * Get the primary key property for an entity
-   */
-  getEntityKeyProperty(entityName: string): UIProperty | undefined {
-    const keyProperties = this.getEntityKeyProperties(entityName);
-    return keyProperties.length > 0 ? keyProperties[0] : undefined;
-  }
+  // /**
+  //  * Get the primary key property for an entity
+  //  */
+  // getEntityKeyProperty(entityName: string): UIProperty | undefined {
+  //   const keyProperties = this.getEntityKeyProperties(entityName);
+  //   return keyProperties.length > 0 ? keyProperties[0] : undefined;
+  // }
 
   /**
    * Get ID properties for an entity
@@ -718,7 +712,6 @@ export class UIModel {
 //     typeof obj.displayName === 'string' &&
 //     // Runtime entity instance checks
 //     (obj.entityUid === undefined || typeof obj.entityUid === 'string') &&
-//     (obj.entityKey === undefined || typeof obj.entityKey === 'string') &&
 //     (obj.entity_type === undefined || typeof obj.entity_type === 'string') &&
 //     (obj.properties === undefined || (Array.isArray(obj.properties) && obj.properties.every((prop: any) => isUIProperty(prop)))) &&
 //     (obj.aggregates === undefined || (Array.isArray(obj.aggregates) && obj.aggregates.every((coll: any) => isUIAggregate(coll)))) &&
@@ -734,7 +727,7 @@ export class UIModel {
 //  * 
 //  * Determines whether a UIEntity object represents a schema definition rather than
 //  * a runtime instance. Schema definitions have tableName and properties defined,
-//  * while runtime instances have entityUid and entityKey.
+//  * while runtime instances have entityUid.
 //  * 
 //  * @param obj - UIEntity object to check
 //  * @returns True if the entity is a schema definition, false if it's a runtime instance
@@ -747,13 +740,13 @@ export class UIModel {
 //  * Type guard to check if a UIEntity is being used as a runtime instance
 //  * 
 //  * Determines whether a UIEntity object represents a runtime instance with actual
-//  * data rather than a schema definition. Runtime instances have entityUid, entityKey,
+//  * data rather than a schema definition. Runtime instances have entityUid,
 //  * and properties with values.
 //  * 
 //  * @param obj - UIEntity object to check
 //  * @returns True if the entity is a runtime instance, false if it's a schema definition
 //  */
-// export function isUIEntityInstance(obj: UIEntity): obj is UIEntity & { entityUid: string; entityKey: string; properties: UIProperty[] } {
-//   return obj.entityUid !== undefined && obj.entityKey !== undefined && obj.properties !== undefined;
+// export function isUIEntityInstance(obj: UIEntity): obj is UIEntity & { entityUid: string; properties: UIProperty[] } {
+//   return obj.entityUid !== undefined && obj.properties !== undefined;
 // } 
 

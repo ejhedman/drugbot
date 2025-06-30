@@ -40,33 +40,3 @@ SELECT
 FROM generic_drugs gd
 INNER JOIN manu_drugs md ON gd.uid = md.generic_uid
 WHERE md.generic_uid IS NOT NULL;
-
--- =============================================
--- VERIFICATION AND SUMMARY
--- =============================================
-
--- Log the number of relationships created
-DO $$
-DECLARE
-    relationship_count INTEGER;
-    generic_count INTEGER;
-    manu_count INTEGER;
-    alias_count INTEGER;
-    route_count INTEGER;
-    approval_count INTEGER;
-BEGIN
-    SELECT COUNT(*) INTO relationship_count FROM entity_relationships;
-    SELECT COUNT(*) INTO generic_count FROM generic_drugs;
-    SELECT COUNT(*) INTO manu_count FROM manu_drugs;
-    SELECT COUNT(*) INTO alias_count FROM generic_aliases;
-    SELECT COUNT(*) INTO route_count FROM generic_routes;
-    SELECT COUNT(*) INTO approval_count FROM generic_approvals;
-    
-    RAISE NOTICE 'Demo Data Summary:';
-    RAISE NOTICE '- Generic Drugs: %', generic_count;
-    RAISE NOTICE '- Manufactured Drugs: %', manu_count;
-    RAISE NOTICE '- Generic Aliases: %', alias_count;
-    RAISE NOTICE '- Generic Routes: %', route_count;
-    RAISE NOTICE '- Generic Approvals: %', approval_count;
-    RAISE NOTICE '- Entity Relationships: %', relationship_count;
-END $$;

@@ -5,12 +5,12 @@ import { UpdateEntityRequest } from '@/model_defs/DBModel';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const { key } = await params;
+    const { uid } = await params;
     
-    const entity = await entityRepository.getEntityByKey(key, genericDrugsTable); // Now returns UIEntity
+    const entity = await entityRepository.getEntityByUid(uid, genericDrugsTable);
     
     if (!entity) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });
@@ -25,13 +25,13 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const { key } = await params;
+    const { uid } = await params;
     const body: UpdateEntityRequest = await request.json();
     
-    const updatedEntity = await entityRepository.updateEntity(key, body, genericDrugsTable); // Now returns UIEntity
+    const updatedEntity = await entityRepository.updateEntityByUid(uid, body, genericDrugsTable);
     
     if (!updatedEntity) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });
@@ -46,11 +46,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const { key } = await params;
-    const deleted = await entityRepository.deleteEntity(key, genericDrugsTable);
+    const { uid } = await params;
+    const deleted = await entityRepository.deleteEntity(uid, genericDrugsTable);
     
     if (!deleted) {
       return NextResponse.json({ error: 'Entity not found' }, { status: 404 });

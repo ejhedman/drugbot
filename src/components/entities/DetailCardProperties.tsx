@@ -96,7 +96,7 @@ export function DetailCardProperties({
       currentProperty.propertyValue !== undefined &&
       currentProperty.propertyValue !== ''
         ? currentProperty.propertyValue
-        : '--no value--';
+        : '--null--';
     return (
       <div key={property.propertyName} className="flex items-center gap-2">
         <span className="label min-w-32">{property.propertyName}:</span>

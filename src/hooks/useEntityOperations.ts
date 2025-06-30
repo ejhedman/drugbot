@@ -11,12 +11,12 @@ interface UseEntityOperationsReturn {
   loading: boolean;
   error: string | null;
   createEntity: (entity: CreateEntityRequest) => Promise<UIEntity>;
-  updateEntity: (key: string, entity: UpdateEntityRequest) => Promise<UIEntity>;
-  deleteEntity: (key: string) => Promise<void>;
+  updateEntity: (uid: string, entity: UpdateEntityRequest) => Promise<UIEntity>;
+  deleteEntity: (uid: string) => Promise<void>;
   createChild: (child: CreateChildEntityRequest) => Promise<UIEntity>;
-  updateChild: (key: string, child: UpdateChildEntityRequest) => Promise<UIEntity>;
-  deleteChild: (key: string) => Promise<void>;
-  updateCollection: (type: string, parentKey: string, index: number, data: any) => Promise<any>;
+  updateChild: (uid: string, child: UpdateChildEntityRequest) => Promise<UIEntity>;
+  deleteChild: (uid: string) => Promise<void>;
+  updateCollection: (type: string, parentKey: string, id: string | number, data: any) => Promise<any>;
   deleteFromCollection: (type: string, parentKey: string, id: string | number) => Promise<void>;
   createInCollection: (type: string, parentKey: string, data: any) => Promise<any>;
 }
@@ -52,9 +52,9 @@ export function useEntityOperations(): UseEntityOperationsReturn {
     });
   };
 
-  const updateEntity = async (key: string, entity: UpdateEntityRequest): Promise<UIEntity> => {
+  const updateEntity = async (uid: string, entity: UpdateEntityRequest): Promise<UIEntity> => {
     return handleApiCall(async () => {
-      const response = await fetch(`/api/entities/${encodeURIComponent(key)}`, {
+      const response = await fetch(`/api/entities/${encodeURIComponent(uid)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(entity),
@@ -64,9 +64,9 @@ export function useEntityOperations(): UseEntityOperationsReturn {
     });
   };
 
-  const deleteEntity = async (key: string): Promise<void> => {
+  const deleteEntity = async (uid: string): Promise<void> => {
     return handleApiCall(async () => {
-      const response = await fetch(`/api/entities/${encodeURIComponent(key)}`, {
+      const response = await fetch(`/api/entities/${encodeURIComponent(uid)}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete entity');
@@ -85,9 +85,9 @@ export function useEntityOperations(): UseEntityOperationsReturn {
     });
   };
 
-  const updateChild = async (key: string, child: UpdateChildEntityRequest): Promise<UIEntity> => {
+  const updateChild = async (uid: string, child: UpdateChildEntityRequest): Promise<UIEntity> => {
     return handleApiCall(async () => {
-      const response = await fetch(`/api/children/${encodeURIComponent(key)}?format=ui`, {
+      const response = await fetch(`/api/children/${encodeURIComponent(uid)}?format=ui`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(child),
@@ -97,18 +97,18 @@ export function useEntityOperations(): UseEntityOperationsReturn {
     });
   };
 
-  const deleteChild = async (key: string): Promise<void> => {
+  const deleteChild = async (uid: string): Promise<void> => {
     return handleApiCall(async () => {
-      const response = await fetch(`/api/children/${encodeURIComponent(key)}`, {
+      const response = await fetch(`/api/children/${encodeURIComponent(uid)}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete child entity');
     });
   };
 
-  const updateCollection = async (type: string, parentKey: string, index: number, data: any): Promise<any> => {
+  const updateCollection = async (type: string, parentKey: string, id: string | number, data: any): Promise<any> => {
     return handleApiCall(async () => {
-      const response = await fetch(`/api/${type}/${encodeURIComponent(parentKey)}/${index}`, {
+      const response = await fetch(`/api/${type}/${encodeURIComponent(parentKey)}/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

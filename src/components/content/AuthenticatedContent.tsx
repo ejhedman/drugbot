@@ -6,20 +6,21 @@ import { DetailView } from '@/components/entities/DetailView';
 import { getBorderClasses } from '@/lib/borderUtils';
 
 export function AuthenticatedContent() {
-  const [selectedEntityKey, setSelectedEntityKey] = useState<string | null>(null);
-  const [selectedChildKey, setSelectedChildKey] = useState<string | null>(null);
+  const [selectedEntityUid, setSelectedEntityUid] = useState<string | null>(null);
+  const [selectedChildUid, setSelectedChildUid] = useState<string | null>(null);
   const [isAddingEntity, setIsAddingEntity] = useState(false);
   const [isAddingChild, setIsAddingChild] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const handleEntitySelect = (entityKey: string) => {
-    setSelectedEntityKey(entityKey);
-    setSelectedChildKey(null); // Clear child selection when entity changes
+  const handleEntitySelect = (entityUid: string) => {
+    setSelectedEntityUid(entityUid);
+    setSelectedChildUid(null); // Clear child selection when entity changes
     setIsAddingEntity(false);
     setIsAddingChild(false);
   };
 
-  const handleChildSelect = (childKey: string) => {
-    setSelectedChildKey(childKey);
+  const handleChildSelect = (childUid: string) => {
+    setSelectedChildUid(childUid);
     setIsAddingEntity(false);
     setIsAddingChild(false);
   };
@@ -27,15 +28,15 @@ export function AuthenticatedContent() {
   const handleAddEntity = () => {
     setIsAddingEntity(true);
     setIsAddingChild(false);
-    setSelectedEntityKey(null);
-    setSelectedChildKey(null);
+    setSelectedEntityUid(null);
+    setSelectedChildUid(null);
   };
 
-  const handleAddChild = (entityKey: string) => {
-    setSelectedEntityKey(entityKey); // Ensure the parent entity is selected
+  const handleAddChild = (entityUid: string) => {
+    setSelectedEntityUid(entityUid); // Ensure the parent entity is selected
     setIsAddingChild(true);
     setIsAddingEntity(false);
-    setSelectedChildKey(null);
+    setSelectedChildUid(null);
   };
 
   const handleCancelAddEntity = () => {
@@ -48,14 +49,37 @@ export function AuthenticatedContent() {
 
   const handleEntityCreated = (newEntity: any) => {
     setIsAddingEntity(false);
+    // Refresh the tree view after creating an entity
+    setRefreshTrigger(prev => prev + 1);
     // TODO: Navigate to the newly created entity
     console.log('New entity created:', newEntity);
   };
 
   const handleChildCreated = (newChild: any) => {
     setIsAddingChild(false);
+    // Refresh the tree view after creating a child entity
+    setRefreshTrigger(prev => prev + 1);
     // TODO: Navigate to the newly created child entity
     console.log('New child entity created:', newChild);
+  };
+
+  const handleEntityDeleted = (entityUid: string) => {
+    // Refresh the tree view after deleting an entity
+    setRefreshTrigger(prev => prev + 1);
+    // Clear selection if the deleted entity was selected
+    if (selectedEntityUid === entityUid) {
+      setSelectedEntityUid(null);
+      setSelectedChildUid(null);
+    }
+  };
+
+  const handleChildDeleted = (childUid: string) => {
+    // Refresh the tree view after deleting a child entity
+    setRefreshTrigger(prev => prev + 1);
+    // Clear selection if the deleted child was selected
+    if (selectedChildUid === childUid) {
+      setSelectedChildUid(null);
+    }
   };
 
   return (
@@ -63,28 +87,31 @@ export function AuthenticatedContent() {
       <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden">
         {/* Column 1: Entity Tree List */}
         <div className={getBorderClasses("col-span-3 h-full min-h-0 flex flex-col overflow-hidden", "border-6 border-blue-500")}>
-          <EntityTreeList
-            selectedEntityKey={selectedEntityKey}
-            selectedChildKey={selectedChildKey}
-            onEntitySelect={handleEntitySelect}
-            onChildSelect={handleChildSelect}
-            onAddEntity={handleAddEntity}
-            onAddChild={handleAddChild}
-          />
+                  <EntityTreeList
+          selectedEntityUid={selectedEntityUid}
+          selectedChildUid={selectedChildUid}
+          onEntitySelect={handleEntitySelect}
+          onChildSelect={handleChildSelect}
+          onAddEntity={handleAddEntity}
+          onAddChild={handleAddChild}
+          refreshTrigger={refreshTrigger}
+        />
         </div>
 
         {/* Column 2: Detail View */}
         <div className={getBorderClasses("col-span-9 h-full min-h-0 flex flex-col overflow-hidden", "border-6 border-yellow-500")}>
-          <DetailView
-            entityKey={selectedEntityKey}
-            childKey={selectedChildKey}
-            isAddingEntity={isAddingEntity}
-            isAddingChild={isAddingChild}
-            onCancelAddEntity={handleCancelAddEntity}
-            onCancelAddChild={handleCancelAddChild}
-            onEntityCreated={handleEntityCreated}
-            onChildCreated={handleChildCreated}
-          />
+                  <DetailView
+          entityUid={selectedEntityUid}
+          childUid={selectedChildUid}
+          isAddingEntity={isAddingEntity}
+          isAddingChild={isAddingChild}
+          onCancelAddEntity={handleCancelAddEntity}
+          onCancelAddChild={handleCancelAddChild}
+          onEntityCreated={handleEntityCreated}
+          onChildCreated={handleChildCreated}
+          onEntityDeleted={handleEntityDeleted}
+          onChildDeleted={handleChildDeleted}
+        />
         </div>
       </div>
     </div>
