@@ -91,7 +91,12 @@ export function DetailCardProperties({
     const currentProperty = isEditing 
       ? editedProperties.find(p => p.propertyName === property.propertyName) || property
       : property;
-    
+    const valueToDisplay =
+      currentProperty.propertyValue !== null &&
+      currentProperty.propertyValue !== undefined &&
+      currentProperty.propertyValue !== ''
+        ? currentProperty.propertyValue
+        : '--no value--';
     return (
       <div key={property.propertyName} className="flex items-center gap-2">
         <span className="label min-w-32">{property.propertyName}:</span>
@@ -105,7 +110,7 @@ export function DetailCardProperties({
             />
           ) : (
             <span className={!property.isEditable ? 'label' : 'value'}>
-              {currentProperty.propertyValue || ''}
+              {valueToDisplay}
             </span>
           )}
         </div>
@@ -179,7 +184,6 @@ export function DetailCardProperties({
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <h4 className="section-title mb-2">Properties</h4>
           <div className="grid grid-cols-2 gap-x-6 gap-y-3">
             {visibleProperties.map(renderProperty)}
           </div>

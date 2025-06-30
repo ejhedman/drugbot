@@ -471,26 +471,26 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                 <tr>
                   {/* Display Name column first */}
                   {isUsingUIEntityData && (
-                    <th className="px-4 py-3 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
+                    <th className="px-4 py-1 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
                       Display Name
                     </th>
                   )}
                   {/* Property columns or regular object keys */}
                   {isUsingUIEntityData ? (
                     propertyColumns.map((propName, index) => (
-                      <th key={propName} className="px-4 py-3 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
+                      <th key={propName} className="px-4 py-1 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
                         {getFieldDisplayName(propName)}
                       </th>
                     ))
                   ) : (
                     Object.keys(flatTableData[0]).map((key, index, array) => (
-                      <th key={key} className="px-4 py-3 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
+                      <th key={key} className="px-4 py-1 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
                         {getFieldDisplayName(key)}
                       </th>
                     ))
                   )}
                   {/* Actions column last */}
-                  <th className="px-4 py-3 bg-slate-600 text-left font-semibold text-white w-24">
+                  <th className="px-4 py-1 bg-slate-600 text-left font-semibold text-white w-24">
                     Actions
                   </th>
                 </tr>
@@ -500,7 +500,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                   <tr key={idx} className="hover:bg-gray-50 border-b last:border-b-0">
                     {/* Display Name column first for UIEntity data */}
                     {isUsingUIEntityData && (
-                      <td className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
+                      <td className="px-4 py-1 text-gray-900 text-left border-r border-gray-200">
                         {editingRow === idx ? (
                           isFieldEditable('displayName') ? (
                             <input
@@ -515,17 +515,17 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                               className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                             />
                           ) : (
-                            <span className="text-gray-500 italic">{row.displayName?.toString() || ''}</span>
+                            <span className="text-gray-500 italic">{row.displayName?.toString() || '--no value--'}</span>
                           )
                         ) : (
-                          row.displayName?.toString() || ''
+                          row.displayName?.toString() || '--no value--'
                         )}
                       </td>
                     )}
                     {/* Property columns or regular object keys */}
                     {isUsingUIEntityData ? (
                       propertyColumns.map((propName, index) => (
-                        <td key={propName} className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
+                        <td key={propName} className="px-4 py-1 text-gray-900 text-left border-r border-gray-200">
                           {editingRow === idx ? (
                             isFieldEditable(propName) ? (
                               <input
@@ -540,16 +540,16 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                                 className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                               />
                             ) : (
-                              <span className="text-gray-500 italic">{row[propName]?.toString() || ''}</span>
+                              <span className="text-gray-500 italic">{row[propName]?.toString() || '--no value--'}</span>
                             )
                           ) : (
-                            row[propName]?.toString() || ''
+                            row[propName]?.toString() || '--no value--'
                           )}
                         </td>
                       ))
                     ) : (
                       Object.keys(row).map((key, index, array) => (
-                        <td key={key} className="px-4 py-3 text-gray-900 text-left border-r border-gray-200">
+                        <td key={key} className="px-4 py-1 text-gray-900 text-left border-r border-gray-200">
                           {editingRow === idx ? (
                             isFieldEditable(key) ? (
                               <input
@@ -564,16 +564,16 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                                 className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                               />
                             ) : (
-                              <span className="text-gray-500 italic">{row[key]?.toString() || ''}</span>
+                              <span className="text-gray-500 italic">{row[key]?.toString() || '--no value--'}</span>
                             )
                           ) : (
-                            row[key]?.toString() || ''
+                            row[key]?.toString() || '--no value--'
                           )}
                         </td>
                       ))
                     )}
                     {/* Actions column last */}
-                    <td className="px-4 py-3 text-gray-900 w-24">
+                    <td className="px-4 py-1 text-gray-900 w-24">
                       <div className="flex items-center gap-2">
                         {editingRow === idx ? (
                           <>
