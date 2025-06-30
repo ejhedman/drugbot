@@ -225,12 +225,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     });
   };
 
-  // const handleInputChange = (key: string, value: string) => {
-  //   setEditedData((prev: any) => ({
-  //     ...prev,
-  //     [key]: value
-  //   }));
-  // };
+
 
   const handleAddNew = () => {
     setIsAddingNew(true);

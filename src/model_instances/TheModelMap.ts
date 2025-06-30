@@ -449,13 +449,7 @@ export function getAggregateTableName(aggregateType: string): string | undefined
   return aggregateMapping?.tableName;
 }
 
-// /**
-//  * Get the key field name for an entity
-//  */
-// export function getEntityKeyField(entityType: string): string | undefined {
-//   const entityMapping = getEntityMapping(entityType);
-//   return entityMapping?.keyField;
-// }
+
 
 /**
  * Get the parent key field name for an aggregate
@@ -526,7 +520,6 @@ export function getEntityCompleteQueryInfo(entityType: string): {
   
   return {
     entityTable: entityMapping.tableName,
-    // entityKeyField: entityMapping.keyField,
     entityDisplayField: entityMapping.displayNameField,
     aggregates: aggregateMappings.map(mapping => ({
       aggregateType: mapping.aggregateType,

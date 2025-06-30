@@ -5,7 +5,6 @@ import { UIEntity } from '@/model_defs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SquarePlus, Search, Pill, Tag, ChevronRight, ChevronDown, RefreshCw } from 'lucide-react';
-// import { shouldShowBorders } from '@/lib/borderUtils';
 import { EntityListSkeleton, ChildEntitySkeleton } from '@/components/ui/skeleton';
 import { getBorderClasses } from '@/lib/borderUtils';
 

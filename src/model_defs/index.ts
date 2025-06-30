@@ -10,7 +10,6 @@
 // ============================================================================
 
 export type { UIProperty, UIAggregate, UIEntity, UIEntityRef } from './UIModel';
-// export { isUIProperty, isUIAggregate, isUIEntity } from './UIModel';
 
 // ============================================================================
 // CORE DATABASE TYPES (imported from separate file)

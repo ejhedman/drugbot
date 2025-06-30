@@ -425,21 +425,7 @@ export class UIModel {
     return properties.filter(prop => prop.isVisible && prop.isEditable && !prop.isId);
   }
 
-  // /**
-  //  * Get key properties for an entity (business keys, not IDs)
-  //  */
-  // getEntityKeyProperties(entityName: string): UIProperty[] {
-  //   const properties = this.getEntityProperties(entityName);
-  //   return properties.filter(prop => prop.isKey && !prop.isId);
-  // }
 
-  // /**
-  //  * Get the primary key property for an entity
-  //  */
-  // getEntityKeyProperty(entityName: string): UIProperty | undefined {
-  //   const keyProperties = this.getEntityKeyProperties(entityName);
-  //   return keyProperties.length > 0 ? keyProperties[0] : undefined;
-  // }
 
   /**
    * Get ID properties for an entity
@@ -648,105 +634,5 @@ export class UIModel {
   }
 } 
 
-// // ============================================================================
-// // TYPE GUARD FUNCTIONS
-// // ============================================================================
-
-// /**
-//  * Type guard to check if an object is a valid UIProperty
-//  * 
-//  * Validates that an object conforms to the UIProperty interface by checking
-//  * required fields and their types. Used for runtime type checking and
-//  * data validation when processing API responses or user input.
-//  * 
-//  * @param obj - Object to validate
-//  * @returns True if object is a valid UIProperty, false otherwise
-//  */
-// export function isUIProperty(obj: any): obj is UIProperty {
-//   return obj && 
-//     typeof obj.propertyName === 'string' &&
-//     typeof obj.ordinal === 'number' &&
-//     typeof obj.isEditable === 'boolean' &&
-//     typeof obj.isVisible === 'boolean' &&
-//     typeof obj.isKey === 'boolean' &&
-//     // Optional schema metadata checks
-//     (obj.type === undefined || typeof obj.type === 'string') &&
-//     (obj.ui === undefined || (obj.ui && typeof obj.displayName === 'string'));
-// }
-
-// /**
-//  * Type guard to check if an object is a valid UIAggregate
-//  * 
-//  * Validates that an object conforms to the UIAggregate interface by checking
-//  * required fields, optional runtime data, and the structure of the rows array.
-//  * Ensures that if rows are present, they form a valid 2D array of UIProperty objects.
-//  * 
-//  * @param obj - Object to validate
-//  * @returns True if object is a valid UIAggregate, false otherwise
-//  */
-// export function isUIAggregate(obj: any): obj is UIAggregate {
-//   return obj && 
-//   typeof obj.displayName === 'string' &&
-//   (obj.aggregateType === undefined || typeof obj.aggregateType === 'string') &&
-//   typeof obj.ordinal === 'number' &&
-//     // Runtime aggregate checks
-//     (obj.entityUid === undefined || typeof obj.entityUid === 'string') &&
-//     // Validate rows structure: must be 2D array of UIProperty objects
-//     (obj.rows === undefined || (Array.isArray(obj.rows) && obj.rows.every((row: any) => Array.isArray(row) && row.every((prop: any) => isUIProperty(prop))))) &&
-//     // Schema definition checks
-//     (obj.propertyDefs === undefined || (Array.isArray(obj.propertyDefs) && obj.propertyDefs.every((prop: any) => isUIProperty(prop))));
-// }
-
-// /**
-//  * Type guard to check if an object is a valid UIEntity
-//  * 
-//  * Validates that an object conforms to the UIEntity interface by checking
-//  * required fields and validating nested structures (properties and aggregates).
-//  * Handles both schema definitions and runtime instances.
-//  * 
-//  * @param obj - Object to validate
-//  * @returns True if object is a valid UIEntity, false otherwise
-//  */
-// export function isUIEntity(obj: any): obj is UIEntity {
-//   return obj && 
-//     typeof obj.displayName === 'string' &&
-//     // Runtime entity instance checks
-//     (obj.entityUid === undefined || typeof obj.entityUid === 'string') &&
-//     (obj.entity_type === undefined || typeof obj.entity_type === 'string') &&
-//     (obj.properties === undefined || (Array.isArray(obj.properties) && obj.properties.every((prop: any) => isUIProperty(prop)))) &&
-//     (obj.aggregates === undefined || (Array.isArray(obj.aggregates) && obj.aggregates.every((coll: any) => isUIAggregate(coll)))) &&
-//     // Schema definition checks
-//     (obj.name === undefined || typeof obj.name === 'string') &&
-//     (obj.tableName === undefined || typeof obj.tableName === 'string') &&
-//     (obj.properties === undefined || (Array.isArray(obj.properties) && obj.properties.every((field: any) => isUIProperty(field)))) &&
-//     (obj.aggregates === undefined || (Array.isArray(obj.aggregates) && obj.aggregates.every((coll: any) => isUIAggregate(coll))));
-// }
-
-// /**
-//  * Type guard to check if a UIEntity is being used as a schema definition
-//  * 
-//  * Determines whether a UIEntity object represents a schema definition rather than
-//  * a runtime instance. Schema definitions have tableName and properties defined,
-//  * while runtime instances have entityUid.
-//  * 
-//  * @param obj - UIEntity object to check
-//  * @returns True if the entity is a schema definition, false if it's a runtime instance
-//  */
-// export function isUIEntitySchema(obj: UIEntity): obj is UIEntity & { name: string; tableName: string; properties: UIProperty[] } {
-//   return obj.properties !== undefined;
-// }
-
-// /**
-//  * Type guard to check if a UIEntity is being used as a runtime instance
-//  * 
-//  * Determines whether a UIEntity object represents a runtime instance with actual
-//  * data rather than a schema definition. Runtime instances have entityUid,
-//  * and properties with values.
-//  * 
-//  * @param obj - UIEntity object to check
-//  * @returns True if the entity is a runtime instance, false if it's a schema definition
-//  */
-// export function isUIEntityInstance(obj: UIEntity): obj is UIEntity & { entityUid: string; properties: UIProperty[] } {
-//   return obj.entityUid !== undefined && obj.properties !== undefined;
-// } 
+ 
 

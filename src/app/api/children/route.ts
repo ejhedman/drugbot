@@ -32,15 +32,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // // Verify that the parent entity exists
-    // const parentEntity = await entityRepository.getEntityByKey(body.parent_entity_key, genericDrugsTable);
-    // if (!parentEntity) {
-    //   return NextResponse.json(
-    //     { error: 'Parent entity not found' }, 
-    //     { status: 404 }
-    //   );
-    // }    
-
     // Verify that the parent entity exists
     const parentEntity = await entityRepository.getEntityByUid(body.parent_entity_uid, genericDrugsTable);
     if (!parentEntity) {
