@@ -206,16 +206,16 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
   };
   
   return (
-    <header className="bg-slate-200 px-6 flex justify-between items-center border-b border-slate-200 shadow-sm" style={{ minHeight: '100px' }}>
+    <header className="bg-slate-200 px-6 flex justify-between items-center border-b border-slate-200 shadow-sm" style={{ minHeight: '50px' }}>
       <div className="flex items-center">
-        <div className="h-24 rounded-xl overflow-hidden">
+        <div className="h-12 rounded-xl overflow-hidden">
           <Image 
             src="/drugissimo.png" 
             alt="Drugissimo Logo" 
             width={0}
             height={0}
             sizes="100vw"
-            className="h-24 w-auto object-contain"
+            className="h-12 w-auto object-contain"
             priority
           />
         </div>
@@ -414,6 +414,9 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
               >
                 <HelpCircle className="h-5 w-5" />
               </button>
+
+              {/* Vertical Divider */}
+              <div className="h-6 w-px bg-slate-400"></div>
 
               {avatarUrl && (
                 <Image
