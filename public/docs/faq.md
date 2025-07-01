@@ -1,40 +1,40 @@
-# DrugBot FAQ - User Guide
+# Drugissimo FAQ - User Guide
 
 ## Getting Started
 
-### Q: What is DrugBot?
-**A:** DrugBot is a comprehensive pharmaceutical database management system designed for pharmaceutical professionals. It helps you track and manage generic drugs, manufactured drugs, administration routes, regulatory approvals, and drug aliases in a single, organized platform.
+### Q: What is Drugissimo?
+**A:** Drugissimo is a comprehensive pharmaceutical database management system designed for pharmaceutical professionals. It helps you track and manage generic drugs, manufactured drugs, administration routes, regulatory approvals, and drug aliases in a single, organized platform.
 
-### Q: How do I access DrugBot?
+### Q: How do I access Drugissimo?
 **A:** 
-1. Open your web browser and navigate to the DrugBot application URL
+1. Open your web browser and navigate to the Drugissimo application URL
 2. You'll see a welcome screen with an overview of the application
 3. Click the "Login" button in the header
 4. Enter any valid email address (the system simulates authentication for demo purposes)
 5. Click "Sign In" to access the application
 
 ### Q: What browsers are supported?
-**A:** DrugBot works best with modern browsers including:
+**A:** Drugissimo works best with modern browsers including:
 - Chrome (recommended)
 - Firefox
 - Safari
 - Edge
 - Mobile browsers (iOS Safari, Chrome Mobile)
 
-### Q: Is DrugBot mobile-friendly?
-**A:** Yes! DrugBot is fully responsive and works on mobile devices, tablets, and desktop computers. The interface automatically adapts to your screen size.
+### Q: Is Drugissimo mobile-friendly?
+**A:** Yes! Drugissimo is fully responsive and works on mobile devices, tablets, and desktop computers. The interface automatically adapts to your screen size.
 
 ## Authentication & Access
 
-### Q: How do I log in to DrugBot?
+### Q: How do I log in to Drugissimo?
 **A:** 
 1. Click the "Login" button in the header
 2. Enter any valid email address (e.g., `yourname@company.com`)
 3. Click "Sign In"
 4. You'll be automatically logged in and redirected to the main application
 
-### Q: Why does DrugBot accept any email address?
-**A:** DrugBot currently uses a simulated authentication system for demonstration purposes. In a production environment, this would be replaced with proper authentication using Supabase Auth or similar services.
+### Q: Why does Drugissimo accept any email address?
+**A:** Drugissimo currently uses a simulated authentication system for demonstration purposes. In a production environment, this would be replaced with proper authentication using Supabase Auth or similar services.
 
 ### Q: How do I log out?
 **A:** 
@@ -43,12 +43,12 @@
 3. You'll be logged out and returned to the welcome screen
 
 ### Q: I forgot my password - what should I do?
-**A:** Since DrugBot uses simulated authentication, you can simply enter any valid email address to log in. In a production environment, there would be a "Forgot Password" link that would send a password reset email.
+**A:** Since Drugissimo uses simulated authentication, you can simply enter any valid email address to log in. In a production environment, there would be a "Forgot Password" link that would send a password reset email.
 
 ## Navigation & Interface
 
-### Q: How do I navigate the DrugBot interface?
-**A:** DrugBot has a three-panel layout:
+### Q: How do I navigate the Drugissimo interface?
+**A:** Drugissimo has a three-panel layout:
 - **Left Panel (Entity Tree)**: Browse and search generic drugs
 - **Center Panel**: View details of selected drugs
 - **Right Panel**: Access related data in tabs (Routes, Approvals, Aliases, Manufactured Drugs)
@@ -156,15 +156,15 @@
 
 ## Data Management
 
-### Q: How do I export data from DrugBot?
+### Q: How do I export data from Drugissimo?
 **A:** 
 1. Click the "Export" button in the header (if available)
 2. The system will generate an Excel file with all drug data
 3. The file will automatically download to your computer
 4. The Excel file will contain separate sheets for each data type
 
-### Q: Can I import data into DrugBot?
-**A:** Currently, DrugBot supports file uploads for Excel files, but the import functionality is being developed. You can upload files through the upload interface, but data processing is not yet fully implemented.
+### Q: Can I import data into Drugissimo?
+**A:** Currently, Drugissimo supports file uploads for Excel files, but the import functionality is being developed. You can upload files through the upload interface, but data processing is not yet fully implemented.
 
 ### Q: How do I search across all drug data?
 **A:** 
@@ -174,7 +174,7 @@
 4. Click on a result to view its full details
 
 ### Q: How do I filter data by specific criteria?
-**A:** Currently, DrugBot provides basic search functionality. Advanced filtering options are planned for future releases and will include filtering by:
+**A:** Currently, Drugissimo provides basic search functionality. Advanced filtering options are planned for future releases and will include filtering by:
 - Drug class/type
 - Target
 - Country of approval
@@ -246,7 +246,7 @@
 ## Advanced Features
 
 ### Q: How do I use keyboard shortcuts?
-**A:** DrugBot supports several keyboard shortcuts:
+**A:** Drugissimo supports several keyboard shortcuts:
 - **Tab**: Navigate between form fields
 - **Enter**: Submit forms or select items
 - **Escape**: Cancel dialogs or close modals
@@ -261,7 +261,7 @@
 4. You can also see relationships in the detail tabs
 
 ### Q: How do I compare drugs?
-**A:** Currently, DrugBot doesn't have a built-in comparison feature. You can:
+**A:** Currently, Drugissimo doesn't have a built-in comparison feature. You can:
 1. Open multiple browser tabs
 2. Navigate to different drugs in each tab
 3. Manually compare the information
@@ -269,12 +269,12 @@
 A drug comparison feature is planned for future releases.
 
 ### Q: How do I track changes to drug data?
-**A:** Currently, DrugBot doesn't have built-in audit logging. Changes are saved immediately but not tracked. An audit trail feature is planned for future releases.
+**A:** Currently, Drugissimo doesn't have built-in audit logging. Changes are saved immediately but not tracked. An audit trail feature is planned for future releases.
 
 ## Data Accuracy & Validation
 
-### Q: How accurate is the drug data in DrugBot?
-**A:** The accuracy depends on the data source and how it's maintained. DrugBot includes demo data for demonstration purposes. In production use, data accuracy should be verified against official sources like:
+### Q: How accurate is the drug data in Drugissimo?
+**A:** The accuracy depends on the data source and how it's maintained. Drugissimo includes demo data for demonstration purposes. In production use, data accuracy should be verified against official sources like:
 - FDA databases
 - EMA databases
 - Manufacturer websites
@@ -292,14 +292,14 @@ A drug comparison feature is planned for future releases.
 **A:** 
 1. Document the incorrect information
 2. Research the correct information from reliable sources
-3. Update the data in DrugBot if you have edit permissions
+3. Update the data in Drugissimo if you have edit permissions
 4. Contact your system administrator if you need help
 5. Consider adding a note about the correction
 
 ## Security & Privacy
 
-### Q: Is my data secure in DrugBot?
-**A:** DrugBot implements several security measures:
+### Q: Is my data secure in Drugissimo?
+**A:** Drugissimo implements several security measures:
 - Secure authentication (in production)
 - Row-level security policies
 - Input validation and sanitization
@@ -314,7 +314,7 @@ A drug comparison feature is planned for future releases.
 - Approval workflows for sensitive changes
 
 ### Q: Is my personal information stored?
-**A:** DrugBot primarily stores drug-related data. Personal information is limited to:
+**A:** Drugissimo primarily stores drug-related data. Personal information is limited to:
 - User authentication data (email, login history)
 - User preferences and settings
 - Audit logs of user actions
@@ -328,7 +328,7 @@ A drug comparison feature is planned for future releases.
 
 ## Getting Help
 
-### Q: How do I get help with DrugBot?
+### Q: How do I get help with Drugissimo?
 **A:** There are several ways to get help:
 1. **Check this FAQ**: Look for answers to common questions
 2. **Use the Help & Feedback feature**: Click the feedback button in the footer
@@ -375,7 +375,7 @@ A drug comparison feature is planned for future releases.
 - **Bulk Operations**: Import/export and batch processing
 - **Real-time Collaboration**: Multi-user editing capabilities
 
-### Q: How often is DrugBot updated?
+### Q: How often is Drugissimo updated?
 **A:** Update frequency depends on the deployment:
 - **Development**: Frequent updates during active development
 - **Production**: Regular updates with new features and bug fixes
@@ -390,8 +390,8 @@ A drug comparison feature is planned for future releases.
 
 ## Technical Questions
 
-### Q: What technology is DrugBot built with?
-**A:** DrugBot is built with modern web technologies:
+### Q: What technology is Drugissimo built with?
+**A:** Drugissimo is built with modern web technologies:
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS, Shadcn/ui components
 - **Backend**: Next.js API routes, Supabase
@@ -399,14 +399,14 @@ A drug comparison feature is planned for future releases.
 - **Authentication**: Supabase Auth
 - **Real-time**: Supabase real-time subscriptions
 
-### Q: Can I integrate DrugBot with other systems?
-**A:** DrugBot provides RESTful APIs that can be integrated with other systems. See the API documentation for technical details about available endpoints and data formats.
+### Q: Can I integrate Drugissimo with other systems?
+**A:** Drugissimo provides RESTful APIs that can be integrated with other systems. See the API documentation for technical details about available endpoints and data formats.
 
-### Q: Is DrugBot open source?
-**A:** DrugBot is built with open-source technologies, but the application itself may have proprietary components. Check with your system administrator for licensing details.
+### Q: Is Drugissimo open source?
+**A:** Drugissimo is built with open-source technologies, but the application itself may have proprietary components. Check with your system administrator for licensing details.
 
-### Q: Can I run DrugBot locally?
-**A:** Yes, DrugBot can be run locally for development purposes. See the main README for setup instructions and requirements.
+### Q: Can I run Drugissimo locally?
+**A:** Yes, Drugissimo can be run locally for development purposes. See the main README for setup instructions and requirements.
 
 ---
 

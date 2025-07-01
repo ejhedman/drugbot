@@ -897,7 +897,7 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
 // ============================================================================
 
 /**
- * The complete UI model wrapper instance for the DrugBot application
+ * The complete UI model wrapper instance for the Drugissimo application
  * 
  * This is the primary interface for accessing UI model information.
  * Instead of working directly with the ENTITIES and ENTITY_AGGREGATES constants,

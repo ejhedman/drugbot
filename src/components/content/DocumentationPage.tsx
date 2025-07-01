@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -65,12 +64,11 @@ const categories = {
   technical: { name: 'Technical', description: 'Developer and technical documentation' }
 };
 
-export default function DocsPage() {
+export function DocumentationPage() {
   const [selectedDoc, setSelectedDoc] = useState<DocFile | null>(null);
   const [markdownContent, setMarkdownContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('overview');
-  const router = useRouter();
 
   const fetchMarkdown = async (docPath: string) => {
     setIsLoading(true);
@@ -105,7 +103,7 @@ export default function DocsPage() {
     }
   };
 
-  // Auto-select first document on page load
+  // Auto-select first document on component mount
   useEffect(() => {
     if (!selectedDoc && docFiles.length > 0) {
       const firstDoc = docFiles[0];
@@ -307,173 +305,163 @@ export default function DocsPage() {
   const filteredDocs = docFiles.filter(doc => doc.category === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <div className="lg:w-1/4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Documentation
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Category Navigation */}
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Categories</h3>
-                  <div className="space-y-2">
-                    {Object.entries(categories).map(([key, category]) => (
-                      <button
-                        key={key}
-                        onClick={() => handleCategorySelect(key)}
-                        className={`w-full text-left p-2 rounded-md transition-colors text-sm ${
-                          selectedCategory === key
-                            ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-                            : 'hover:bg-slate-100 text-slate-700'
-                        }`}
-                      >
-                        <div className="font-medium">{category.name}</div>
-                        <div className="text-xs text-slate-500">{category.description}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <Separator className="my-4" />
-
-                {/* Document Navigation */}
+    <div className="flex-1 flex min-h-0 overflow-hidden bg-gray-50">
+      <div className="flex flex-1 gap-6 p-6">
+        {/* Sidebar */}
+        <div className="w-80 flex-shrink-0">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Documentation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-y-auto">
+              {/* Category Navigation */}
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-slate-700 mb-3">Categories</h3>
                 <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Documents</h3>
-                  {filteredDocs.map((doc) => {
-                    const IconComponent = doc.icon;
-                    return (
-                      <button
-                        key={doc.name}
-                        onClick={() => handleDocSelect(doc)}
-                        className={`w-full text-left p-3 rounded-md transition-colors ${
-                          selectedDoc?.name === doc.name
-                            ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-                            : 'hover:bg-slate-100 text-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <IconComponent className="h-4 w-4" />
-                          <div className="font-medium">{doc.title}</div>
-                        </div>
-                        <div className="text-sm text-slate-500">{doc.description}</div>
-                      </button>
-                    );
-                  })}
+                  {Object.entries(categories).map(([key, category]) => (
+                    <button
+                      key={key}
+                      onClick={() => handleCategorySelect(key)}
+                      className={`w-full text-left p-2 rounded-md transition-colors text-sm ${
+                        selectedCategory === key
+                          ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                          : 'hover:bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      <div className="font-medium">{category.name}</div>
+                      <div className="text-xs text-slate-500">{category.description}</div>
+                    </button>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
 
-          {/* Main Content */}
-          <div className="lg:w-3/4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {selectedDoc && (
-                      <>
-                        <selectedDoc.icon className="h-6 w-6 text-indigo-600" />
-                        <CardTitle className="text-2xl">
-                          {selectedDoc.title}
-                        </CardTitle>
-                      </>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => router.push('/')}
-                  >
-                    Back to App
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {!selectedDoc ? (
-                  <div className="text-center py-12">
-                    <h2 className="text-2xl font-semibold text-slate-700 mb-4">
-                      Welcome to Drugissimo Documentation
-                    </h2>
-                    <p className="text-slate-600 mb-8">
-                      Select a category and document from the sidebar to get started. The documentation covers everything from getting started to advanced technical details.
-                    </p>
-                    
-                    {/* Category Cards */}
-                    <div className="grid md:grid-cols-3 gap-6 mb-8">
-                      {Object.entries(categories).map(([key, category]) => {
-                        const categoryDocs = docFiles.filter(doc => doc.category === key);
-                        return (
-                          <Card key={key} className="cursor-pointer hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                              <h3 className="font-semibold text-slate-800 mb-2">{category.name}</h3>
-                              <p className="text-sm text-slate-600 mb-4">{category.description}</p>
-                              <div className="space-y-2">
-                                {categoryDocs.map((doc) => {
-                                  const IconComponent = doc.icon;
-                                  return (
-                                    <button
-                                      key={doc.name}
-                                      onClick={() => handleDocSelect(doc)}
-                                      className="w-full text-left p-2 rounded hover:bg-slate-50 flex items-center gap-2 text-sm"
-                                    >
-                                      <IconComponent className="h-4 w-4 text-slate-500" />
-                                      {doc.title}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
+              <Separator className="my-4" />
 
-                    {/* Quick Start Guide */}
-                    <div className="bg-indigo-50 p-6 rounded-lg">
-                      <h3 className="font-semibold text-indigo-900 mb-3">Quick Start</h3>
-                      <div className="grid md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <h4 className="font-medium text-indigo-800 mb-2">For Users</h4>
-                          <ul className="space-y-1 text-indigo-700">
-                            <li>• Read the Application Overview</li>
-                            <li>• Check the User Guide & FAQ</li>
-                            <li>• Learn about data management</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-indigo-800 mb-2">For Developers</h4>
-                          <ul className="space-y-1 text-indigo-700">
-                            <li>• Review the API Specification</li>
-                            <li>• Study the System Architecture</li>
-                            <li>• Understand the Design System</li>
-                          </ul>
-                        </div>
+              {/* Document Navigation */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-slate-700 mb-3">Documents</h3>
+                {filteredDocs.map((doc) => {
+                  const IconComponent = doc.icon;
+                  return (
+                    <button
+                      key={doc.name}
+                      onClick={() => handleDocSelect(doc)}
+                      className={`w-full text-left p-3 rounded-md transition-colors ${
+                        selectedDoc?.name === doc.name
+                          ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                          : 'hover:bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <IconComponent className="h-4 w-4" />
+                        <div className="font-medium">{doc.title}</div>
                       </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="prose max-w-none">
-                    {isLoading ? (
-                      <div className="flex items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                        <span className="ml-3 text-slate-600">Loading document...</span>
-                      </div>
-                    ) : (
-                      <div className="markdown-content">
-                        {renderMarkdown(markdownContent)}
-                      </div>
-                    )}
-                  </div>
+                      <div className="text-sm text-slate-500">{doc.description}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 min-w-0">
+          <Card className="h-full">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                {selectedDoc && (
+                  <>
+                    <selectedDoc.icon className="h-6 w-6 text-indigo-600" />
+                    <CardTitle className="text-2xl">
+                      {selectedDoc.title}
+                    </CardTitle>
+                  </>
                 )}
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardHeader>
+            <CardContent className="overflow-y-auto">
+              {!selectedDoc ? (
+                <div className="text-center py-12">
+                  <h2 className="text-2xl font-semibold text-slate-700 mb-4">
+                    Welcome to Drugissimo Documentation
+                  </h2>
+                  <p className="text-slate-600 mb-8">
+                    Select a category and document from the sidebar to get started. The documentation covers everything from getting started to advanced technical details.
+                  </p>
+                  
+                  {/* Category Cards */}
+                  <div className="grid md:grid-cols-3 gap-6 mb-8">
+                    {Object.entries(categories).map(([key, category]) => {
+                      const categoryDocs = docFiles.filter(doc => doc.category === key);
+                      return (
+                        <Card key={key} className="cursor-pointer hover:shadow-md transition-shadow">
+                          <CardContent className="p-6">
+                            <h3 className="font-semibold text-slate-800 mb-2">{category.name}</h3>
+                            <p className="text-sm text-slate-600 mb-4">{category.description}</p>
+                            <div className="space-y-2">
+                              {categoryDocs.map((doc) => {
+                                const IconComponent = doc.icon;
+                                return (
+                                  <button
+                                    key={doc.name}
+                                    onClick={() => handleDocSelect(doc)}
+                                    className="w-full text-left p-2 rounded hover:bg-slate-50 flex items-center gap-2 text-sm"
+                                  >
+                                    <IconComponent className="h-4 w-4 text-slate-500" />
+                                    {doc.title}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+
+                  {/* Quick Start Guide */}
+                  <div className="bg-indigo-50 p-6 rounded-lg">
+                    <h3 className="font-semibold text-indigo-900 mb-3">Quick Start</h3>
+                    <div className="grid md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <h4 className="font-medium text-indigo-800 mb-2">For Users</h4>
+                        <ul className="space-y-1 text-indigo-700">
+                          <li>• Read the Application Overview</li>
+                          <li>• Check the User Guide & FAQ</li>
+                          <li>• Learn about data management</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-indigo-800 mb-2">For Developers</h4>
+                        <ul className="space-y-1 text-indigo-700">
+                          <li>• Review the API Specification</li>
+                          <li>• Study the System Architecture</li>
+                          <li>• Understand the Design System</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="prose max-w-none">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                      <span className="ml-3 text-slate-600">Loading document...</span>
+                    </div>
+                  ) : (
+                    <div className="markdown-content">
+                      {renderMarkdown(markdownContent)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

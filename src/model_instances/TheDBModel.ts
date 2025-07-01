@@ -1002,7 +1002,7 @@ const genericDrugsWideViewTable: DBTable = {
 export const theDBSchema: DBSchema = {
   name: 'drugbot_schema',
   version: '1.0.0',
-  description: 'Complete database schema for the DrugBot application, including drug information, approvals, routes, and manufacturer data',
+  description: 'Complete database schema for the Drugissimo application, including drug information, approvals, routes, and manufacturer data',
   tables: [
     // Lookup tables
     drugClassesTable,
@@ -1040,7 +1040,7 @@ export {
 // ============================================================================
 
 /**
- * The complete database model wrapper instance for the DrugBot application
+ * The complete database model wrapper instance for the Drugissimo application
  * 
  * This is the primary interface for accessing database model information.
  * Instead of working directly with the schema and tables, consumers should

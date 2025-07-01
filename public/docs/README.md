@@ -1,10 +1,10 @@
-# DrugBot - Pharmaceutical Database Management System
+# Drugissimo - Pharmaceutical Database Management System
 
-A comprehensive pharmaceutical database management system for tracking generic drugs, manufactured drugs, administration routes, regulatory approvals, and drug aliases. Built with modern web technologies, DrugBot provides an intuitive interface for pharmaceutical professionals to manage complex drug information with rich relationships and metadata.
+A comprehensive pharmaceutical database management system for tracking generic drugs, manufactured drugs, administration routes, regulatory approvals, and drug aliases. Built with modern web technologies, Drugissimo provides an intuitive interface for pharmaceutical professionals to manage complex drug information with rich relationships and metadata.
 
 ## Overview
 
-DrugBot is a specialized application designed to handle the complex data relationships in pharmaceutical research and regulatory management. It provides a hierarchical view of drug information, from generic compounds to their manufactured variants, including biosimilars, with comprehensive tracking of administration routes, regulatory approvals, and alternative names.
+Drugissimo is a specialized application designed to handle the complex data relationships in pharmaceutical research and regulatory management. It provides a hierarchical view of drug information, from generic compounds to their manufactured variants, including biosimilars, with comprehensive tracking of administration routes, regulatory approvals, and alternative names.
 
 ## Key Features
 

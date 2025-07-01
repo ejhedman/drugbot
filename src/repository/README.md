@@ -1,6 +1,6 @@
 # Repository Layer
 
-This directory contains the organized repository layer for the DrugBot application. The repository layer provides a clean interface for data operations and abstracts database interactions.
+This directory contains the organized repository layer for the Drugissimo application. The repository layer provides a clean interface for data operations and abstracts database interactions.
 
 ## Structure
 

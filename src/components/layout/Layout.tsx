@@ -4,10 +4,14 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { Sidebar } from '@/components/layout/Sidebar';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { LoginHelpForm } from '@/components/auth/LoginHelpForm';
 import { UnauthenticatedContent } from '@/components/content/UnauthenticatedContent';
 import { AuthenticatedContent } from '@/components/content/AuthenticatedContent';
+import { HomePage } from '@/components/content/HomePage';
+import { ReportsPage } from '@/components/content/ReportsPage';
+import { DocumentationPage } from '@/components/content/DocumentationPage';
 import { ReleaseNotesPage } from '@/components/content/ReleaseNotesPage';
 import { HelpFeedbackPage } from '@/components/content/HelpFeedbackPage';
 import { useLoginHelpSubmission } from '@/hooks/useLoginHelpSubmission';
@@ -19,6 +23,7 @@ export function Layout() {
   const [showLoginHelp, setShowLoginHelp] = useState(false);
   const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const [showHelpFeedback, setShowHelpFeedback] = useState(false);
+  const [activeFeature, setActiveFeature] = useState('home');
   
   // Use the login help submission hook with default logging behavior
   const { submitHelpRequest } = useLoginHelpSubmission();
@@ -81,6 +86,13 @@ export function Layout() {
     setShowHelpFeedback(false);
   };
 
+  const handleFeatureChange = (feature: string) => {
+    setActiveFeature(feature);
+    // Close any modals when switching features
+    setShowReleaseNotes(false);
+    setShowHelpFeedback(false);
+  };
+
   // Determine what content to show
   const getMainContent = () => {
     if (isLoading) {
@@ -130,7 +142,19 @@ export function Layout() {
         />
       );
     } else {
-      return <AuthenticatedContent />;
+      // Show different content based on active feature
+      switch (activeFeature) {
+        case 'home':
+          return <HomePage />;
+        case 'drugs':
+          return <AuthenticatedContent />;
+        case 'reports':
+          return <ReportsPage />;
+        case 'documentation':
+          return <DocumentationPage />;
+        default:
+          return <HomePage />;
+      }
     }
   };
 
@@ -143,8 +167,19 @@ export function Layout() {
       />
 
       {/* Body Content */}
-      <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {getMainContent()}
+      <main className="flex-1 flex min-h-0 overflow-hidden">
+        {/* Sidebar - only show for authenticated users */}
+        {isAuthenticated && !isLoading && (
+          <Sidebar 
+            activeFeature={activeFeature}
+            onFeatureChange={handleFeatureChange}
+          />
+        )}
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {getMainContent()}
+        </div>
       </main>
 
       {/* Footer */}

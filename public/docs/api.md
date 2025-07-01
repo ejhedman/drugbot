@@ -1,14 +1,14 @@
-# DrugBot API Specification
+# Drugissimo API Specification
 
-This document describes the complete RESTful API for DrugBot, including all endpoints, data types, and operations for managing pharmaceutical data.
+This document describes the complete RESTful API for Drugissimo, including all endpoints, data types, and operations for managing pharmaceutical data.
 
 ## Base URL
 
-All API endpoints are relative to the base URL of your DrugBot application (e.g., `http://localhost:3000`).
+All API endpoints are relative to the base URL of your Drugissimo application (e.g., `http://localhost:3000`).
 
 ## Authentication
 
-Currently, DrugBot uses simulated authentication. In production, endpoints would require proper authentication headers:
+Currently, Drugissimo uses simulated authentication. In production, endpoints would require proper authentication headers:
 
 ```http
 Authorization: Bearer <access_token>
@@ -858,7 +858,7 @@ All endpoints return consistent error responses:
 
 ## Rate Limiting
 
-Currently, DrugBot does not implement rate limiting. In production, rate limiting should be implemented to prevent abuse:
+Currently, Drugissimo does not implement rate limiting. In production, rate limiting should be implemented to prevent abuse:
 
 - **Default**: 100 requests per minute per IP
 - **Search endpoints**: 50 requests per minute per IP
@@ -955,7 +955,7 @@ drugs = client.entities.search('adalimumab')
 ## Testing
 
 ### Test Data
-DrugBot includes comprehensive test data for development and testing:
+Drugissimo includes comprehensive test data for development and testing:
 
 ```bash
 # Load test data

@@ -1,8 +1,8 @@
-# DrugBot Architecture Document
+# Drugissimo Architecture Document
 
 ## System Overview
 
-DrugBot is built as a modern web application following a layered architecture pattern with clear separation of concerns. The system is designed for scalability, maintainability, and type safety throughout the entire stack.
+Drugissimo is built as a modern web application following a layered architecture pattern with clear separation of concerns. The system is designed for scalability, maintainability, and type safety throughout the entire stack.
 
 ## High-Level Architecture
 
@@ -41,7 +41,7 @@ DrugBot is built as a modern web application following a layered architecture pa
 
 ### Database Schema Overview
 
-The DrugBot database is built on PostgreSQL with a normalized schema designed for pharmaceutical data management. The schema follows a hierarchical structure with clear relationships between entities.
+The Drugissimo database is built on PostgreSQL with a normalized schema designed for pharmaceutical data management. The schema follows a hierarchical structure with clear relationships between entities.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

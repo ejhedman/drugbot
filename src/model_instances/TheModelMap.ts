@@ -551,14 +551,14 @@ const genericDrugsWideViewMapping: AggregateMapping = {
 // ============================================================================
 
 /**
- * The complete static model map for the DrugBot application
+ * The complete static model map for the Drugissimo application
  * 
  * This is the central mapping configuration that connects all UI model
  * definitions to their corresponding database representations. It serves
  * as the authoritative source for data transformation and query generation.
  */
 export const drugBotModelMap: ModelMap = {
-  name: 'DrugBot Model Map',
+  name: 'Drugissimo Model Map',
   version: '1.0.0',
   
   entityMappings: {

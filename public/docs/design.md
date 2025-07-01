@@ -1,8 +1,8 @@
-# DrugBot Design Document
+# Drugissimo Design Document
 
 ## Design Philosophy
 
-DrugBot follows a user-centered design approach focused on clarity, efficiency, and accessibility. The design prioritizes pharmaceutical professionals who need to quickly access, understand, and manage complex drug information in their daily workflow.
+Drugissimo follows a user-centered design approach focused on clarity, efficiency, and accessibility. The design prioritizes pharmaceutical professionals who need to quickly access, understand, and manage complex drug information in their daily workflow.
 
 ## Design Principles
 
