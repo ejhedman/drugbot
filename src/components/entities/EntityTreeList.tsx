@@ -153,7 +153,7 @@ export function EntityTreeList({
               size="sm"
               variant="ghost"
               className="h-8 w-8 p-0 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-              title="Add New Entity"
+              title="Add New Item"
             >
               <SquarePlus className="h-4 w-4" />
             </Button>
@@ -174,7 +174,7 @@ export function EntityTreeList({
         </div>
       </div>
 
-      {/* Entity Tree List */}
+      {/* Tree List */}
       <div className="flex-1 overflow-y-scroll scrollbar-always-visible">
         {loading ? (
           <EntityListSkeleton />
@@ -190,7 +190,7 @@ export function EntityTreeList({
               
               return (
                 <div key={uniqueKey} className="space-y-1">
-                  {/* Entity Row */}
+                  {/* Row */}
                   <div className="flex items-center gap-2 rounded-xl overflow-hidden">
                     <button
                       onClick={() => handleEntityClick(entityUid)}

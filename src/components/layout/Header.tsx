@@ -211,7 +211,7 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
         <div className="h-24 rounded-xl overflow-hidden">
           <Image 
             src="/drugissimo.png" 
-            alt="Entity Manager Logo" 
+            alt="Drugissimo Logo" 
             width={0}
             height={0}
             sizes="100vw"

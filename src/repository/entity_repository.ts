@@ -791,95 +791,95 @@ export class EntityRepository extends BaseRepository {
   //   return entity;
   // }
 
-  async updateChildEntityByUid(childUid: string, data: UpdateChildEntityRequest, table: DBTable): Promise<UIEntity | null> {
-    this.log('UPDATE_CHILD_ENTITY_BY_UID', 'CHILD_ENTITIES', { childUid, data, tableName: table.name });
-    const supabase = await this.getSupabaseClient();
+  // async updateChildEntityByUid(childUid: string, data: UpdateChildEntityRequest, table: DBTable): Promise<UIEntity | null> {
+  //   this.log('UPDATE_CHILD_ENTITY_BY_UID', 'CHILD_ENTITIES', { childUid, data, tableName: table.name });
+  //   const supabase = await this.getSupabaseClient();
     
-    // Extract table name and find key/name fields
-    const tableName = table.name;
-    const keyField = this.findKeyField(table, true);
-    const nameField = this.findNameField(table);
+  //   // Extract table name and find key/name fields
+  //   const tableName = table.name;
+  //   const keyField = this.findKeyField(table, true);
+  //   const nameField = this.findNameField(table);
     
-    if (!keyField) {
-      throw new Error(`No entity key field found in table ${tableName}`);
-    }
-    if (!nameField) {
-      throw new Error(`No name field found in table ${tableName}`);
-    }
+  //   if (!keyField) {
+  //     throw new Error(`No entity key field found in table ${tableName}`);
+  //   }
+  //   if (!nameField) {
+  //     throw new Error(`No name field found in table ${tableName}`);
+  //   }
     
-    const updateData: any = {};
+  //   const updateData: any = {};
     
-    // Update display name if provided
-    if (data.displayName !== undefined) {
-      updateData[nameField.name] = data.displayName;
-    }
+  //   // Update display name if provided
+  //   if (data.displayName !== undefined) {
+  //     updateData[nameField.name] = data.displayName;
+  //   }
     
-    // Update dynamic properties if provided
-    if (data.properties) {
-      Object.entries(data.properties).forEach(([propertyName, propertyValue]) => {
-        // Find the corresponding field in the table
-        const field = table.fields.find(f => 
-          f.name === propertyName && 
-          f.name !== keyField.name && 
-          f.name !== nameField.name && 
-          f.name !== 'uid' &&
-          f.name !== 'generic_key' &&
-          !f.is_primary_key
-        );
-        if (field) {
-          // Get the property mapping to check for transformations
-          const entityType = this.getEntityTypeFromTableName(table.name);
-          const propertyMapping = entityType ? this.getPropertyMapping(entityType, propertyName) : null;
+  //   // Update dynamic properties if provided
+  //   if (data.properties) {
+  //     Object.entries(data.properties).forEach(([propertyName, propertyValue]) => {
+  //       // Find the corresponding field in the table
+  //       const field = table.fields.find(f => 
+  //         f.name === propertyName && 
+  //         f.name !== keyField.name && 
+  //         f.name !== nameField.name && 
+  //         f.name !== 'uid' &&
+  //         f.name !== 'generic_key' &&
+  //         !f.is_primary_key
+  //       );
+  //       if (field) {
+  //         // Get the property mapping to check for transformations
+  //         const entityType = this.getEntityTypeFromTableName(table.name);
+  //         const propertyMapping = entityType ? this.getPropertyMapping(entityType, propertyName) : null;
           
-          // Apply transformation if defined
-          let convertedValue = propertyValue;
-          if (propertyMapping?.transform?.toDB) {
-            convertedValue = applyTransform(propertyMapping.transform.toDB, propertyValue);
-          } else if (field.datatype === 'INTEGER' && propertyValue !== null && propertyValue !== undefined && propertyValue !== '') {
-            // Fallback to basic integer conversion if no transform is defined
-            convertedValue = parseInt(propertyValue as string, 10);
-            if (isNaN(convertedValue)) {
-              throw new Error(`Invalid integer value for field ${field.name}: ${propertyValue}`);
-            }
-          }
-          updateData[field.name] = convertedValue;
-        }
-      });
-    }
+  //         // Apply transformation if defined
+  //         let convertedValue = propertyValue;
+  //         if (propertyMapping?.transform?.toDB) {
+  //           convertedValue = applyTransform(propertyMapping.transform.toDB, propertyValue);
+  //         } else if (field.datatype === 'INTEGER' && propertyValue !== null && propertyValue !== undefined && propertyValue !== '') {
+  //           // Fallback to basic integer conversion if no transform is defined
+  //           convertedValue = parseInt(propertyValue as string, 10);
+  //           if (isNaN(convertedValue)) {
+  //             throw new Error(`Invalid integer value for field ${field.name}: ${propertyValue}`);
+  //           }
+  //         }
+  //         updateData[field.name] = convertedValue;
+  //       }
+  //     });
+  //   }
 
-    // Update the child entity using UID directly
-    const { data: updated, error } = await supabase
-      .from(tableName)
-      .update(updateData)
-      .eq('uid', childUid)
-      .select()
-      .single();
+  //   // Update the child entity using UID directly
+  //   const { data: updated, error } = await supabase
+  //     .from(tableName)
+  //     .update(updateData)
+  //     .eq('uid', childUid)
+  //     .select()
+  //     .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        this.log('UPDATE_CHILD_ENTITY_BY_UID_NOT_FOUND', 'CHILD_ENTITIES', { childUid, tableName });
-        return null;
-      }
-      this.log('UPDATE_CHILD_ENTITY_BY_UID_ERROR', 'CHILD_ENTITIES', { childUid, data, tableName, error: error.message });
-      throw new Error(`Failed to update child entity: ${error.message}`);
-    }
+  //   if (error) {
+  //     if (error.code === 'PGRST116') {
+  //       this.log('UPDATE_CHILD_ENTITY_BY_UID_NOT_FOUND', 'CHILD_ENTITIES', { childUid, tableName });
+  //       return null;
+  //     }
+  //     this.log('UPDATE_CHILD_ENTITY_BY_UID_ERROR', 'CHILD_ENTITIES', { childUid, data, tableName, error: error.message });
+  //     throw new Error(`Failed to update child entity: ${error.message}`);
+  //   }
 
-    // Fetch ancestors using the relationship utilities
-    const ancestors = await this.fetchAncestorsForEntity(updated.uid, genericDrugsTable);
+  //   // Fetch ancestors using the relationship utilities
+  //   const ancestors = await this.fetchAncestorsForEntity(updated.uid, genericDrugsTable);
 
-    const entity: UIEntity = {
-      entityUid: updated.uid,
-      // entityKey: updated[keyField.name],
-      displayName: updated[nameField.name],
-      properties: this.generatePropertiesFromTable(table, updated, { isChildEntity: true }),
-      aggregates: [],
-      ancestors: ancestors, // Populated from relationships table
-      children: [] // Child entities typically don't have children
-    };
+  //   const entity: UIEntity = {
+  //     entityUid: updated.uid,
+  //     // entityKey: updated[keyField.name],
+  //     displayName: updated[nameField.name],
+  //     properties: this.generatePropertiesFromTable(table, updated, { isChildEntity: true }),
+  //     aggregates: [],
+  //     ancestors: ancestors, // Populated from relationships table
+  //     children: [] // Child entities typically don't have children
+  //   };
 
-    this.log('UPDATE_CHILD_ENTITY_BY_UID_SUCCESS', 'CHILD_ENTITIES', { childUid, tableName, updatedChild: entity });
-    return entity;
-  }
+  //   this.log('UPDATE_CHILD_ENTITY_BY_UID_SUCCESS', 'CHILD_ENTITIES', { childUid, tableName, updatedChild: entity });
+  //   return entity;
+  // }
 
   async getEntityTreeData(): Promise<{ ancestors: UIEntity[], childrenMap: Record<string, UIEntity[]> }> {
     this.log('GET_ENTITY_TREE_DATA', 'TREE', {});

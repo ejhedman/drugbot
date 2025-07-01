@@ -148,21 +148,21 @@ export function DetailView({
           </div>
         ) : isAddingEntity ? (
           <FormCard
-            title="Add New Entity"
+            title="Add New Item"
             fields={entityFormFields}
             onSubmit={handleCreateEntity}
             onCancel={onCancelAddEntity || (() => {})}
-            submitLabel="Create Entity"
+            submitLabel="Create Item"
             loading={operations.loading}
             propertyDefs={entityPropertyDefs}
           />
         ) : isAddingChild ? (
           <FormCard
-            title={`Add New Child Entity to ${entityUid || 'Entity'}`}
+            title={`Add New Sub-Item to ${entityUid || 'Entity'}`}
             fields={childFormFields}
             onSubmit={handleCreateChild}
             onCancel={onCancelAddChild || (() => {})}
-            submitLabel="Create Child Entity"
+            submitLabel="Create Sub-Item"
             loading={operations.loading}
             propertyDefs={childPropertyDefs}
           />

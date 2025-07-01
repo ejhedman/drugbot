@@ -85,7 +85,7 @@ export function AuthenticatedContent() {
   return (
     <div className={getBorderClasses("flex flex-col flex-1 min-h-0 bg-gray-50", "border-6 border-purple-500")}>
       <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden">
-        {/* Column 1: Entity Tree List */}
+        {/* Column 1: Tree List */}
         <div className={getBorderClasses("col-span-3 h-full min-h-0 flex flex-col overflow-hidden", "border-6 border-blue-500")}>
                   <EntityTreeList
           selectedEntityUid={selectedEntityUid}
