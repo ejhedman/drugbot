@@ -14,6 +14,7 @@ export interface TabConfig {
   emptyMessage?: string;
   schemaEntityName?: string; // Schema entity name for metadata lookup
   isTable: boolean; // Whether this aggregate should be displayed as a table (true) or as properties (false) - REQUIRED
+  canEdit?: boolean; // Whether edit controls should be shown
 }
 
 export interface TabCallbacks {
@@ -70,6 +71,7 @@ export function CollectionTabSet({
           onDelete={tabCallbacks.onDelete}
           onCreate={tabCallbacks.onCreate}
           schemaEntityName={tabConfig.schemaEntityName}
+          canEdit={tabConfig.canEdit}
         />
       );
     } else {
@@ -81,6 +83,7 @@ export function CollectionTabSet({
           loading={loading}
           onUpdate={tabCallbacks.onUpdate}
           schemaEntityName={tabConfig.schemaEntityName}
+          canEdit={tabConfig.canEdit}
         />
       );
     }

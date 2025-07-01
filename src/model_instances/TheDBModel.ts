@@ -634,6 +634,368 @@ const entityRelationshipsTable: DBTable = {
 };
 
 // ============================================================================
+// VIEWS
+// ============================================================================
+
+const genericDrugsWideViewTable: DBTable = {
+  name: 'generic_drugs_wide_view',
+  description: 'Comprehensive wide view of all drug information including generic drugs, manufactured drugs, routes, and approvals',
+  forExport: true,
+  fields: [
+    // Generic Drugs table (base table)
+    {
+      name: 'generic_uid',
+      datatype: 'UUID',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'generic_row',
+      datatype: 'INTEGER',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'generic_key',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'generic_name',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'biologic',
+      datatype: 'TEXT',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'mech_of_action',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'class_or_type',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'target',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    
+    // Manufactured Drugs table (joined on generic_key)
+    {
+      name: 'manu_drug_uid',
+      datatype: 'UUID',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'manu_drug_row',
+      datatype: 'INTEGER',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'manu_drug_key',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'drug_name',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'manufacturer',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'brandkey',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'biosimilar_suffix',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'biosimilar',
+      datatype: 'INTEGER',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'biosimilar_originator',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    
+    // Generic Routes table (joined on generic_key)
+    {
+      name: 'route_uid',
+      datatype: 'UUID',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'route_row',
+      datatype: 'INTEGER',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'route_key',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'route_type',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'load_measure',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'load_dose',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'load_measure_2',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'load_reg',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'maintain_dose',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'maintain_measure',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'maintain_reg',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'montherapy',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'half_life',
+      datatype: 'TEXT',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    
+    // Generic Approvals table (joined on generic_key)
+    {
+      name: 'approval_uid',
+      datatype: 'UUID',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'approval_row',
+      datatype: 'INTEGER',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'approval_route_type',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'country',
+      datatype: 'VARCHAR',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      max_length: 255,
+      forExport: true
+    },
+    {
+      name: 'indication',
+      datatype: 'TEXT',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'populations',
+      datatype: 'TEXT',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'approval_date',
+      datatype: 'DATE',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'discon_date',
+      datatype: 'TEXT',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'box_warning',
+      datatype: 'TEXT',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    },
+    {
+      name: 'box_warning_date',
+      datatype: 'TEXT',
+      is_nullable: true,
+      is_primary_key: false,
+      is_foreign_key: false,
+      forExport: true
+    }
+  ]
+};
+
+// ============================================================================
 // COMPLETE DATABASE SCHEMA
 // ============================================================================
 
@@ -653,7 +1015,9 @@ export const theDBSchema: DBSchema = {
     genericApprovalsTable,
     manuDrugsTable,
     // Relationship tables
-    entityRelationshipsTable
+    entityRelationshipsTable,
+    // Views
+    genericDrugsWideViewTable
   ]
 };
 
@@ -667,7 +1031,8 @@ export {
   genericRoutesTable,
   genericApprovalsTable,
   manuDrugsTable,
-  entityRelationshipsTable
+  entityRelationshipsTable,
+  genericDrugsWideViewTable
 };
 
 // ============================================================================

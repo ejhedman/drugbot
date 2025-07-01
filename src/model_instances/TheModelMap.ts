@@ -93,7 +93,8 @@ const genericDrugsMapping: EntityMapping = {
     'GenericAlias',
     'GenericRoute', 
     'GenericApproval',
-    'GenericManuDrugs'
+    'GenericManuDrugs',
+    'GenericDrugsWideView'
   ]
 };
 
@@ -351,6 +352,200 @@ const genericManuDrugsMapping: AggregateMapping = {
   ]
 };
 
+/**
+ * Generic Drugs Wide View Aggregate Mapping
+ * Maps the GenericDrugsWideView UI aggregate to the generic_drugs_wide_view database view
+ */
+const genericDrugsWideViewMapping: AggregateMapping = {
+  aggregateType: 'GenericDrugsWideView',
+  tableName: 'generic_drugs_wide_view',
+  parentKeyField: 'generic_uid',
+  propertyMappings: [
+    // Generic Drugs table (base table)
+    {
+      propertyName: 'generic_uid',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'generic_uid'
+    },
+    {
+      propertyName: 'generic_key',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'generic_key'
+    },
+    {
+      propertyName: 'generic_name',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'generic_name'
+    },
+    {
+      propertyName: 'biologic',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'biologic'
+    },
+    {
+      propertyName: 'mech_of_action',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'mech_of_action'
+    },
+    {
+      propertyName: 'class_or_type',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'class_or_type'
+    },
+    {
+      propertyName: 'target',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'target'
+    },
+    
+    // Manufactured Drugs table
+    {
+      propertyName: 'manu_drug_uid',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'manu_drug_uid'
+    },
+    {
+      propertyName: 'manu_drug_key',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'manu_drug_key'
+    },
+    {
+      propertyName: 'drug_name',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'drug_name'
+    },
+    {
+      propertyName: 'manufacturer',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'manufacturer'
+    },
+    {
+      propertyName: 'brandkey',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'brandkey'
+    },
+    {
+      propertyName: 'biosimilar_suffix',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'biosimilar_suffix'
+    },
+    {
+      propertyName: 'biosimilar',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'biosimilar'
+    },
+    {
+      propertyName: 'biosimilar_originator',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'biosimilar_originator'
+    },
+    
+    // Generic Routes table
+    {
+      propertyName: 'route_uid',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'route_uid'
+    },
+    {
+      propertyName: 'route_key',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'route_key'
+    },
+    {
+      propertyName: 'route_type',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'route_type'
+    },
+    {
+      propertyName: 'load_measure',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'load_measure'
+    },
+    {
+      propertyName: 'load_dose',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'load_dose'
+    },
+    {
+      propertyName: 'load_reg',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'load_reg'
+    },
+    {
+      propertyName: 'maintain_dose',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'maintain_dose'
+    },
+    {
+      propertyName: 'maintain_measure',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'maintain_measure'
+    },
+    {
+      propertyName: 'maintain_reg',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'maintain_reg'
+    },
+    {
+      propertyName: 'montherapy',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'montherapy'
+    },
+    {
+      propertyName: 'half_life',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'half_life'
+    },
+    
+    // Generic Approvals table
+    {
+      propertyName: 'approval_uid',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'approval_uid'
+    },
+    {
+      propertyName: 'approval_route_type',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'approval_route_type'
+    },
+    {
+      propertyName: 'country',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'country'
+    },
+    {
+      propertyName: 'indication',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'indication'
+    },
+    {
+      propertyName: 'populations',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'populations'
+    },
+    {
+      propertyName: 'approval_date',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'approval_date'
+    },
+    {
+      propertyName: 'discon_date',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'discon_date'
+    },
+    {
+      propertyName: 'box_warning',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'box_warning'
+    },
+    {
+      propertyName: 'box_warning_date',
+      tableName: 'generic_drugs_wide_view',
+      fieldName: 'box_warning_date'
+    }
+  ]
+};
+
 // ============================================================================
 // COMPLETE MODEL MAP
 // ============================================================================
@@ -375,7 +570,8 @@ export const drugBotModelMap: ModelMap = {
     GenericAlias: genericAliasesMapping,
     GenericRoute: genericRoutesMapping,
     GenericApproval: genericApprovalsMapping,
-    GenericManuDrugs: genericManuDrugsMapping
+    GenericManuDrugs: genericManuDrugsMapping,
+    GenericDrugsWideView: genericDrugsWideViewMapping
   }
 };
 

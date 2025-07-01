@@ -51,6 +51,7 @@ export function EntityDetailPage({
   const [routesList, setRoutesList] = useState<UIAggregate | null>(null);
   const [approvalsList, setApprovalsList] = useState<UIAggregate | null>(null);
   const [manuDrugsList, setManuDrugsList] = useState<UIAggregate | null>(null);
+  const [wideViewList, setWideViewList] = useState<UIAggregate | null>(null);
 
   const operations = useEntityOperations();
 
@@ -94,6 +95,7 @@ export function EntityDetailPage({
       setRoutesList(null);
       setApprovalsList(null);
       setManuDrugsList(null);
+      setWideViewList(null);
     }
   }, [entityUid, childUid]);
 
@@ -175,12 +177,13 @@ export function EntityDetailPage({
         return;
       }
       
-      // Fetch all four collections for the entity using the dynamic aggregate API
-      const [aliasesRes, routesRes, approvalsRes, manuDrugsRes] = await Promise.all([
+      // Fetch all five collections for the entity using the dynamic aggregate API
+      const [aliasesRes, routesRes, approvalsRes, manuDrugsRes, wideViewRes] = await Promise.all([
         fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericAlias`),
         fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericRoute`),
         fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericApproval`),
-        fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericManuDrugs`)
+        fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericManuDrugs`),
+        fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericDrugsWideView`)
       ]);
 
       // Fetch aliases (now returns single UIAggregate)
@@ -214,11 +217,20 @@ export function EntityDetailPage({
       } else {
         setManuDrugsList(null);
       }
+
+      // Fetch wide view (now returns single UIAggregate)
+      if (wideViewRes.ok) {
+        const wideView: UIAggregate = await wideViewRes.json();
+        setWideViewList(wideView);
+      } else {
+        setWideViewList(null);
+      }
     } catch (error) {
       setAliasesList(null);
       setRoutesList(null);
       setApprovalsList(null);
       setManuDrugsList(null);
+      setWideViewList(null);
     } finally {
       setCollectionsLoading(false);
     }
@@ -450,6 +462,7 @@ export function EntityDetailPage({
           emptyMessage: 'No manufactured drugs for this generic drug.',
           schemaEntityName: 'GenericManuDrugs',
           isTable: manuDrugsList?.isTable ?? true,
+          canEdit: theUIModel.getAggregate('GenericManuDrugs')?.canEdit ?? true,
           ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericManuDrugs')?.ordinal ?? 4,
         },
         {
@@ -460,6 +473,7 @@ export function EntityDetailPage({
           emptyMessage: 'No routes & dosing information for this generic drug.',
           schemaEntityName: 'GenericRoute',
           isTable: routesList?.isTable ?? true,
+          canEdit: theUIModel.getAggregate('GenericRoute')?.canEdit ?? true,
           ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericRoute')?.ordinal ?? 2,
         },
         {
@@ -470,6 +484,7 @@ export function EntityDetailPage({
           emptyMessage: 'No approval information for this generic drug.',
           schemaEntityName: 'GenericApproval',
           isTable: approvalsList?.isTable ?? true,
+          canEdit: theUIModel.getAggregate('GenericApproval')?.canEdit ?? true,
           ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericApproval')?.ordinal ?? 3,
         },
         {
@@ -480,7 +495,19 @@ export function EntityDetailPage({
           emptyMessage: 'No aliases for this generic drug.',
           schemaEntityName: 'GenericAlias',
           isTable: aliasesList?.isTable ?? true,
+          canEdit: theUIModel.getAggregate('GenericAlias')?.canEdit ?? true,
           ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericAlias')?.ordinal ?? 1,
+        },
+        {
+          key: 'wide-view',
+          label: 'Complete Drug Information',
+          icon: <Database className="w-4 h-4" />,
+          data: convertUIAggregateToTabData(wideViewList),
+          emptyMessage: 'No complete drug information available.',
+          schemaEntityName: 'GenericDrugsWideView',
+          isTable: wideViewList?.isTable ?? true,
+          canEdit: theUIModel.getAggregate('GenericDrugsWideView')?.canEdit ?? false,
+          ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericDrugsWideView')?.ordinal ?? 5,
         },
       ].sort((a, b) => a.ordinal - b.ordinal) // Sort tabs by ordinal
     : [];
@@ -492,6 +519,7 @@ export function EntityDetailPage({
     tabCallbacks['routes'] = createTabCallbacks('GenericRoute', entityUidForAPI);
     tabCallbacks['approvals'] = createTabCallbacks('GenericApproval', entityUidForAPI);
     tabCallbacks['manufactured-drugs'] = createTabCallbacks('GenericManuDrugs', entityUidForAPI);
+    tabCallbacks['wide-view'] = createTabCallbacks('GenericDrugsWideView', entityUidForAPI);
   }
 
   return (

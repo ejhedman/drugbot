@@ -77,6 +77,8 @@ export class AggregateRepository extends BaseRepository {
         return { field: 'alias' };
       case 'GenericManuDrugs':
         return { field: 'drug_name' };
+      case 'GenericDrugsWideView':
+        return { field: 'generic_name' };
       default:
         return { field: 'uid' }; // Default sort by uid if no specific sort defined
     }
@@ -111,6 +113,7 @@ export class AggregateRepository extends BaseRepository {
       aggregateType: aggregateType,
       displayName: aggregateDef.displayName,
       isTable: aggregateDef.isTable,
+      canEdit: aggregateDef.canEdit,
       rows: rows
     };
 
@@ -181,6 +184,7 @@ export class AggregateRepository extends BaseRepository {
       aggregateType: aggregateType,
       displayName: aggregateDef.displayName,
       isTable: aggregateDef.isTable,
+      canEdit: aggregateDef.canEdit,
       rows: rows
     };
 

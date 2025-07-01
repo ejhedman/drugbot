@@ -15,9 +15,10 @@ interface TabPropertiesProps {
   loading?: boolean;
   onUpdate?: (index: number, data: any) => Promise<void>;
   schemaEntityName?: string; // Optional schema entity name for metadata lookup
+  canEdit?: boolean; // Whether edit controls should be shown
 }
 
-export function TabProperties({ data, title, emptyMessage, loading = false, onUpdate, schemaEntityName }: TabPropertiesProps) {
+export function TabProperties({ data, title, emptyMessage, loading = false, onUpdate, schemaEntityName, canEdit = true }: TabPropertiesProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Record<string, any>>({});
   
@@ -148,7 +149,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
             </div>
         )}
         <div className="flex items-center gap-1">
-          {isEditing ? (
+          {canEdit && (isEditing ? (
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -181,7 +182,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
                 <Edit className="w-4 h-4" />
               </Button>
             </div>
-          )}
+          ))}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-x-8 gap-y-4 px-4">

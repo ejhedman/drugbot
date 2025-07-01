@@ -161,6 +161,9 @@ export interface UIAggregateMeta {
 
   /** Whether this aggregate should be displayed as a table (true) or as properties (false) */
   isTable: boolean;
+  
+  /** Whether this aggregate can be edited (shows edit/delete controls and new row button) */
+  canEdit: boolean;
 }
 
 /**

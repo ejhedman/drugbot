@@ -38,7 +38,8 @@ export {
   genericRoutesTable,
   genericApprovalsTable,
   manuDrugsTable,
-  entityRelationshipsTable
+  entityRelationshipsTable,
+  genericDrugsWideViewTable
 } from './TheDBModel';
 
 // ============================================================================

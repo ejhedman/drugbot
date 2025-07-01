@@ -19,9 +19,10 @@ interface TabTableProps {
   onDelete?: (id: string | number) => Promise<void>;
   onCreate?: (data: any) => Promise<void>;
   schemaEntityName?: string; // Schema entity name for metadata lookup
+  canEdit?: boolean; // Whether edit controls should be shown
 }
 
-export function TabTable({ data, title, icon, emptyMessage, loading = false, onUpdate, onDelete, onCreate, schemaEntityName }: TabTableProps) {
+export function TabTable({ data, title, icon, emptyMessage, loading = false, onUpdate, onDelete, onCreate, schemaEntityName, canEdit = true }: TabTableProps) {
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [editedData, setEditedData] = useState<any>(null);
   const [tableData, setTableData] = useState(data);
@@ -423,15 +424,17 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
             {icon && <span className="text-slate-700">{icon}</span>}
             <span className="section-title text-slate-700">{title}</span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleAddNew}
-            className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl"
-            title="Add new item"
-          >
-            <SquarePlus className="w-4 h-4" />
-          </Button>
+          {canEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleAddNew}
+              className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl"
+              title="Add new item"
+            >
+              <SquarePlus className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       )}
       {isAddingNew ? (
@@ -521,11 +524,13 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                       <th key={key} className="px-4 py-1 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
                         {getFieldDisplayName(key)}
                       </th>
-                    ))
-                  )}
+                                      ))
+                )}
+                {canEdit && (
                   <th className="px-4 py-1 bg-slate-600 text-left font-semibold text-white w-24">
                     Actions
                   </th>
+                )}
                 </tr>
               </thead>
               <tbody className={getBorderClasses("", "border-6 border-blue-500")}>
@@ -603,53 +608,55 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                         </td>
                       ))
                     )}
-                    <td className="px-4 py-1 text-gray-900 w-24">
-                      <div className="flex items-center gap-2">
-                        {editingRow === idx ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleSave(idx)}
-                              className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl"
-                              title="Save"
-                            >
-                              <Check className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={handleCancel}
-                              className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-xl"
-                              title="Cancel"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(idx)}
-                              className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl"
-                              title="Edit"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(idx)}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+                    {canEdit && (
+                      <td className="px-4 py-1 text-gray-900 w-24">
+                        <div className="flex items-center gap-2">
+                          {editingRow === idx ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSave(idx)}
+                                className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl"
+                                title="Save"
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleCancel}
+                                className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-xl"
+                                title="Cancel"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(idx)}
+                                className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(idx)}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
