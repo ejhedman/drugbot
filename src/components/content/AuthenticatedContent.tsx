@@ -103,6 +103,8 @@ export function AuthenticatedContent() {
                   <DetailView
           entityUid={selectedEntityUid}
           childUid={selectedChildUid}
+          entityType="GenericDrugs"
+          childType="ManuDrugs"
           isAddingEntity={isAddingEntity}
           isAddingChild={isAddingChild}
           onCancelAddEntity={handleCancelAddEntity}

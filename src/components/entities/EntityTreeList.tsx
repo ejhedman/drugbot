@@ -66,10 +66,35 @@ export function EntityTreeList({
   const filterTreeData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/entities?search=${encodeURIComponent(searchTerm)}&format=ui`);
+      const response = await fetch('/api/dynamic-select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          table: 'generic_drugs',
+          where: searchTerm ? { generic_name: searchTerm } : undefined,
+          orderBy: { generic_name: 'asc' }
+        }),
+      });
       if (response.ok) {
-        const data = await response.json();
-        setEntities(data);
+        const result = await response.json();
+        // Convert raw database rows to UIEntity format
+        const entities: UIEntity[] = result.data.map((row: any) => ({
+          entityUid: row.uid,
+          displayName: row.generic_name,
+          properties: [
+            { propertyName: 'uid', propertyValue: row.uid, isVisible: false, isEditable: false, isId: true, controlType: 'text', isRequired: true, ordinal: 1 },
+            { propertyName: 'generic_key', propertyValue: row.generic_key, isVisible: false, isEditable: false, isId: false, controlType: 'text', isRequired: true, ordinal: 2 },
+            { propertyName: 'generic_name', propertyValue: row.generic_name, isVisible: true, isEditable: true, isId: false, controlType: 'text', isRequired: true, ordinal: 3 },
+            { propertyName: 'biologic', propertyValue: row.biologic, isVisible: true, isEditable: true, isId: false, controlType: 'text', isRequired: false, ordinal: 4 },
+            { propertyName: 'mech_of_action', propertyValue: row.mech_of_action, isVisible: true, isEditable: true, isId: false, controlType: 'text', isRequired: false, ordinal: 5 },
+            { propertyName: 'class_or_type', propertyValue: row.class_or_type, isVisible: true, isEditable: true, isId: false, controlType: 'text', isRequired: false, ordinal: 6 },
+            { propertyName: 'target', propertyValue: row.target, isVisible: true, isEditable: true, isId: false, controlType: 'text', isRequired: false, ordinal: 7 }
+          ],
+          aggregates: [],
+          ancestors: [],
+          children: []
+        }));
+        setEntities(entities);
         // Clear children map for search results
         setChildrenMap({});
       }
@@ -98,8 +123,6 @@ export function EntityTreeList({
     }
     setExpandedEntities(newExpanded);
   };
-
-
 
   const handleAddChild = (entityUid: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent entity selection

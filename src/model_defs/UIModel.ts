@@ -36,7 +36,6 @@
  * - controlType: UI control type for rendering (text input, dropdown, etc.)
  * - isEditable: Whether users can modify this property value
  * - isVisible: Whether this property should be shown in the UI
- * - isKey: Whether this property serves as a business key (not primary key)
  * - isId: Whether this property is a primary key or unique identifier
  * - isRequired: Whether this property must have a value for validation
  * - ordinal: Sort order for consistent property display (lower numbers first)
@@ -57,9 +56,6 @@ export interface UIPropertyMeta {
   
   /** Whether this property should be displayed in the UI (hidden fields are typically system fields) */
   isVisible: boolean;
-  
-  /** Whether this property serves as a business key (used for lookups, URLs, etc.) */
-  isKey: boolean;
   
   /** Whether this property is a primary key or unique identifier */
   isId: boolean;
@@ -554,14 +550,6 @@ export class UIModel {
   getAggregateEditableProperties(aggregateType: string): UIProperty[] {
     const properties = this.getAggregateProperties(aggregateType);
     return properties.filter(prop => prop.isVisible && prop.isEditable && !prop.isId);
-  }
-
-  /**
-   * Get key properties for an aggregate
-   */
-  getAggregateKeyProperties(aggregateType: string): UIProperty[] {
-    const properties = this.getAggregateProperties(aggregateType);
-    return properties.filter(prop => prop.isKey && !prop.isId);
   }
 
   /**

@@ -20,14 +20,13 @@ export class AggregateRepository extends BaseRepository {
   /**
    * Helper function to create a property array from database row fields
    */
-  private createPropertiesFromRow(row: any, fieldDefinitions: Array<{name: string, ordinal: number, isEditable: boolean, isVisible: boolean, isKey: boolean, isId: boolean, isRequired: boolean, controlType: string}>): UIProperty[] {
+  private createPropertiesFromRow(row: any, fieldDefinitions: Array<{name: string, ordinal: number, isEditable: boolean, isVisible: boolean, isId: boolean, isRequired: boolean, controlType: string}>): UIProperty[] {
     return fieldDefinitions.map(field => ({
       propertyName: field.name,
       propertyValue: row[field.name] || '',
       ordinal: field.ordinal,
       isEditable: field.isEditable,
       isVisible: field.isVisible,
-      isKey: field.isKey,
       isId: field.isId,
       isRequired: field.isRequired,
       controlType: field.controlType as any,
@@ -37,7 +36,7 @@ export class AggregateRepository extends BaseRepository {
   /**
    * Get field definitions from UIModel schema
    */
-  private getFieldsFromSchema(aggregateType: string): Array<{name: string, ordinal: number, isEditable: boolean, isVisible: boolean, isKey: boolean, isId: boolean, isRequired: boolean, controlType: string}> {
+  private getFieldsFromSchema(aggregateType: string): Array<{name: string, ordinal: number, isEditable: boolean, isVisible: boolean, isId: boolean, isRequired: boolean, controlType: string}> {
     // Map aggregate types to their UI model keys
     const uiModelKey = this.getUIModelKey(aggregateType);
     
@@ -51,7 +50,6 @@ export class AggregateRepository extends BaseRepository {
       ordinal: prop.ordinal,
       isEditable: prop.isEditable,
       isVisible: prop.isVisible,
-      isKey: prop.isKey,
       isId: prop.isId,
       isRequired: prop.isRequired,
       controlType: prop.controlType
@@ -88,7 +86,40 @@ export class AggregateRepository extends BaseRepository {
   // AGGREGATE RETRIEVAL
   // ============================================================================
   
+  /**
+   * Transforms raw database data into UIAggregate format
+   * @param entityUid - The UID of the parent entity
+   * @param aggregateType - The type of aggregate
+   * @param rawData - Raw database rows
+   * @returns Promise<UIAggregate>
+   */
+  async transformRawDataToUIAggregate(entityUid: string, aggregateType: string, rawData: any[]): Promise<UIAggregate> {
+    this.log('TRANSFORM_RAW_DATA_TO_UI_AGGREGATE', aggregateType, { entityUid, recordCount: rawData.length });
+    
+    // Get field definitions from UIModel schema
+    const fields = this.getFieldsFromSchema(aggregateType);
 
+    // Convert each database row to a row of properties using the mapping
+    const rows: UIProperty[][] = rawData.map(row => this.createPropertiesFromRow(row, fields));
+
+    // Get the display name and ordinal from the UI model definition
+    const uiModelKey = this.getUIModelKey(aggregateType);
+    const aggregateDef = ENTITY_AGGREGATES[uiModelKey];
+    
+    const aggregate: UIAggregate = {
+      entityUid: entityUid,
+      aggregateType: aggregateType,
+      displayName: aggregateDef.displayName,
+      isTable: aggregateDef.isTable,
+      rows: rows
+    };
+
+    this.log('TRANSFORM_RAW_DATA_TO_UI_AGGREGATE_SUCCESS', aggregateType, { 
+      entityUid,
+      recordCount: rows.length 
+    });
+    return aggregate;
+  }
 
   /**
    * Retrieves aggregate data for a given entity UID and aggregate type using ModelMap

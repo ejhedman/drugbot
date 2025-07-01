@@ -112,7 +112,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     // First try to find in main entity schemas
     let schema = theUIModel.getEntity(schemaEntityName);
     
-    // If not found in main schemas, try sub-collections
+    // If not found in main schemas, try aggregate schemas
     if (!schema) {
       schema = ENTITY_AGGREGATES[schemaEntityName];
     }
@@ -135,7 +135,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     // First try to find in main entity schemas
     let schema = theUIModel.getEntity(schemaEntityName);
     
-    // If not found in main schemas, try sub-collections
+    // If not found in main schemas, try aggregate schemas
     if (!schema) {
       schema = ENTITY_AGGREGATES[schemaEntityName];
     }
@@ -274,7 +274,6 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
         // Create a new UIEntity structure using schema metadata
         const newEntity = {
           entityUid: crypto.randomUUID(),
-          entity_key: 'new-item',
           displayName: newItemData.displayName,
           properties: propertyColumns.map((propName, index) => ({
             propertyName: propName,
@@ -282,7 +281,6 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
             ordinal: index + 1,
             isEditable: isFieldEditable(propName),
             isVisible: true, // Columns are already filtered to visible only
-            isKey: false
           })),
           aggregates: []
         };
@@ -298,6 +296,22 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     } catch (error) {
       console.error('Error creating item:', error);
     }
+  };
+
+  // Helper function to properly display values, distinguishing between null and zero/empty
+  const formatCellValue = (value: any): string => {
+    if (value === null || value === undefined) {
+      return '--null--';
+    }
+    // Explicitly handle zero values to ensure they're visible
+    if (value === 0 || value === '0') {
+      return '0';
+    }
+    // Handle empty strings
+    if (value === '') {
+      return '';
+    }
+    return value.toString();
   };
 
   const handleNewItemInputChange = (key: string, value: string) => {
@@ -348,7 +362,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                         placeholder="Enter Display Name"
                       />
                     </div>
-                    {propertyColumns.map((propName) => (
+                    {propertyColumns.filter(propName => propName !== 'uid' && propName !== '_uid').map((propName) => (
                       <div key={propName} className="space-y-2">
                         <label className="label">{getFieldDisplayName(propName)}</label>
                         <input
@@ -362,7 +376,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                     ))}
                   </>
                 ) : (
-                  Object.keys(newItemData).map((key) => (
+                  Object.keys(newItemData).filter(key => key !== 'uid' && key !== '_uid').map((key) => (
                     <div key={key} className="space-y-2">
                       <label className="label">{getFieldDisplayName(key)}</label>
                       <input
@@ -438,7 +452,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                       />
                     </div>
                   )}
-                  {propertyColumns.filter(propName => isFieldEditable(propName)).map((propName) => (
+                  {propertyColumns.filter(propName => propName !== 'uid' && propName !== '_uid').map((propName) => (
                     <div key={propName} className="space-y-2">
                       <label className="label">{getFieldDisplayName(propName)}</label>
                       <input
@@ -452,7 +466,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                   ))}
                 </>
               ) : (
-                Object.keys(newItemData).filter(key => isFieldEditable(key)).map((key) => (
+                Object.keys(newItemData).filter(key => key !== 'uid' && key !== '_uid').map((key) => (
                   <div key={key} className="space-y-2">
                     <label className="label">{getFieldDisplayName(key)}</label>
                     <input
@@ -491,13 +505,11 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
             <table className="min-w-full text-sm">
               <thead className="sticky top-0 z-10">
                 <tr>
-                  {/* Display Name column first */}
                   {isUsingUIEntityData && (
                     <th className="px-4 py-1 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
                       Display Name
                     </th>
                   )}
-                  {/* Property columns or regular object keys */}
                   {isUsingUIEntityData ? (
                     propertyColumns.map((propName, index) => (
                       <th key={propName} className="px-4 py-1 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
@@ -505,13 +517,12 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                       </th>
                     ))
                   ) : (
-                    Object.keys(flatTableData[0]).map((key, index, array) => (
+                    Object.keys(flatTableData[0] || {}).filter(key => key !== 'uid' && key !== '_uid').map((key, index, array) => (
                       <th key={key} className="px-4 py-1 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
                         {getFieldDisplayName(key)}
                       </th>
                     ))
                   )}
-                  {/* Actions column last */}
                   <th className="px-4 py-1 bg-slate-600 text-left font-semibold text-white w-24">
                     Actions
                   </th>
@@ -520,7 +531,6 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
               <tbody className={getBorderClasses("", "border-6 border-blue-500")}>
                 {flatTableData.map((row, idx) => (
                   <tr key={row._uid || row.uid || row.id || idx} className="hover:bg-gray-50 border-b last:border-b-0">
-                    {/* Display Name column first for UIEntity data */}
                     {isUsingUIEntityData && (
                       <td className="px-4 py-1 text-gray-900 text-left border-r border-gray-200">
                         {editingRow === idx ? (
@@ -536,15 +546,14 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                               }}
                               className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                             />
-                          ) : (
-                            <span className="text-gray-500 italic">{row.displayName?.toString() || '--null--'}</span>
-                          )
-                        ) : (
-                          row.displayName?.toString() || '--null--'
-                        )}
+                                                  ) : (
+                          <span className="text-gray-500 italic">{formatCellValue(row.displayName)}</span>
+                        )
+                      ) : (
+                        formatCellValue(row.displayName)
+                      )}
                       </td>
                     )}
-                    {/* Property columns or regular object keys */}
                     {isUsingUIEntityData ? (
                       propertyColumns.map((propName, index) => (
                         <td key={propName} className="px-4 py-1 text-gray-900 text-left border-r border-gray-200">
@@ -562,15 +571,15 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                                 className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                               />
                             ) : (
-                              <span className="text-gray-500 italic">{row[propName]?.toString() || '--null--'}</span>
+                              <span className="text-gray-500 italic">{formatCellValue(row[propName])}</span>
                             )
                           ) : (
-                            row[propName]?.toString() || '--null--'
+                            formatCellValue(row[propName])
                           )}
                         </td>
                       ))
                     ) : (
-                      Object.keys(row).map((key, index, array) => (
+                      Object.keys(row).filter(key => key !== 'uid' && key !== '_uid').map((key, index, array) => (
                         <td key={key} className="px-4 py-1 text-gray-900 text-left border-r border-gray-200">
                           {editingRow === idx ? (
                             isFieldEditable(key) ? (
@@ -586,15 +595,14 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                                 className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
                               />
                             ) : (
-                              <span className="text-gray-500 italic">{row[key]?.toString() || '--null--'}</span>
+                              <span className="text-gray-500 italic">{formatCellValue(row[key])}</span>
                             )
                           ) : (
-                            row[key]?.toString() || '--null--'
+                            formatCellValue(row[key])
                           )}
                         </td>
                       ))
                     )}
-                    {/* Actions column last */}
                     <td className="px-4 py-1 text-gray-900 w-24">
                       <div className="flex items-center gap-2">
                         {editingRow === idx ? (

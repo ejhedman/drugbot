@@ -258,19 +258,19 @@ CREATE INDEX idx_manu_drugs_biosimilar ON manu_drugs(biosimilar);
 
 ALTER TABLE generic_aliases 
     ADD CONSTRAINT fk_generic_aliases_generic_uid 
-    FOREIGN KEY (generic_uid) REFERENCES generic_drugs(uid);
+    FOREIGN KEY (generic_uid) REFERENCES generic_drugs(uid) ON DELETE CASCADE;
 
 ALTER TABLE generic_routes 
     ADD CONSTRAINT fk_generic_routes_generic_uid 
-    FOREIGN KEY (generic_uid) REFERENCES generic_drugs(uid);
+    FOREIGN KEY (generic_uid) REFERENCES generic_drugs(uid) ON DELETE CASCADE;
 
 ALTER TABLE generic_approvals 
     ADD CONSTRAINT fk_generic_approvals_generic_uid 
-    FOREIGN KEY (generic_uid) REFERENCES generic_drugs(uid);
+    FOREIGN KEY (generic_uid) REFERENCES generic_drugs(uid) ON DELETE CASCADE;
 
 ALTER TABLE manu_drugs 
     ADD CONSTRAINT fk_manu_drugs_generic_uid 
-    FOREIGN KEY (generic_uid) REFERENCES generic_drugs(uid);
+    FOREIGN KEY (generic_uid) REFERENCES generic_drugs(uid) ON DELETE CASCADE;
 
 -- ============================================================================
 -- Entity Relationships Migration
@@ -287,7 +287,7 @@ ALTER TABLE manu_drugs
 CREATE TABLE entity_relationships (
     uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ancestor_uid UUID NOT NULL,
-    child_uid UUID NOT NULL,
+    child_uid UUID,
     relationship_type VARCHAR(50) NOT NULL DEFAULT 'parent_child',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -303,11 +303,11 @@ CREATE TABLE entity_relationships (
 
 ALTER TABLE entity_relationships 
     ADD CONSTRAINT fk_entity_relationships_ancestor_uid
-    FOREIGN KEY (ancestor_uid) REFERENCES generic_drugs(uid);
+    FOREIGN KEY (ancestor_uid) REFERENCES generic_drugs(uid) ON DELETE CASCADE;
 
 ALTER TABLE entity_relationships 
     ADD CONSTRAINT fk_entity_relationships_child_uid
-    FOREIGN KEY (child_uid) REFERENCES manu_drugs(uid);
+    FOREIGN KEY (child_uid) REFERENCES manu_drugs(uid) ON DELETE CASCADE;
 
 
 -- Create indexes for better query performance

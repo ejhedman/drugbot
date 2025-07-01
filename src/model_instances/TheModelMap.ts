@@ -50,7 +50,7 @@ import { ModelMap, EntityMapping, AggregateMapping, PropertyMapping } from '../m
 const genericDrugsMapping: EntityMapping = {
   entityType: 'GenericDrugs',
   tableName: 'generic_drugs',
-  keyField: 'generic_key',
+  keyField: 'uid',
   displayNameField: 'generic_name',
   propertyMappings: [
     {
@@ -104,7 +104,7 @@ const genericDrugsMapping: EntityMapping = {
 const manuDrugsMapping: EntityMapping = {
   entityType: 'ManuDrugs',
   tableName: 'manu_drugs',
-  keyField: 'manu_drug_key',
+  keyField: 'uid',
   displayNameField: 'drug_name',
   propertyMappings: [
     {
@@ -136,10 +136,10 @@ const manuDrugsMapping: EntityMapping = {
       propertyName: 'biosimilar',
       tableName: 'manu_drugs',
       fieldName: 'biosimilar',
-      transform: {
-        fromDB: 'integerToBoolean',
-        toDB: 'booleanToInteger'
-      }
+      // transform: {
+      //   fromDB: 'integerToBoolean',
+      //   toDB: 'booleanToInteger'
+      // }
     },
     {
       propertyName: 'biosimilar_suffix',
@@ -449,7 +449,13 @@ export function getAggregateTableName(aggregateType: string): string | undefined
   return aggregateMapping?.tableName;
 }
 
-
+/**
+ * Get the key field name for an entity
+ */
+export function getEntityKeyField(entityType: string): string | undefined {
+  const entityMapping = getEntityMapping(entityType);
+  return entityMapping?.keyField;
+}
 
 /**
  * Get the parent key field name for an aggregate

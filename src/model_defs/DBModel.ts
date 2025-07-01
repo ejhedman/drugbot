@@ -189,7 +189,6 @@ export interface CreateUIAggregateRequest {
     ordinal: number;
     isEditable: boolean;
     isVisible: boolean;
-    isKey: boolean;
   }[];
 }
 
@@ -205,7 +204,6 @@ export interface UpdateUIAggregateRequest {
     ordinal: number;
     isEditable: boolean;
     isVisible: boolean;
-    isKey: boolean;
   }[];
 }
 
@@ -222,7 +220,6 @@ export interface CreateChildUIAggregateRequest {
     ordinal: number;
     isEditable: boolean;
     isVisible: boolean;
-    isKey: boolean;
   }[];
 }
 
@@ -238,7 +235,6 @@ export interface UpdateChildUIAggregateRequest {
     ordinal: number;
     isEditable: boolean;
     isVisible: boolean;
-    isKey: boolean;
   }[];
 }
 

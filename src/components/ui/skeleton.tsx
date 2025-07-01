@@ -28,7 +28,7 @@ function EntityListSkeleton() {
   )
 }
 
-// Entity Detail Skeleton
+// Generic Drug Detail Skeleton
 function EntityDetailSkeleton() {
   return (
     <div className="space-y-6">

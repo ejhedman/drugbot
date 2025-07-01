@@ -2,6 +2,8 @@ import { createServerSupabaseClient } from '../lib/supabase-server';
 import { DBTable } from '@/model_defs/DBModel';
 import { UIProperty, UIEntityRef } from '@/model_defs';
 import { theUIModel, ENTITY_AGGREGATES } from '@/model_instances';
+import { applyTransform } from '@/lib/transformUtils';
+import { drugBotModelMap } from '@/model_instances/TheModelMap';
 
 /**
  * Base repository class containing common utilities used by all repositories
@@ -41,13 +43,13 @@ export class BaseRepository {
     };
 
     const entityType = entityTypeMap[tableName];
+    
     if (!entityType) {
       // Return secure defaults if no schema mapping found - hide everything not explicitly defined
       return {
         isVisible: false,
         isEditable: false,
         isRequired: false,
-        isKey: false,
         isId: false,
         controlType: 'text'
       };
@@ -55,13 +57,13 @@ export class BaseRepository {
 
     // Get the schema definition
     const schema = theUIModel.getEntity(entityType);
+    
     if (!schema || !schema.propertyDefs) {
       // Return secure defaults if no schema found - hide everything not explicitly defined
       return {
         isVisible: false,
         isEditable: false,
         isRequired: false,
-        isKey: false,
         isId: false,
         controlType: 'text'
       };
@@ -69,6 +71,7 @@ export class BaseRepository {
 
     // Find the property definition
     const propertyDef = schema.propertyDefs.find(prop => prop.propertyName === propertyName);
+    
     if (propertyDef) {
       return {
         isVisible: propertyDef.isVisible,
@@ -86,7 +89,6 @@ export class BaseRepository {
       isVisible: false,
       isEditable: false,
       isRequired: false,
-      isKey: false,
       isId: false,
       controlType: 'text'
     };
@@ -124,13 +126,22 @@ export class BaseRepository {
         // Get metadata from UI schema
         const metadata = this.getPropertyMetaFromSchema(table.name, field.name, isChildEntity);
         
+        // Get the property mapping to check for transformations
+        const entityType = this.getEntityTypeFromTableName(table.name);
+        const propertyMapping = entityType ? this.getPropertyMapping(entityType, field.name) : null;
+        
+        // Apply transformation if defined
+        let propertyValue = rowData[field.name] || '';
+        if (propertyMapping?.transform?.fromDB) {
+          propertyValue = applyTransform(propertyMapping.transform.fromDB, propertyValue);
+        }
+        
         return {
           propertyName: field.name,
-          propertyValue: rowData[field.name] || '',
+          propertyValue: propertyValue,
           ordinal: metadata.ordinal || (index + 1),
           isEditable: metadata.isEditable,
           isVisible: metadata.isVisible,
-          isKey: field.name === keyField.name, 
           isId: metadata.isId,
           controlType: (metadata.controlType as UIProperty['controlType']) || 'text',
           isRequired: metadata.isRequired,
@@ -156,6 +167,34 @@ export class BaseRepository {
    */
   protected findNameField(table: DBTable) {
     return table.fields.find(field => field.name.includes('_name') || field.name.includes('name'));
+  }
+
+  /**
+   * Get entity type from table name
+   * @param tableName - The database table name
+   * @returns The entity type string or null if not found
+   */
+  protected getEntityTypeFromTableName(tableName: string): string | null {
+    const entityTypeMap: Record<string, string> = {
+      'generic_drugs': 'GenericDrugs',
+      'manu_drugs': 'ManuDrugs'
+    };
+    return entityTypeMap[tableName] || null;
+  }
+
+  /**
+   * Get property mapping for a specific entity type and property name
+   * @param entityType - The entity type
+   * @param propertyName - The property name
+   * @returns The property mapping or null if not found
+   */
+  protected getPropertyMapping(entityType: string, propertyName: string) {
+    const entityMapping = drugBotModelMap.entityMappings[entityType];
+    if (!entityMapping) {
+      return null;
+    }
+    
+    return entityMapping.propertyMappings.find(mapping => mapping.propertyName === propertyName);
   }
 
   // ============================================================================

@@ -54,7 +54,7 @@ export {
   findAggregatePropertyMapping,
   getEntityTableName,
   getAggregateTableName,
-  // getEntityKeyField,
+  getEntityKeyField,
   getAggregateParentKeyField
 } from './TheModelMap';
 

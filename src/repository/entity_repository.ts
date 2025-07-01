@@ -9,6 +9,8 @@ import {
   UpdateChildEntityRequest
 } from '@/model_defs/DBModel';
 import { manuDrugsTable, genericDrugsTable } from '../model_instances/TheDBModel';
+import { applyTransform } from '@/lib/transformUtils';
+import { drugBotModelMap } from '@/model_instances/TheModelMap';
 
 /**
  * Repository for Entity operations (generic_drugs table)
@@ -617,11 +619,11 @@ export class EntityRepository extends BaseRepository {
       throw new Error(`No name field found in table ${tableName}`);
     }
 
-    // First, find the parent entity UID from the parent_entity_key
+    // First, find the parent entity UID from the parent_entity_uid
     const { data: parentData, error: parentError } = await supabase
       .from('generic_drugs')
       .select('uid')
-      .eq('generic_key', data.parent_entity_uid)
+      .eq('uid', data.parent_entity_uid)
       .single();
 
     if (parentError || !parentData) {
@@ -630,7 +632,7 @@ export class EntityRepository extends BaseRepository {
         tableName, 
         error: 'Parent entity not found' 
       });
-      throw new Error(`Parent entity not found for key: ${data.parent_entity_uid}`);
+      throw new Error(`Parent entity not found for uid: ${data.parent_entity_uid}`);
     }
     
     const parentUid = parentData.uid;
@@ -654,7 +656,22 @@ export class EntityRepository extends BaseRepository {
           !f.is_primary_key
         );
         if (field) {
-          newEntity[field.name] = propertyValue;
+          // Get the property mapping to check for transformations
+          const entityType = this.getEntityTypeFromTableName(table.name);
+          const propertyMapping = entityType ? this.getPropertyMapping(entityType, propertyName) : null;
+          
+          // Apply transformation if defined
+          let convertedValue = propertyValue;
+          if (propertyMapping?.transform?.toDB) {
+            convertedValue = applyTransform(propertyMapping.transform.toDB, propertyValue);
+          } else if (field.datatype === 'INTEGER' && propertyValue !== null && propertyValue !== undefined && propertyValue !== '') {
+            // Fallback to basic integer conversion if no transform is defined
+            convertedValue = parseInt(propertyValue as string, 10);
+            if (isNaN(convertedValue)) {
+              throw new Error(`Invalid integer value for field ${field.name}: ${propertyValue}`);
+            }
+          }
+          newEntity[field.name] = convertedValue;
         }
       });
     }
@@ -691,80 +708,88 @@ export class EntityRepository extends BaseRepository {
     return entity;
   }
 
-  async updateChildEntityByKey(childKey: string, data: UpdateChildEntityRequest, table: DBTable): Promise<UIEntity | null> {
-    this.log('UPDATE_CHILD_ENTITY_BY_KEY', 'CHILD_ENTITIES', { childKey, data, tableName: table.name });
-    const supabase = await this.getSupabaseClient();
+  // async updateChildEntityByKey(childKey: string, data: UpdateChildEntityRequest, table: DBTable): Promise<UIEntity | null> {
+  //   this.log('UPDATE_CHILD_ENTITY_BY_KEY', 'CHILD_ENTITIES', { childKey, data, tableName: table.name });
+  //   const supabase = await this.getSupabaseClient();
     
-    // Extract table name and find key/name fields
-    const tableName = table.name;
-    const keyField = this.findKeyField(table, true);
-    const nameField = this.findNameField(table);
+  //   // Extract table name and find key/name fields
+  //   const tableName = table.name;
+  //   const keyField = this.findKeyField(table, true);
+  //   const nameField = this.findNameField(table);
     
-    if (!keyField) {
-      throw new Error(`No entity key field found in table ${tableName}`);
-    }
-    if (!nameField) {
-      throw new Error(`No name field found in table ${tableName}`);
-    }
+  //   if (!keyField) {
+  //     throw new Error(`No entity key field found in table ${tableName}`);
+  //   }
+  //   if (!nameField) {
+  //     throw new Error(`No name field found in table ${tableName}`);
+  //   }
     
-    const updateData: any = {};
+  //   const updateData: any = {};
     
-    // Update display name if provided
-    if (data.displayName !== undefined) {
-      updateData[nameField.name] = data.displayName;
-    }
+  //   // Update display name if provided
+  //   if (data.displayName !== undefined) {
+  //     updateData[nameField.name] = data.displayName;
+  //   }
     
-    // Update dynamic properties if provided
-    if (data.properties) {
-      Object.entries(data.properties).forEach(([propertyName, propertyValue]) => {
-        // Find the corresponding field in the table
-        const field = table.fields.find(f => 
-          f.name === propertyName && 
-          f.name !== keyField.name && 
-          f.name !== nameField.name && 
-          f.name !== 'uid' &&
-          f.name !== 'generic_key' &&
-          !f.is_primary_key
-        );
-        if (field) {
-          updateData[field.name] = propertyValue;
-        }
-      });
-    }
+  //   // Update dynamic properties if provided
+  //   if (data.properties) {
+  //     Object.entries(data.properties).forEach(([propertyName, propertyValue]) => {
+  //       // Find the corresponding field in the table
+  //       const field = table.fields.find(f => 
+  //         f.name === propertyName && 
+  //         f.name !== keyField.name && 
+  //         f.name !== nameField.name && 
+  //         f.name !== 'uid' &&
+  //         f.name !== 'generic_key' &&
+  //         !f.is_primary_key
+  //       );
+  //       if (field) {
+  //         // Convert value based on field data type
+  //         let convertedValue = propertyValue;
+  //         if (field.datatype === 'INTEGER' && propertyValue !== null && propertyValue !== undefined && propertyValue !== '') {
+  //           convertedValue = parseInt(propertyValue as string, 10);
+  //           if (isNaN(convertedValue)) {
+  //             throw new Error(`Invalid integer value for field ${field.name}: ${propertyValue}`);
+  //           }
+  //         }
+  //         updateData[field.name] = convertedValue;
+  //       }
+  //     });
+  //   }
 
-    // Update the child entity
-    const { data: updated, error } = await supabase
-      .from(tableName)
-      .update(updateData)
-      .eq(keyField.name, childKey)
-      .select()
-      .single();
+  //   // Update the child entity
+  //   const { data: updated, error } = await supabase
+  //     .from(tableName)
+  //     .update(updateData)
+  //     .eq(keyField.name, childKey)
+  //     .select()
+  //     .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        this.log('UPDATE_CHILD_ENTITY_BY_KEY_NOT_FOUND', 'CHILD_ENTITIES', { childKey, tableName });
-        return null;
-      }
-      this.log('UPDATE_CHILD_ENTITY_BY_KEY_ERROR', 'CHILD_ENTITIES', { childKey, data, tableName, error: error.message });
-      throw new Error(`Failed to update entity entity: ${error.message}`);
-    }
+  //   if (error) {
+  //     if (error.code === 'PGRST116') {
+  //       this.log('UPDATE_CHILD_ENTITY_BY_KEY_NOT_FOUND', 'CHILD_ENTITIES', { childKey, tableName });
+  //       return null;
+  //     }
+  //     this.log('UPDATE_CHILD_ENTITY_BY_KEY_ERROR', 'CHILD_ENTITIES', { childKey, data, tableName, error: error.message });
+  //     throw new Error(`Failed to update entity entity: ${error.message}`);
+  //   }
 
-    // Fetch ancestors using the relationship utilities
-    const ancestors = await this.fetchAncestorsForEntity(updated.uid, genericDrugsTable);
+  //   // Fetch ancestors using the relationship utilities
+  //   const ancestors = await this.fetchAncestorsForEntity(updated.uid, genericDrugsTable);
 
-    const entity: UIEntity = {
-      entityUid: updated.uid,
-      // entityKey: updated[keyField.name],
-      displayName: updated[nameField.name],
-      properties: this.generatePropertiesFromTable(table, updated, { isChildEntity: true }),
-      aggregates: [],
-      ancestors: ancestors, // Populated from relationships table
-      children: [] // Child entities typically don't have children
-    };
+  //   const entity: UIEntity = {
+  //     entityUid: updated.uid,
+  //     // entityKey: updated[keyField.name],
+  //     displayName: updated[nameField.name],
+  //     properties: this.generatePropertiesFromTable(table, updated, { isChildEntity: true }),
+  //     aggregates: [],
+  //     ancestors: ancestors, // Populated from relationships table
+  //     children: [] // Child entities typically don't have children
+  //   };
 
-    this.log('UPDATE_CHILD_ENTITY_BY_KEY_SUCCESS', 'CHILD_ENTITIES', { childKey, tableName, updatedChild: entity });
-    return entity;
-  }
+  //   this.log('UPDATE_CHILD_ENTITY_BY_KEY_SUCCESS', 'CHILD_ENTITIES', { childKey, tableName, updatedChild: entity });
+  //   return entity;
+  // }
 
   async updateChildEntityByUid(childUid: string, data: UpdateChildEntityRequest, table: DBTable): Promise<UIEntity | null> {
     this.log('UPDATE_CHILD_ENTITY_BY_UID', 'CHILD_ENTITIES', { childUid, data, tableName: table.name });
@@ -802,7 +827,22 @@ export class EntityRepository extends BaseRepository {
           !f.is_primary_key
         );
         if (field) {
-          updateData[field.name] = propertyValue;
+          // Get the property mapping to check for transformations
+          const entityType = this.getEntityTypeFromTableName(table.name);
+          const propertyMapping = entityType ? this.getPropertyMapping(entityType, propertyName) : null;
+          
+          // Apply transformation if defined
+          let convertedValue = propertyValue;
+          if (propertyMapping?.transform?.toDB) {
+            convertedValue = applyTransform(propertyMapping.transform.toDB, propertyValue);
+          } else if (field.datatype === 'INTEGER' && propertyValue !== null && propertyValue !== undefined && propertyValue !== '') {
+            // Fallback to basic integer conversion if no transform is defined
+            convertedValue = parseInt(propertyValue as string, 10);
+            if (isNaN(convertedValue)) {
+              throw new Error(`Invalid integer value for field ${field.name}: ${propertyValue}`);
+            }
+          }
+          updateData[field.name] = convertedValue;
         }
       });
     }
@@ -868,7 +908,7 @@ export class EntityRepository extends BaseRepository {
             entityUid: rel.ancestor_uid,
             // entityKey: rel.ancestor_key,
             displayName: rel.ancestor_name,
-                         properties: [
+            properties: [
                {
                  propertyName: 'generic_key',
                  propertyValue: rel.ancestor_key,
@@ -876,7 +916,6 @@ export class EntityRepository extends BaseRepository {
                  ordinal: 1,
                  isEditable: false,
                  isVisible: false,
-                 isKey: true,
                  isId: false,
                  isRequired: true
                },
@@ -887,7 +926,6 @@ export class EntityRepository extends BaseRepository {
                  ordinal: 2,
                  isEditable: true,
                  isVisible: true,
-                 isKey: false,
                  isId: false,
                  isRequired: true
                },
@@ -898,7 +936,6 @@ export class EntityRepository extends BaseRepository {
                  ordinal: 3,
                  isEditable: true,
                  isVisible: true,
-                 isKey: false,
                  isId: false,
                  isRequired: false
                }
@@ -924,7 +961,6 @@ export class EntityRepository extends BaseRepository {
                ordinal: 1,
                isEditable: false,
                isVisible: false,
-               isKey: true,
                isId: false,
                isRequired: true
              },
@@ -935,7 +971,6 @@ export class EntityRepository extends BaseRepository {
                ordinal: 2,
                isEditable: true,
                isVisible: true,
-               isKey: false,
                isId: false,
                isRequired: true
              },
@@ -946,7 +981,6 @@ export class EntityRepository extends BaseRepository {
                ordinal: 3,
                isEditable: true,
                isVisible: true,
-               isKey: false,
                isId: false,
                isRequired: false
              },
@@ -957,7 +991,6 @@ export class EntityRepository extends BaseRepository {
                ordinal: 4,
                isEditable: true,
                isVisible: true,
-               isKey: false,
                isId: false,
                isRequired: false
              }

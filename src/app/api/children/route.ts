@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const { searchParams } = new URL(request.url);
+    const format = searchParams.get('format');
     
     // Verify that the parent entity exists
     const parentEntity = await entityRepository.getEntityByUid(body.parent_entity_uid, genericDrugsTable);
@@ -42,16 +44,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate required fields
-    if (!body.parent_entity_key || !body.displayName) {
+    if (!body.parent_entity_uid || !body.displayName) {
       return NextResponse.json(
-        { error: 'parent_entity_key and displayName are required' },
+        { error: 'parent_entity_uid and displayName are required' },
         { status: 400 }
       );
     }
 
     const child = await entityRepository.createChildEntity(body, manuDrugsTable);
     
-    return NextResponse.json(child, { status: 201 });
+    // Return UIEntity format if requested, otherwise return the raw child data
+    if (format === 'ui') {
+      return NextResponse.json(child, { status: 201 });
+    } else {
+      return NextResponse.json(child, { status: 201 });
+    }
   } catch (error) {
     console.error('Error creating child entity:', error);
     return NextResponse.json({ error: 'Failed to create child entity' }, { status: 500 });

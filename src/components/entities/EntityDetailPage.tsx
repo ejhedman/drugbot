@@ -16,11 +16,15 @@ import { CollectionTabSet, TabConfig, TabCallbacks } from './CollectionTabSet';
 import { useEntityOperations } from '@/hooks/useEntityOperations';
 import { EntityDetailSkeleton } from '@/components/ui/skeleton';
 import { theUIModel } from '@/model_instances/TheUIModel';
+import { getEntityTableName, getEntityKeyField } from '@/model_instances/TheModelMap';
 import { getBorderClasses } from '@/lib/borderUtils';
+import { getEntityMapping } from '@/model_instances/TheModelMap';
 
 interface EntityDetailPageProps {
   entityUid: string | null;
   childUid: string | null;
+  entityType?: string; // Entity type for main entities (e.g., 'GenericDrugs')
+  childType?: string; // Entity type for child entities (e.g., 'ManuDrugs')
   onEntityUpdated?: (entity: UIEntity) => void;
   onChildUpdated?: (child: UIEntity) => void;
   onEntityDeleted?: (entityUid: string) => void;
@@ -30,6 +34,8 @@ interface EntityDetailPageProps {
 export function EntityDetailPage({
   entityUid,
   childUid,
+  entityType = 'GenericDrugs',
+  childType = 'ManuDrugs',
   onEntityUpdated,
   onChildUpdated,
   onEntityDeleted,
@@ -47,6 +53,25 @@ export function EntityDetailPage({
   const [manuDrugsList, setManuDrugsList] = useState<UIAggregate | null>(null);
 
   const operations = useEntityOperations();
+
+  // Function to convert raw database row to UIEntity format
+  const convertRowToUIEntity = (row: any, entityType: string): UIEntity => {
+    const entityMeta = theUIModel.getEntity(entityType);
+    if (!entityMeta) {
+      throw new Error(`Entity type not found: ${entityType}`);
+    }
+
+    const properties: UIProperty[] = entityMeta.propertyDefs?.map(propDef => ({
+      ...propDef,
+      propertyValue: row[propDef.propertyName]
+    })) || [];
+
+    return {
+      ...entityMeta,
+      entityUid: row.uid,
+      properties
+    };
+  };
 
   useEffect(() => {
     if (childUid) {
@@ -67,23 +92,37 @@ export function EntityDetailPage({
 
   // Fetch collections when entity is loaded
   useEffect(() => {
-    if (entity && !child) {
+    if (entity && !child && entity.entityUid) {
       fetchEntityCollections();
     }
   }, [entity, child]);
 
   const fetchEntity = async () => {
     if (!entityUid) return;
+    const table = getEntityTableName(entityType);
+    if (!table) {
+      return;
+    }
     try {
       setLoading(true);
-      const response = await fetch(`/api/entities/${encodeURIComponent(entityUid)}`);
+      const requestBody = { table, where: { uid: entityUid }, limit: 1 };
+      const response = await fetch('/api/dynamic-select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
       if (response.ok) {
-        const unifiedEntity: UIEntity = await response.json();
-        setEntity(unifiedEntity);
-        setChild(null);
+        const result = await response.json();
+        const row = result?.data?.[0] || null;
+        if (row) {
+          const uiEntity = convertRowToUIEntity(row, entityType);
+          setEntity(uiEntity);
+          setChild(null);
+        } else {
+          setEntity(null);
+        }
       }
     } catch (error) {
-      console.error('Error fetching entity:', error);
     } finally {
       setLoading(false);
     }
@@ -93,7 +132,7 @@ export function EntityDetailPage({
     if (!childUid) return;
     try {
       setLoading(true);
-      const response = await fetch(`/api/children/${encodeURIComponent(childUid)}?format=ui`);
+      const response = await fetch(`/api/children/${encodeURIComponent(childUid)}`);
       if (response.ok) {
         const unifiedChild: UIEntity = await response.json();
         setChild(unifiedChild);
@@ -105,7 +144,6 @@ export function EntityDetailPage({
         }
       }
     } catch (error) {
-      console.error('Error fetching child:', error);
     } finally {
       setLoading(false);
     }
@@ -117,29 +155,31 @@ export function EntityDetailPage({
       // Get the entity UID from the entity object
       const entityUid = entity?.entityUid;
       if (!entityUid) {
-        console.error('Entity UID not available for fetching collections');
         return;
       }
       
-      // Fetch all four collections for the entity
-      const [routesData, aliasesRes, approvalsRes, manuDrugsRes] = await Promise.all([
-        fetchRoutes(entityUid),
-        fetch(`/api/generic-aliases?entityUid=${encodeURIComponent(entityUid)}`), // aliases (generic_aliases)
-        fetch(`/api/generic-approvals?entityUid=${encodeURIComponent(entityUid)}`), // approvals (generic_approvals)
-        fetch(`/api/generic-manu-drugs?entityUid=${encodeURIComponent(entityUid)}`) // manufactured drugs (manu_drugs)
+      // Fetch all four collections for the entity using the dynamic aggregate API
+      const [aliasesRes, routesRes, approvalsRes, manuDrugsRes] = await Promise.all([
+        fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericAlias`),
+        fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericRoute`),
+        fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericApproval`),
+        fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericManuDrugs`)
       ]);
-
-      // Set routes data (already processed by fetchRoutes)
-      setRoutesList(routesData);
 
       // Fetch aliases (now returns single UIAggregate)
       if (aliasesRes.ok) {
         const aliases: UIAggregate = await aliasesRes.json();
-        console.log('EntityDetailPage: Aliases refreshed, count:', aliases.rows?.length || 0);
         setAliasesList(aliases);
       } else {
-        console.log('EntityDetailPage: Failed to fetch aliases');
         setAliasesList(null);
+      }
+
+      // Fetch routes (now returns single UIAggregate)
+      if (routesRes.ok) {
+        const routes: UIAggregate = await routesRes.json();
+        setRoutesList(routes);
+      } else {
+        setRoutesList(null);
       }
 
       // Fetch approvals (now returns single UIAggregate)
@@ -168,7 +208,7 @@ export function EntityDetailPage({
   };
 
   async function fetchRoutes(entityUid: string): Promise<UIAggregate> {
-    const routesRes = await fetch(`/api/generic-routes?entityUid=${encodeURIComponent(entityUid)}`);
+    const routesRes = await fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericRoute`);
     if (!routesRes.ok) {
       throw new Error('Failed to fetch routes');
     }
@@ -187,13 +227,10 @@ export function EntityDetailPage({
       }
     },
     onDelete: async (id: string | number) => {
-      console.log('EntityDetailPage: onDelete called with id:', id, 'collectionType:', collectionType);
       await operations.deleteFromCollection(collectionType, parentKey, id);
       // Refresh collections after delete (only for entities, not child entities)
       if (entity && !child) {
-        console.log('EntityDetailPage: Refreshing collections after delete');
         await fetchEntityCollections();
-        console.log('EntityDetailPage: Collections refreshed');
       }
     },
     onCreate: async (data: any) => {
@@ -208,95 +245,105 @@ export function EntityDetailPage({
   // Generic handler for both entity and child updates
   const handleUpdate = async (entity: UIEntity, updatedProperties: UIProperty[]) => {
     try {
-      // Check if this is a child entity by looking for child_entity_key property
-      const childEntityIndicator = updatedProperties.find((p: UIProperty) => p.propertyName === 'child_entity_key');
+      // Check if this is a child entity by checking if we have a childUid and the entity matches
+      const isChildEntity = childUid && child && entity.entityUid === childUid;
       
-      if (childEntityIndicator) {
+      if (isChildEntity) {
         // Handle child entity update - build properties object from updated properties
-        const nameProperty = updatedProperties.find(p => p.propertyName === 'child_entity_name');
-        
-        // Build properties object from all non-name, non-key properties
+        // Build properties object from all non-uid properties
         const properties: { [key: string]: any } = {};
         updatedProperties.forEach(prop => {
-          if (prop.propertyName !== 'child_entity_name' && 
-              prop.propertyName !== 'child_entity_key' && 
-              prop.propertyName !== 'uid') {
-            // Map property names to actual database field names
-            if (prop.propertyName === 'child_entity_property1') {
-              properties['manufacturer'] = prop.propertyValue;
-            } else {
-              properties[prop.propertyName] = prop.propertyValue;
-            }
+          if (prop.propertyName !== 'uid') {
+            // Use the actual property names from the UI model
+            properties[prop.propertyName] = prop.propertyValue;
           }
         });
         
-        const updateData: UpdateChildEntityRequest = {
-          displayName: nameProperty?.propertyValue || '',
-          properties: Object.keys(properties).length > 0 ? properties : undefined
-        };
+        // Get table and key from model for child entity
+        const table = getEntityTableName(childType);
+        
+        if (!table) {
+          throw new Error(`No table found for entity type: ${childType}`);
+        }
         
         // Use entityUid for child operations
         if (entity.entityUid) {
-          const updatedChild = await operations.updateChild(entity.entityUid, updateData);
-          setChild(updatedChild);
+          const updatedChild = await operations.updateChild(entity.entityUid, {
+            table,
+            properties
+          });
+          
+          // Refetch the child entity to get the proper UIEntity format
+          await fetchChild();
+          
           onChildUpdated?.(updatedChild);
         }
       } else {
         // Handle main entity update - build properties object from updated properties
-        const nameProperty = updatedProperties.find(p => p.propertyName === 'entity_name');
-        
-        // Build properties object from all non-name, non-key properties
+        // Build properties object from all non-uid properties
         const properties: { [key: string]: any } = {};
         updatedProperties.forEach(prop => {
-          if (prop.propertyName !== 'entity_name' && 
-              prop.propertyName !== 'entity_key' && 
-              prop.propertyName !== 'uid') {
-            // Map property names to actual database field names
-            if (prop.propertyName === 'entity_property1') {
-              properties['mech_of_action'] = prop.propertyValue;
-            } else {
-              properties[prop.propertyName] = prop.propertyValue;
-            }
+          if (prop.propertyName !== 'uid') {
+            // Use the actual property names from the UI model
+            properties[prop.propertyName] = prop.propertyValue;
           }
         });
         
-        const updateData: UpdateEntityRequest = {
-          displayName: nameProperty?.propertyValue || '',
-          properties: Object.keys(properties).length > 0 ? properties : undefined
-        };
+        // Get table from model for main entity
+        const table = getEntityTableName(entityType);
+        
+        if (!table) {
+          throw new Error(`No table found for entity type: ${entityType}`);
+        }
         
         if (entity.entityUid) {
-          const updatedEntity = await operations.updateEntity(entity.entityUid, updateData);
-          setEntity(updatedEntity);
+          const updatedEntity = await operations.updateEntity(entity.entityUid, {
+            table,
+            properties
+          });
+          
+          // Refetch the entity to get the proper UIEntity format
+          await fetchEntity();
+          
           onEntityUpdated?.(updatedEntity);
         }
       }
     } catch (error) {
-      console.error('Error updating entity:', error);
     }
   };
 
   // Generic handler for both entity and child deletes
   const handleDelete = async (entity: UIEntity) => {
     try {
-      // Check if this is a child entity by looking for child_entity_key property
-      const childEntityIndicator = entity.properties?.find((p: UIProperty) => p.propertyName === 'child_entity_key');
+      // Check if this is a child entity by checking if we have a childUid and the entity matches
+      const isChildEntity = childUid && child && entity.entityUid === childUid;
       
-      if (childEntityIndicator) {
+      if (isChildEntity) {
         // Handle child entity delete
         if (entity.entityUid) {
-          await operations.deleteChild(entity.entityUid);
-          onChildDeleted?.(childEntityIndicator.propertyValue);
+          const table = getEntityTableName(childType);
+          
+          if (!table) {
+            throw new Error(`No table found for entity type: ${childType}`);
+          }
+          
+          await operations.deleteChild(entity.entityUid, { table });
+          onChildDeleted?.(entity.entityUid);
         }
       } else {
         // Handle main entity delete
         if (entity.entityUid) {
-          await operations.deleteEntity(entity.entityUid);
+          const table = getEntityTableName(entityType);
+          
+          if (!table) {
+            throw new Error(`No table found for entity type: ${entityType}`);
+          }
+          
+          await operations.deleteEntity(entity.entityUid, { table });
           onEntityDeleted?.(entity.entityUid || '');
         }
       }
     } catch (error) {
-      console.error('Error deleting entity:', error);
     }
   };
 
@@ -360,11 +407,8 @@ export function EntityDetailPage({
         return obj;
       });
       
-      console.log('EntityDetailPage: convertUIAggregateToTabData result:', result.length, 'items');
       return result;
     }
-    
-
     
     return [];
   };
@@ -387,7 +431,7 @@ export function EntityDetailPage({
           icon: <Database className="w-4 h-4" />,
           data: convertUIAggregateToTabData(manuDrugsList),
           emptyMessage: 'No manufactured drugs for this generic drug.',
-          schemaEntityName: 'generic_manu_drugs',
+          schemaEntityName: 'GenericManuDrugs',
           isTable: manuDrugsList?.isTable ?? true,
           ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericManuDrugs')?.ordinal ?? 4,
         },
@@ -397,7 +441,7 @@ export function EntityDetailPage({
           icon: <Database className="w-4 h-4" />,
           data: convertUIAggregateToTabData(routesList),
           emptyMessage: 'No routes & dosing information for this generic drug.',
-          schemaEntityName: 'generic_routes',
+          schemaEntityName: 'GenericRoute',
           isTable: routesList?.isTable ?? true,
           ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericRoute')?.ordinal ?? 2,
         },
@@ -407,7 +451,7 @@ export function EntityDetailPage({
           icon: <Settings className="w-4 h-4" />,
           data: convertUIAggregateToTabData(approvalsList),
           emptyMessage: 'No approval information for this generic drug.',
-          schemaEntityName: 'generic_approvals',
+          schemaEntityName: 'GenericApproval',
           isTable: approvalsList?.isTable ?? true,
           ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericApproval')?.ordinal ?? 3,
         },
@@ -417,7 +461,7 @@ export function EntityDetailPage({
           icon: <Tag className="w-4 h-4" />,
           data: convertUIAggregateToTabData(aliasesList),
           emptyMessage: 'No aliases for this generic drug.',
-          schemaEntityName: 'generic_aliases',
+          schemaEntityName: 'GenericAlias',
           isTable: aliasesList?.isTable ?? true,
           ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericAlias')?.ordinal ?? 1,
         },
@@ -427,17 +471,17 @@ export function EntityDetailPage({
   // Create callback map for tabs
   const tabCallbacks: Record<string, TabCallbacks> = {};
   if (entity && !child) { // Only entity has collections, child entities have no tabs
-    tabCallbacks['aliases'] = createTabCallbacks('generic-aliases', entityUidForAPI);
-    tabCallbacks['routes'] = createTabCallbacks('generic-routes', entityUidForAPI);
-    tabCallbacks['approvals'] = createTabCallbacks('generic-approvals', entityUidForAPI);
-    tabCallbacks['manufactured-drugs'] = createTabCallbacks('generic-manu-drugs', entityUidForAPI);
+    tabCallbacks['aliases'] = createTabCallbacks('GenericAlias', entityUidForAPI);
+    tabCallbacks['routes'] = createTabCallbacks('GenericRoute', entityUidForAPI);
+    tabCallbacks['approvals'] = createTabCallbacks('GenericApproval', entityUidForAPI);
+    tabCallbacks['manufactured-drugs'] = createTabCallbacks('GenericManuDrugs', entityUidForAPI);
   }
 
   return (
     <div className={getBorderClasses("flex-1 min-h-0 flex flex-col bg-white rounded-xl overflow-hidden", "border-6 border-orange-500")}>
       <div className="flex-1 min-h-0 flex flex-col p-4 overflow-hidden">
         <DetailCardProperties
-          subtitle={child ? 'Child Entity Detail' : 'Entity Detail'}
+          subtitle={child ? 'Brand Name Detail' : 'Generic Drug Detail'}
           icon={child ? <Tag className="w-4 h-4 text-emerald-500" /> : <Pill className="w-4 h-4 text-indigo-600" />}
           entity={child || entity!}
           onUpdate={handleUpdate}

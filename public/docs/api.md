@@ -27,7 +27,6 @@ interface UIProperty {
   controlType: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'boolean';
   isEditable: boolean;            // Whether users can modify this property
   isVisible: boolean;             // Whether this property should be shown in UI
-  isKey: boolean;                 // Whether this property serves as a business key
   isId: boolean;                  // Whether this property is a primary key
   isRequired: boolean;            // Whether this property must have a value
   ordinal: number;                // Display order
