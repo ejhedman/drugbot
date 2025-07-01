@@ -212,19 +212,6 @@ export function EntityTreeList({
                         </span>
                       </div>
                     </button>
-                    
-                    {/* Add Child Button */}
-                    {onAddChild && isExpanded(entityUid) && (
-                      <Button
-                        onClick={(e) => handleAddChild(entityUid, e)}
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 mr-2 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                        title="Add Child Entity"
-                      >
-                        <SquarePlus className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
 
                   {/* Children Section */}

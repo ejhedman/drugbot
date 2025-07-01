@@ -66,9 +66,16 @@ export function EntityDetailPage({
       propertyValue: row[propDef.propertyName]
     })) || [];
 
+    // Determine the main display property for the entity type
+    let mainNameProp = 'generic_name';
+    if (entityType === 'ManuDrugs') mainNameProp = 'drug_name';
+    // Add more entity types as needed
+    const displayName = row[mainNameProp] || entityMeta.displayName;
+
     return {
       ...entityMeta,
       entityUid: row.uid,
+      displayName,
       properties
     };
   };
@@ -130,17 +137,27 @@ export function EntityDetailPage({
 
   const fetchChild = async () => {
     if (!childUid) return;
+    const table = getEntityTableName(childType);
+    if (!table) {
+      return;
+    }
     try {
       setLoading(true);
-      const response = await fetch(`/api/children/${encodeURIComponent(childUid)}`);
+      const requestBody = { table, where: { uid: childUid }, limit: 1 };
+      const response = await fetch('/api/dynamic-select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
       if (response.ok) {
-        const unifiedChild: UIEntity = await response.json();
-        setChild(unifiedChild);
-        
-        // Also fetch the parent entity from the child's ancestors
-        if (unifiedChild.ancestors && unifiedChild.ancestors.length > 0) {
-          const parentEntity = unifiedChild.ancestors[0];
-          setEntity(parentEntity);
+        const result = await response.json();
+        const row = result?.data?.[0] || null;
+        if (row) {
+          const uiChild = convertRowToUIEntity(row, childType);
+          setChild(uiChild);
+          setEntity(null); // Clear the parent entity when viewing a child
+        } else {
+          setChild(null);
         }
       }
     } catch (error) {
@@ -481,7 +498,8 @@ export function EntityDetailPage({
     <div className={getBorderClasses("flex-1 min-h-0 flex flex-col bg-white rounded-xl overflow-hidden", "border-6 border-orange-500")}>
       <div className="flex-1 min-h-0 flex flex-col p-4 overflow-hidden">
         <DetailCardProperties
-          subtitle={child ? 'Brand Name Detail' : 'Generic Drug Detail'}
+          title={(child || entity!)?.displayName}
+          subtitle={child ? theUIModel.getEntityDisplayName(childType) : theUIModel.getEntityDisplayName(entityType)}
           icon={child ? <Tag className="w-4 h-4 text-emerald-500" /> : <Pill className="w-4 h-4 text-indigo-600" />}
           entity={child || entity!}
           onUpdate={handleUpdate}

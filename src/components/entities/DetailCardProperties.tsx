@@ -122,13 +122,12 @@ export function DetailCardProperties({
     <Card className={className}>
       <CardHeader className="border-b border-slate-200 bg-slate-200 rounded-t-xl px-4 py-3 relative">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {icon}
-            <span className="section-title text-slate-700">{displayTitle}</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-bold text-lg truncate text-slate-900" title={displayTitle}>{displayTitle}</span>
           </div>
           {subtitle && (
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <h2 className="section-title text-slate-700">{subtitle}</h2>
+            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-max pointer-events-none">
+              <h2 className="text-base font-medium text-slate-500 tracking-wide whitespace-nowrap">{subtitle}</h2>
             </div>
           )}
           {showActions && (

@@ -82,13 +82,18 @@ export function useEntityOperations(): UseEntityOperationsReturn {
 
   const updateCollection = async (type: string, parentKey: string, id: string | number, data: any): Promise<any> => {
     return handleApiCall(async () => {
+      const table = getAggregateTableName(type);
+      if (!table) {
+        throw new Error(`Unknown aggregate type: ${type}`);
+      }
+      
       const response = await fetch(`/api/dynamic-update`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          aggregateType: type,
+          table,
           uid: id,
-          ...data
+          properties: data
         }),
       });
       if (!response.ok) throw new Error(`Failed to update ${type}`);

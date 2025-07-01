@@ -324,7 +324,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
 export const ENTITIES: Record<string, UIEntityMeta> = {
   GenericDrugs: {
     entityType: 'GenericDrugs',
-    displayName: 'Generic Drug',
+    displayName: 'Generic',
     pluralName: 'Generic Drugs',
     propertyDefs: [
       {
@@ -424,7 +424,7 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
 
   ManuDrugs: {
     entityType: 'ManuDrugs',
-    displayName: 'Manufactured Drug',
+    displayName: 'Branded Drug',
     pluralName: 'Manufactured Drugs',
     propertyDefs: [
       {

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { theDBModel } from '@/model_instances/TheDBModel';
 import { createServiceClient } from '@/lib/supabase-server';
-import { getAggregateMapping } from '@/model_instances/TheModelMap';
-import { aggregateRepository } from '@/lib/repository';
 
 function isSafeName(name: string) {
   return /^[a-zA-Z0-9_]+$/.test(name);
@@ -11,40 +9,12 @@ function isSafeName(name: string) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json() as Record<string, any>;
-    const { table, uid, properties, aggregateType, ...aggregateData } = body;
+    const { table, uid, properties } = body;
 
-    console.log('dynamic-update: Received request:', { table, uid, properties, aggregateType, aggregateData });
+    console.log('dynamic-update: Received request:', { table, uid, properties });
 
-    // Handle aggregate updates
-    if (aggregateType && uid) {
-      console.log('dynamic-update: Processing aggregate update...');
-      
-      if (!isSafeName(aggregateType)) {
-        console.log('dynamic-update: Invalid aggregateType format:', aggregateType);
-        return NextResponse.json({ error: 'Invalid aggregateType format' }, { status: 400 });
-      }
-
-      // Validate that the aggregate type exists in our model
-      const aggregateMapping = getAggregateMapping(aggregateType);
-      if (!aggregateMapping) {
-        console.log('dynamic-update: Aggregate type not found in model:', aggregateType);
-        return NextResponse.json({ error: 'Aggregate type not found in model' }, { status: 400 });
-      }
-
-      // Update the aggregate record using the repository
-      const result = await aggregateRepository.updateAggregateRecord(aggregateType, uid, aggregateData);
-      
-      console.log('dynamic-update: Aggregate update successful:', result);
-      return NextResponse.json({ 
-        success: true,
-        message: `${aggregateType} updated successfully`,
-        record: result 
-      }, { status: 200 });
-    }
-
-    // Handle regular table updates (existing logic)
     if (!table || !uid || !properties) {
-      console.log('dynamic-update: Missing required parameters for table update');
+      console.log('dynamic-update: Missing required parameters');
       return NextResponse.json({ error: 'Missing required parameters: table, uid, properties' }, { status: 400 });
     }
 
