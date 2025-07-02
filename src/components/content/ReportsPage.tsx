@@ -431,7 +431,7 @@ export function ReportsPage() {
       {(selectedReport || creatingNewReport) && (
         <>
           {/* Column List Card */}
-          <div className={`${columnsCollapsed ? 'w-12' : 'w-1/5'} bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-all duration-200`}>
+          <div className={`${columnsCollapsed ? 'w-12' : 'w-1/10'} bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-all duration-200`}>
             <ColumnList
               reportDefinition={reportDefinition}
               selectedReportType={selectedReportType}
