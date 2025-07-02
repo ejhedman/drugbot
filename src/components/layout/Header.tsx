@@ -3,19 +3,50 @@
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 
 interface HeaderProps {
   onLogin?: () => void;
   onLogout: () => void;
 }
 
+// User Avatar Component
+function UserAvatar({ user }: { user: any }) {
+  const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || 'User';
+  
+  // Generate initials from display name
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // If we have a name, show initials, otherwise show user icon
+  if (displayName && displayName !== 'User') {
+    const initials = getInitials(displayName);
+    return (
+      <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+        {initials}
+      </div>
+    );
+  }
+
+  // Fallback to user icon
+  return (
+    <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center">
+      <User className="w-4 h-4" />
+    </div>
+  );
+}
+
 export function Header({ onLogin, onLogout }: HeaderProps) {
   const { user } = useAuth();
   
-  // Get display name and avatar from GitHub user data
+  // Get display name from user data
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || 'User';
-  const avatarUrl = user?.user_metadata?.avatar_url;
   
   return (
     <header className="bg-slate-200 px-6 flex justify-between items-center border-b border-slate-200 shadow-sm" style={{ minHeight: '70px' }}>
@@ -36,15 +67,7 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
         {user ? (
           <>
             <div className="flex items-center gap-3">
-              {avatarUrl && (
-                <Image
-                  src={avatarUrl}
-                  alt="User avatar"
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-              )}
+              <UserAvatar user={user} />
               <span className="label text-slate-700">Welcome, {displayName}</span>
             </div>
             <Button
