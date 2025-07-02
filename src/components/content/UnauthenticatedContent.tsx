@@ -18,7 +18,7 @@ export function UnauthenticatedContent({ onLogin, onLoginHelp }: Unauthenticated
               </h1>
               <p className="text-lg text-gray-600">
                 Explore and manage your entities with our modern, intuitive interface. 
-                Get started by logging in with any email address.
+                Get started by signing in with your email address.
               </p>
             </div>
             <div className="space-y-4">
@@ -37,16 +37,17 @@ export function UnauthenticatedContent({ onLogin, onLoginHelp }: Unauthenticated
             </div>
           </div>
           <div className="flex justify-center">
-            <div className="flex flex-col items-center space-y-4">
-              <LoginForm onSuccess={onLogin} />
-              <button
-                onClick={onLoginHelp}
-                className="text-sm text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
-              >
-                I need help logging in
-              </button>
-            </div>
+            <LoginForm onSuccess={onLogin} />
           </div>
+        </div>
+        
+        <div className="text-center mt-8">
+          <button
+            onClick={onLoginHelp}
+            className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+          >
+            Need help signing in?
+          </button>
         </div>
       </div>
     </div>

@@ -9,7 +9,9 @@ interface AuthContextType {
   session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  signInWithGitHub: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithOtp: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -44,15 +46,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [supabase.auth]);
 
-  const signInWithGitHub = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
+  const signInWithEmail = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      console.error('Error signing in with email:', error);
+      throw error;
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    if (error) {
+      console.error('Error signing up with email:', error);
+      throw error;
+    }
+  };
+
+  const signInWithOtp = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
     if (error) {
-      console.error('Error signing in with GitHub:', error);
+      console.error('Error sending OTP:', error);
       throw error;
     }
   };
@@ -70,7 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     isAuthenticated: !!user,
     isLoading,
-    signInWithGitHub,
+    signInWithEmail,
+    signUpWithEmail,
+    signInWithOtp,
     signOut,
   };
 

@@ -6,12 +6,18 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const error = searchParams.get('error')
+  const next = searchParams.get('next') || '/'
 
-  console.log('Auth callback - URL params:', { code: code?.substring(0, 10), error })
+  console.log('Auth callback - URL params:', { 
+    code: code?.substring(0, 10), 
+    error,
+    next,
+    hasCode: !!code 
+  })
 
   if (error) {
-    console.error('OAuth error:', error)
-    return NextResponse.redirect(`${origin}/?error=auth_failed`)
+    console.error('Auth error:', error)
+    return NextResponse.redirect(`${origin}/?error=auth_failed&details=${encodeURIComponent(error)}`)
   }
 
   if (code) {
@@ -48,7 +54,17 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/?error=auth_failed&details=${encodeURIComponent(exchangeError.message)}`)
       }
 
-      console.log('Successfully exchanged code for session:', { userId: data?.user?.id })
+      console.log('Successfully exchanged code for session:', { 
+        userId: data?.user?.id,
+        email: data?.user?.email,
+        emailConfirmed: data?.user?.email_confirmed_at
+      })
+      
+      // Check if email is confirmed (for email auth)
+      if (data?.user && !data.user.email_confirmed_at) {
+        console.log('User email not confirmed, redirecting to confirmation page')
+        return NextResponse.redirect(`${origin}/?message=check_email`)
+      }
       
     } catch (err) {
       console.error('Unexpected error in auth callback:', err)
@@ -57,6 +73,6 @@ export async function GET(request: NextRequest) {
   }
 
   // URL to redirect to after sign in process completes
-  console.log('Redirecting to home page')
-  return NextResponse.redirect(`${origin}/`)
+  console.log('Redirecting to:', next)
+  return NextResponse.redirect(`${origin}${next}`)
 } 
