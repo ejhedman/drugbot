@@ -355,7 +355,8 @@ export function ReportsPage() {
 
   // Save new report (when creating)
   const handleSaveNewReport = async () => {
-    if (!editingName.trim() || !reportDefinition) return;
+    if (!editingName.trim() || !selectedReportType || !reportDefinition) return;
+    
     const tableName = getReportTableName(selectedReportType);
     const newColumnList: Record<string, ReportColumn> = {};
     if (selectedReportType) {
@@ -401,6 +402,12 @@ export function ReportsPage() {
     }
   };
 
+  const handleEditReport = (report: Report) => {
+    // Select the report and put it into edit mode
+    handleReportSelect(report);
+    setIsInConfigEditMode(true);
+  };
+
   return (
     <div className="flex flex-1 min-h-0 gap-4 p-4 bg-gray-50">
       {/* Report List Card */}
@@ -424,6 +431,7 @@ export function ReportsPage() {
           handleCreateReport={handleStartCreateReport}
           collapsed={reportsCollapsed}
           setCollapsed={setReportsCollapsed}
+          onEditReport={handleEditReport}
         />
       </div>
 

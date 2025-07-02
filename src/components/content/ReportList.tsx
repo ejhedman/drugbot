@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Globe, Trash, Plus, Search, ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react';
+import { Globe, Trash, Plus, Search, ArrowLeftFromLine, ArrowRightFromLine, Edit } from 'lucide-react';
 import { Report } from '@/hooks/useReports';
 import { User } from '@supabase/supabase-js';
 
@@ -25,6 +25,7 @@ interface ReportListProps {
   handleCreateReport: () => void;
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
+  onEditReport?: (report: Report) => void;
 }
 
 export function ReportList({
@@ -45,7 +46,8 @@ export function ReportList({
   setIsCreateDialogOpen,
   handleCreateReport,
   collapsed,
-  setCollapsed
+  setCollapsed,
+  onEditReport
 }: ReportListProps) {
   return (
     <div className="flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl">
@@ -125,19 +127,35 @@ export function ReportList({
                           </div>
                         </button>
                         {isOwner(report) && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="ml-2 text-red-600 hover:bg-red-50 rounded-xl"
-                            onClick={e => {
-                              e.stopPropagation();
-                              setReportToDelete(report);
-                              setDeleteDialogOpen(true);
-                            }}
-                            title="Delete report"
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1 mr-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-100 rounded-lg"
+                              onClick={e => {
+                                e.stopPropagation();
+                                if (onEditReport) {
+                                  onEditReport(report);
+                                }
+                              }}
+                              title="Edit report"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-red-600 hover:bg-red-50 rounded-lg"
+                              onClick={e => {
+                                e.stopPropagation();
+                                setReportToDelete(report);
+                                setDeleteDialogOpen(true);
+                              }}
+                              title="Delete report"
+                            >
+                              <Trash className="h-3 w-3" />
+                            </Button>
+                          </div>
                         )}
                       </div>
                     ))}
