@@ -21,6 +21,9 @@ import {
 } from '@/components/ui/dialog';
 import { getReportTableName } from '@/model_instances/TheModelMap';
 import { getReportColumnDisplayName } from '@/model_instances/TheUIModel';
+import { ReportList } from '@/components/content/ReportList';
+import { ColumnList } from '@/components/content/ColumnList';
+import { ReportBody } from '@/components/content/ReportBody';
 
 export function ReportsPage() {
   const { user } = useAuth();
@@ -38,9 +41,21 @@ export function ReportsPage() {
   const [originalReportDefinition, setOriginalReportDefinition] = useState<ReportDefinition | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<Report | null>(null);
+  const [reportsCollapsed, setReportsCollapsed] = useState(false);
+  const [columnsCollapsed, setColumnsCollapsed] = useState(false);
+  const [creatingNewReport, setCreatingNewReport] = useState(false);
 
   // Get available report types from the UI model
   const reportTypes = theUIModel.getReportTypes();
+
+  // Auto-collapse/expand Reports list based on report selection
+  useEffect(() => {
+    if (selectedReport) {
+      setReportsCollapsed(true);
+    } else {
+      setReportsCollapsed(false);
+    }
+  }, [selectedReport]);
 
   useEffect(() => {
     if (selectedReportType && (isInConfigEditMode || !selectedReport)) {
@@ -73,53 +88,23 @@ export function ReportsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedReportType, isInConfigEditMode]);
 
-  const handleCreateReport = async () => {
-    if (!newReportName.trim()) return;
-
-    const tableName = getReportTableName(selectedReportType);
-    const newColumnList: Record<string, ReportColumn> = {};
-    if (selectedReportType) {
-      const reportMeta = theUIModel.getReport(selectedReportType);
-      if (reportMeta && reportMeta.propertyDefs) {
-        reportMeta.propertyDefs.filter(prop => prop.isVisible).forEach((prop, idx) => {
-          newColumnList[prop.propertyName] = {
-            isActive: true,
-            isSortColumn: false,
-            filter: {},
-            ordinal: idx,
-            displayName: getReportColumnDisplayName(selectedReportType, prop.propertyName) || prop.propertyName
-          };
-        });
-      }
-    }
-
-    const newReportDefinition: ReportDefinition = {
-      name: newReportName,
-      reportType: selectedReportType || '',
+  // Helper to start new report creation
+  const handleStartCreateReport = () => {
+    setCreatingNewReport(true);
+    setSelectedReport(null);
+    setColumnsCollapsed(false);
+    setIsEditingName(true);
+    setEditingName('');
+    setSelectedReportType('');
+    setReportDefinition({
+      name: '',
+      reportType: '',
       owner: user?.email || '',
       public: false,
-      tableName: tableName,
-      columnList: newColumnList
-    };
-
-    try {
-      const newReport = await createReport({
-        name: newReportName.toLowerCase().replace(/\s+/g, '_'),
-        display_name: newReportName,
-        report_type: selectedReportType || '',
-        report_definition: newReportDefinition,
-        is_public: newReportDefinition.public
-      });
-      
-      setSelectedReport(newReport);
-      setSelectedReportType(selectedReportType || '');
-      setSelectedColumns(Object.keys(newColumnList));
-      setReportDefinition(newReportDefinition);
-      setIsCreateDialogOpen(false);
-      setNewReportName('');
-    } catch (error) {
-      console.error('Error creating report:', error);
-    }
+      tableName: '',
+      columnList: {}
+    });
+    setReportsCollapsed(true);
   };
 
   const updateReportName = async () => {
@@ -368,404 +353,179 @@ export function ReportsPage() {
     });
   };
 
+  // Save new report (when creating)
+  const handleSaveNewReport = async () => {
+    if (!editingName.trim() || !reportDefinition) return;
+    const tableName = getReportTableName(selectedReportType);
+    const newColumnList: Record<string, ReportColumn> = {};
+    if (selectedReportType) {
+      const reportMeta = theUIModel.getReport(selectedReportType);
+      if (reportMeta && reportMeta.propertyDefs) {
+        reportMeta.propertyDefs.filter(prop => prop.isVisible).forEach((prop, idx) => {
+          newColumnList[prop.propertyName] = {
+            isActive: true,
+            isSortColumn: false,
+            filter: {},
+            ordinal: idx,
+            displayName: getReportColumnDisplayName(selectedReportType, prop.propertyName) || prop.propertyName
+          };
+        });
+      }
+    }
+    const newReportDefinition: ReportDefinition = {
+      ...reportDefinition,
+      name: editingName,
+      reportType: selectedReportType || '',
+      owner: user?.email || '',
+      public: reportDefinition.public,
+      tableName: tableName,
+      columnList: newColumnList
+    };
+    try {
+      const newReport = await createReport({
+        name: editingName.toLowerCase().replace(/\s+/g, '_'),
+        display_name: editingName,
+        report_type: selectedReportType || '',
+        report_definition: newReportDefinition,
+        is_public: newReportDefinition.public
+      });
+      setSelectedReport(newReport);
+      setSelectedReportType(selectedReportType || '');
+      setSelectedColumns(Object.keys(newColumnList));
+      setReportDefinition(newReportDefinition);
+      setIsEditingName(false);
+      setEditingName('');
+      setCreatingNewReport(false);
+    } catch (error) {
+      console.error('Error creating report:', error);
+    }
+  };
+
   return (
-    <div className="flex h-full bg-gray-50">
-      {/* Reports List Column */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Reports</h2>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Report</DialogTitle>
-                <DialogDescription>
-                  Enter a name for your new report. You can configure the report type and columns after creation.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="report-name" className="text-sm font-medium text-gray-700">
-                    Report Name
-                  </label>
-                  <Input
-                    id="report-name"
-                    value={newReportName}
-                    onChange={(e) => setNewReportName(e.target.value)}
-                    placeholder="Enter report name"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newReportName.trim()) {
-                        handleCreateReport();
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsCreateDialogOpen(false);
-                      setNewReportName('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateReport}
-                    disabled={!newReportName.trim()}
-                  >
-                    Create Report
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto min-h-0 p-4">
-          {isLoading ? (
-            <div className="text-center text-gray-500">Loading reports...</div>
-          ) : (
-            <>
-              {/* User's Reports */}
-              {userReports.length > 0 && (
-                <>
-                  <div className="space-y-2">
-                    {userReports.map((report) => (
-                      <div
-                        key={report.uid}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors flex items-center ${selectedReport?.uid === report.uid ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 hover:bg-gray-100'}`}
-                        onClick={() => handleReportSelect(report)}
-                      >
-                        <div className="flex items-center space-x-2 flex-1 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
-                            {getUserInitials(user?.email || '')}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-gray-900 truncate">
-                              {report.display_name}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {report.report_type || 'No type selected'}
-                            </div>
-                          </div>
-                        </div>
-                        {isOwner(report) && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="ml-2 text-red-600 hover:bg-red-50"
-                            onClick={e => {
-                              e.stopPropagation();
-                              setReportToDelete(report);
-                              setDeleteDialogOpen(true);
-                            }}
-                            title="Delete report"
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {publicReports.length > 0 && (
-                    <Separator className="my-4" />
-                  )}
-                </>
-              )}
-
-              {/* Public Reports */}
-              {publicReports.length > 0 && (
-                <div className="space-y-2">
-                  {publicReports.map((report) => (
-                    <div
-                      key={report.uid}
-                      className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                        selectedReport?.uid === report.uid
-                          ? 'bg-blue-50 border border-blue-200'
-                          : 'bg-gray-50 hover:bg-gray-100'
-                      }`}
-                      onClick={() => handleReportSelect(report)}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm">
-                          <Globe className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-gray-900 truncate">
-                            {report.display_name}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {report.report_type || 'No type selected'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {reports.length === 0 && (
-                <div className="text-center text-gray-500 py-8">
-                  No reports found. Create your first report!
-                </div>
-              )}
-            </>
-          )}
-        </div>
+    <div className="flex flex-1 min-h-0 gap-4 p-4 bg-gray-50">
+      {/* Report List Card */}
+      <div className={`${reportsCollapsed ? 'w-12' : (selectedReport ? 'w-1/8' : 'w-1/4')} bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-all duration-200`}>
+        <ReportList
+          isLoading={isLoading}
+          userReports={reports.filter(r => isOwner(r))}
+          publicReports={reports.filter(r => !isOwner(r))}
+          selectedReport={selectedReport}
+          user={user}
+          getUserInitials={getUserInitials}
+          isOwner={isOwner}
+          handleReportSelect={handleReportSelect}
+          setReportToDelete={setReportToDelete}
+          setDeleteDialogOpen={setDeleteDialogOpen}
+          reports={reports}
+          newReportName={newReportName}
+          setNewReportName={setNewReportName}
+          isCreateDialogOpen={isCreateDialogOpen}
+          setIsCreateDialogOpen={setIsCreateDialogOpen}
+          handleCreateReport={handleStartCreateReport}
+          collapsed={reportsCollapsed}
+          setCollapsed={setReportsCollapsed}
+        />
       </div>
 
-      {/* Column List Column */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          {selectedReport ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 flex-1">
-                {/* Public/Private Icon */}
-                {!isEditingName ? (
-                  <div className="flex items-center justify-center w-6 h-6">
-                    {reportDefinition?.public ? (
-                      <div className="group relative">
-                        <Globe className="h-4 w-4 text-green-600" />
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
-                          Public Report
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="group relative">
-                        <Lock className="h-4 w-4 text-gray-500" />
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
-                          Private Report
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center w-6 h-6">
-                    <input
-                      type="checkbox"
-                      checked={reportDefinition?.public || false}
-                      onChange={(e) => {
-                        setReportDefinition(prev => prev ? { ...prev, public: e.target.checked } : null);
-                      }}
-                      className="rounded border-gray-300"
-                      title={reportDefinition?.public ? "Make Private" : "Make Public"}
-                    />
-                  </div>
-                )}
-                
-                {isEditingName ? (
-                  <Input
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    className="h-8 text-sm flex-1"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && editingName.trim()) {
-                        updateReportName();
-                      } else if (e.key === 'Escape') {
-                        setIsEditingName(false);
-                        setEditingName(selectedReport.display_name);
-                      }
-                    }}
-                  />
-                ) : (
-                  <h3 className="text-lg font-semibold text-gray-900 flex-1">
-                    {selectedReport.display_name}
-                  </h3>
-                )}
-                {selectedReport && isOwner(selectedReport) && (
-                  <div className="flex items-center space-x-1">
-                    {isEditingName ? (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={updateReportName}
-                          className="h-6 w-6 p-0 text-green-600"
-                          disabled={!editingName.trim()}
-                        >
-                          <Check className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setIsEditingName(false);
-                            setEditingName(selectedReport.display_name);
-                            // Restore original public state when canceling
-                            if (originalReportDefinition) {
-                              setReportDefinition(prev => prev ? { ...prev, public: originalReportDefinition.public } : null);
-                            }
-                          }}
-                          className="h-6 w-6 p-0 text-red-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setIsEditingName(true);
-                          setEditingName(selectedReport.display_name);
-                        }}
-                        className="h-6 w-6 p-0"
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <h3 className="text-lg font-semibold text-gray-900">Columns</h3>
-          )}
-        </div>
-
-        {/* Report type dropdown and edit controls */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">
-                Report Type
-              </label>
-              <div className="flex items-center space-x-1">
-                {selectedReport && isOwner(selectedReport) && !isInConfigEditMode && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setIsInConfigEditMode(true)}
-                    className="h-6 w-6 p-0"
-                    title="Edit report type and columns"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                )}
-                {selectedReport && isOwner(selectedReport) && isInConfigEditMode && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={saveReportChanges}
-                      className="h-6 w-6 p-0 text-green-600"
-                      title="Save changes"
-                    >
-                      <Check className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={cancelReportChanges}
-                      className="h-6 w-6 p-0 text-red-600"
-                      title="Cancel changes"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-            <Select
-              value={selectedReportType}
-              onValueChange={handleReportTypeChange}
-              disabled={!isInConfigEditMode}
+      {/* Only show Column List and Report Data if a report is selected or creatingNewReport */}
+      {(selectedReport || creatingNewReport) && (
+        <>
+          {/* Column List Card */}
+          <div className={`${columnsCollapsed ? 'w-12' : 'w-1/5'} bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-all duration-200`}>
+            <ColumnList
+              reportDefinition={reportDefinition}
+              selectedReportType={selectedReportType}
+              isInConfigEditMode={isInConfigEditMode}
+              renderColumnList={renderColumnList}
+              selectedReport={selectedReport}
+              isOwner={isOwner}
+              isEditingName={isEditingName}
+              editingName={editingName}
+              setIsEditingName={setIsEditingName}
+              setEditingName={setEditingName}
+              updateReportName={creatingNewReport ? handleSaveNewReport : updateReportName}
+              originalReportDefinition={originalReportDefinition}
+              setReportDefinition={setReportDefinition}
+              collapsed={columnsCollapsed}
+              setCollapsed={setColumnsCollapsed}
+              creatingNewReport={creatingNewReport}
+              setCreatingNewReport={setCreatingNewReport}
             >
-              <SelectTrigger disabled={!isInConfigEditMode}>
-                <SelectValue placeholder="Select report type" />
-              </SelectTrigger>
-              <SelectContent>
-                {reportTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {theUIModel.getReportDisplayName(type)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Scrollable column list */}
-        <div className="flex-1 overflow-y-auto min-h-0 p-4">
-          {renderColumnList()}
-          {!selectedReportType && selectedReport && (
-            <div className="text-center text-gray-500 py-4">
-              <p className="text-sm">Select a report type to configure columns</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Report Data Column */}
-      <div className="flex-1 bg-white">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Report Data</h3>
-          {selectedReport && (
-            <div className="flex items-center space-x-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setIsJsonViewerOpen(true)}
-                className="flex items-center space-x-2"
-                title="View Report Configuration"
-              >
-                <Settings className="h-4 w-4" />
-                <span>View Config</span>
-              </Button>
-            </div>
-          )}
-        </div>
-        
-        <div className="p-4">
-          {selectedReport && reportDefinition ? (
-            <div className="space-y-4">
-              <div className="text-center text-gray-500 py-8">
-                <p className="text-lg">Coming Soon</p>
-                <p className="text-sm mt-2">Report data will be displayed here</p>
-              </div>
-              
-              {/* JSON Viewer Dialog */}
-              <Dialog open={isJsonViewerOpen} onOpenChange={setIsJsonViewerOpen}>
-                <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-                  <DialogHeader>
-                    <DialogTitle>Report Configuration JSON</DialogTitle>
-                    <DialogDescription>
-                      View and copy the JSON configuration for this report.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="overflow-auto max-h-[60vh]">
-                    {reportDefinition ? (
-                      <JsonViewer
-                        data={reportDefinition}
-                        title="Report Definition"
-                      />
-                    ) : (
-                      <div className="text-center text-gray-500 py-8">
-                        <p>No configuration data available for this report.</p>
-                        <p className="text-sm mt-2">Try selecting a report type and configuring columns first.</p>
-                      </div>
-                    )}
+              {/* Report type dropdown and edit controls, as before */}
+              <div className="p-4 border-b border-gray-200">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Report Type
+                    </label>
+                    <div className="flex items-center space-x-1">
+                      {selectedReport && isOwner(selectedReport) && !isInConfigEditMode && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setIsInConfigEditMode(true)}
+                          className="h-6 w-6 p-0"
+                          title="Edit report type and columns"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      )}
+                      {selectedReport && isOwner(selectedReport) && isInConfigEditMode && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={saveReportChanges}
+                            className="h-6 w-6 p-0 text-green-600"
+                            title="Save changes"
+                          >
+                            <Check className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={cancelReportChanges}
+                            className="h-6 w-6 p-0 text-red-600"
+                            title="Cancel changes"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              <p className="text-lg">Select a report to view data</p>
-              <p className="text-sm mt-2">Choose a report from the list to see its configuration and data</p>
-            </div>
-          )}
-        </div>
-      </div>
+                  <Select
+                    value={selectedReportType}
+                    onValueChange={handleReportTypeChange}
+                    disabled={!isInConfigEditMode}
+                  >
+                    <SelectTrigger disabled={!isInConfigEditMode}>
+                      <SelectValue placeholder="Select report type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {reportTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {theUIModel.getReportDisplayName(type)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </ColumnList>
+          </div>
+
+          {/* Report Data Card */}
+          <div className="flex-1 bg-white rounded-xl shadow-md overflow-hidden flex flex-col">
+            <ReportBody
+              selectedReport={selectedReport}
+              reportDefinition={reportDefinition}
+              isJsonViewerOpen={isJsonViewerOpen}
+              setIsJsonViewerOpen={setIsJsonViewerOpen}
+            />
+          </div>
+        </>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
