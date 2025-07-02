@@ -155,9 +155,6 @@ export interface UIAggregateMeta {
   
   /** Property schema definitions for this aggregate (defines the "columns" of the collection) */
   propertyDefs?: UIPropertyMeta[];
-  
-  // /** Display order when multiple aggregates are present (lower numbers appear first) */
-  // ordinal: number;
 
   /** Whether this aggregate should be displayed as a table (true) or as properties (false) */
   isTable: boolean;
@@ -196,6 +193,28 @@ export interface UIAggregate extends UIAggregateMeta {
    * but different propertyValues.
    */
   rows?: UIProperty[][];
+}
+
+export interface UIReportMeta {
+  /** Type identifier for this report (used for API routing and type checking) */
+  reportType: string; 
+ 
+  /** Human-readable display name (shown in report headers, navigation, etc.) */
+  displayName: string;
+ 
+  /** Property schema definitions for this aggregate (defines the "columns" of the collection) */
+  propertyDefs?: UIPropertyMeta[];
+
+}
+
+export interface UIReport extends UIReportMeta {
+  /** Entity identifier that this aggregate belongs to (optional for schema definitions) */
+  entityUid?: string; 
+
+  displayName: string;
+
+  reportDef: string;
+  
 }
 
 // ============================================================================
@@ -339,13 +358,16 @@ export interface UIEntity extends UIEntityMeta {
 export class UIModel {
   private entities: Record<string, UIEntityMeta>;
   private aggregates: Record<string, UIAggregateMeta>;
+  private reports: Record<string, UIReportMeta>;
 
   constructor(
     entities: Record<string, UIEntityMeta>,
-    aggregates: Record<string, UIAggregateMeta>
+    aggregates: Record<string, UIAggregateMeta>,
+    reports: Record<string, UIReportMeta> = {}
   ) {
     this.entities = entities;
     this.aggregates = aggregates;
+    this.reports = reports;
   }
 
   // ============================================================================
@@ -423,8 +445,6 @@ export class UIModel {
     const properties = this.getEntityProperties(entityName);
     return properties.filter(prop => prop.isVisible && prop.isEditable && !prop.isId);
   }
-
-
 
   /**
    * Get ID properties for an entity
@@ -580,42 +600,147 @@ export class UIModel {
   }
 
   // ============================================================================
+  // REPORT OPERATIONS
+  // ============================================================================
+
+  /**
+   * Get a report definition by type
+   */
+  getReport(reportType: string): UIReportMeta | undefined {
+    return this.reports[reportType];
+  }
+
+  /**
+   * Get all report types
+   */
+  getReportTypes(): string[] {
+    return Object.keys(this.reports);
+  }
+
+  /**
+   * Get all reports
+   */
+  getAllReports(): Record<string, UIReportMeta> {
+    return { ...this.reports };
+  }
+
+  /**
+   * Get report display name
+   */
+  getReportDisplayName(reportType: string): string {
+    const report = this.getReport(reportType);
+    return report?.displayName || reportType;
+  }
+
+  /**
+   * Check if a report exists
+   */
+  hasReport(reportType: string): boolean {
+    return reportType in this.reports;
+  }
+
+  // ============================================================================
+  // REPORT PROPERTY OPERATIONS
+  // ============================================================================
+
+  /**
+   * Get all property definitions for a report
+   */
+  getReportProperties(reportType: string): UIProperty[] {
+    const report = this.getReport(reportType);
+    return report?.propertyDefs || [];
+  }
+
+  /**
+   * Get visible properties for a report
+   */
+  getReportVisibleProperties(reportType: string): UIProperty[] {
+    const properties = this.getReportProperties(reportType);
+    return properties.filter(prop => prop.isVisible);
+  }
+
+  /**
+   * Get editable properties for a report
+   */
+  getReportEditableProperties(reportType: string): UIProperty[] {
+    const properties = this.getReportProperties(reportType);
+    return properties.filter(prop => prop.isVisible && prop.isEditable && !prop.isId);
+  }
+
+  /**
+   * Get ID properties for a report
+   */
+  getReportIdProperties(reportType: string): UIProperty[] {
+    const properties = this.getReportProperties(reportType);
+    return properties.filter(prop => prop.isId);
+  }
+
+  /**
+   * Get required properties for a report
+   */
+  getReportRequiredProperties(reportType: string): UIProperty[] {
+    const properties = this.getReportProperties(reportType);
+    return properties.filter(prop => prop.isRequired);
+  }
+
+  /**
+   * Find a specific property by name in a report
+   */
+  findReportProperty(reportType: string, propertyName: string): UIProperty | undefined {
+    const properties = this.getReportProperties(reportType);
+    return properties.find(prop => prop.propertyName === propertyName);
+  }
+
+  // ============================================================================
   // UTILITY OPERATIONS
   // ============================================================================
 
   /**
-   * Get a summary of the model (useful for debugging/inspection)
+   * Get a summary of the model structure
    */
   getModelSummary(): {
     entityCount: number;
     aggregateCount: number;
+    reportCount: number;
     entities: string[];
     aggregates: string[];
+    reports: string[];
   } {
     return {
       entityCount: Object.keys(this.entities).length,
       aggregateCount: Object.keys(this.aggregates).length,
+      reportCount: Object.keys(this.reports).length,
       entities: Object.keys(this.entities),
-      aggregates: Object.keys(this.aggregates)
+      aggregates: Object.keys(this.aggregates),
+      reports: Object.keys(this.reports)
     };
   }
 
   /**
-   * Validate that all entity aggregate references point to valid aggregates
+   * Validate the model structure
    */
   validateModel(): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    // Validate all entities
-    Object.entries(this.entities).forEach(([entityName, entity]) => {
-      // Check that all referenced aggregates exist
-      (entity.aggregateRefs || []).forEach(ref => {
-        if (!this.hasAggregate(ref.aggregateType)) {
-          errors.push(`Entity "${entityName}" references non-existent aggregate type "${ref.aggregateType}"`);
-        }
-      });
+    // Validate entities
+    Object.entries(this.entities).forEach(([name, entity]) => {
+      if (!entity.displayName) {
+        errors.push(`Entity ${name} missing displayName`);
+      }
+    });
 
-      // ... rest of validation code ...
+    // Validate aggregates
+    Object.entries(this.aggregates).forEach(([name, aggregate]) => {
+      if (!aggregate.displayName) {
+        errors.push(`Aggregate ${name} missing displayName`);
+      }
+    });
+
+    // Validate reports
+    Object.entries(this.reports).forEach(([name, report]) => {
+      if (!report.reportType) {
+        errors.push(`Report ${name} missing reportType`);
+      }
     });
 
     return {

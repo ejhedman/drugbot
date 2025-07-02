@@ -18,7 +18,7 @@ export function Header({ onLogin, onLogout }: HeaderProps) {
   const avatarUrl = user?.user_metadata?.avatar_url;
   
   return (
-    <header className="bg-slate-200 px-6 flex justify-between items-center border-b border-slate-200 shadow-sm" style={{ minHeight: '50px' }}>
+    <header className="bg-slate-200 px-6 flex justify-between items-center border-b border-slate-200 shadow-sm" style={{ minHeight: '70px' }}>
       <div className="flex items-center">
         <div className="h-12 rounded-xl overflow-hidden">
           <Image 

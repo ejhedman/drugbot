@@ -1,7 +1,7 @@
 // Drug Database Schema - Refined from DDL
 // This file defines the complete metadata for the drug database
 
-import { UIAggregateMeta, UIEntityMeta, UIModel } from '../model_defs/UIModel';
+import { UIAggregateMeta, UIEntityMeta, UIModel, UIReportMeta } from '../model_defs/UIModel';
 
 // ============================================================================
 // SUB-COLLECTION SCHEMAS (for tabs/aggregates)
@@ -892,6 +892,376 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
   }
 };
 
+export const REPORT_VIEWS: Record<string, UIReportMeta> = {
+
+
+  GenericDrugsWideView: {
+    reportType: 'GenericDrugsWideView',
+    displayName: 'Complete Drug Information Report',
+
+    propertyDefs: [
+      // Generic Drugs table (base table)
+      {
+        propertyName: 'generic_uid',
+        ordinal: 1,
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isId: true,
+        displayName: 'Generic UID',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'generic_key',
+        ordinal: 2,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Generic Key',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'generic_name',
+        ordinal: 3,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Generic Name',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'biologic',
+        ordinal: 4,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Biologic',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'mech_of_action',
+        ordinal: 5,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Mechanism of Action',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'class_or_type',
+        ordinal: 6,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Class/Type',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'target',
+        ordinal: 7,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Target',
+        controlType: 'text'
+      },
+      
+      // Manufactured Drugs table
+      {
+        propertyName: 'manu_drug_uid',
+        ordinal: 8,
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isId: false,
+        displayName: 'Manufactured Drug UID',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'manu_drug_key',
+        ordinal: 9,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Manufactured Drug Key',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'drug_name',
+        ordinal: 10,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Drug Name',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'manufacturer',
+        ordinal: 11,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Manufacturer',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'brandkey',
+        ordinal: 12,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Brand Key',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'biosimilar_suffix',
+        ordinal: 13,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Biosimilar Suffix',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'biosimilar',
+        ordinal: 14,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Biosimilar',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'biosimilar_originator',
+        ordinal: 15,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Biosimilar Originator',
+        controlType: 'text'
+      },
+      
+      // Generic Routes table
+      {
+        propertyName: 'route_uid',
+        ordinal: 16,
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isId: false,
+        displayName: 'Route UID',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'route_key',
+        ordinal: 17,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Route Key',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'route_type',
+        ordinal: 18,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Route Type',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'load_measure',
+        ordinal: 19,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Load Measure',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'load_dose',
+        ordinal: 20,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Load Dose',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'load_reg',
+        ordinal: 21,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Load Regimen',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'maintain_dose',
+        ordinal: 22,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Maintain Dose',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'maintain_measure',
+        ordinal: 23,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Maintain Measure',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'maintain_reg',
+        ordinal: 24,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Maintain Regimen',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'montherapy',
+        ordinal: 25,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Monotherapy',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'half_life',
+        ordinal: 26,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Half Life',
+        controlType: 'text'
+      },
+      
+      // Generic Approvals table
+      {
+        propertyName: 'approval_uid',
+        ordinal: 27,
+        isEditable: false,
+        isVisible: false,
+        isRequired: false,
+        isId: false,
+        displayName: 'Approval UID',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'approval_route_type',
+        ordinal: 28,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Approval Route Type',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'country',
+        ordinal: 29,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Country',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'indication',
+        ordinal: 30,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Indication',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'populations',
+        ordinal: 31,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Populations',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'approval_date',
+        ordinal: 32,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Approval Date',
+        controlType: 'date'
+      },
+      {
+        propertyName: 'discon_date',
+        ordinal: 33,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Discontinuation Date',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'box_warning',
+        ordinal: 34,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Box Warning',
+        controlType: 'text'
+      },
+      {
+        propertyName: 'box_warning_date',
+        ordinal: 35,
+        isEditable: false,
+        isVisible: true,
+        isRequired: false,
+        isId: false,
+        displayName: 'Box Warning Date',
+        controlType: 'text'
+      }
+    ],
+  }
+
+};
+
 // ============================================================================
 // UI MODEL WRAPPER INSTANCE
 // ============================================================================
@@ -911,7 +1281,17 @@ export const ENTITIES: Record<string, UIEntityMeta> = {
  * - theUIModel.getAggregateEditableProperties('GenericRoute')
  * - theUIModel.findEntityProperty('GenericDrugs', 'generic_name')
  */
-export const theUIModel = new UIModel(ENTITIES, ENTITY_AGGREGATES);
+export const theUIModel = new UIModel(ENTITIES, ENTITY_AGGREGATES, REPORT_VIEWS);
+
+/**
+ * Get the display name for a column in a report type
+ */
+export function getReportColumnDisplayName(reportType: string, propertyName: string): string | undefined {
+  const report = REPORT_VIEWS[reportType];
+  if (!report || !report.propertyDefs) return undefined;
+  const prop = report.propertyDefs.find(p => p.propertyName === propertyName);
+  return prop?.displayName;
+}
 
 // Export as default for convenience
 export default theUIModel;

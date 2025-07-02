@@ -37,7 +37,7 @@
  * ```
  */
 
-import { ModelMap, EntityMapping, AggregateMapping, PropertyMapping } from '../model_defs/ModelMap';
+import { ModelMap, EntityMapping, AggregateMapping, PropertyMapping, ReportMapping } from '../model_defs/ModelMap';
 
 // ============================================================================
 // ENTITY MAPPINGS
@@ -94,7 +94,7 @@ const genericDrugsMapping: EntityMapping = {
     'GenericRoute', 
     'GenericApproval',
     'GenericManuDrugs',
-    'GenericDrugsWideView'
+    // 'GenericDrugsWideView'
   ]
 };
 
@@ -356,10 +356,208 @@ const genericManuDrugsMapping: AggregateMapping = {
  * Generic Drugs Wide View Aggregate Mapping
  * Maps the GenericDrugsWideView UI aggregate to the generic_drugs_wide_view database view
  */
-const genericDrugsWideViewMapping: AggregateMapping = {
-  aggregateType: 'GenericDrugsWideView',
+// const genericDrugsWideViewMapping: ReportMapping = {
+//   reportType: 'GenericDrugsWideView',
+//   tableName: 'generic_drugs_wide_view',
+//   keyField: 'generic_uid',
+//   propertyMappings: [
+//     // Generic Drugs table (base table)
+//     {
+//       propertyName: 'generic_uid',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'generic_uid'
+//     },
+//     {
+//       propertyName: 'generic_key',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'generic_key'
+//     },
+//     {
+//       propertyName: 'generic_name',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'generic_name'
+//     },
+//     {
+//       propertyName: 'biologic',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'biologic'
+//     },
+//     {
+//       propertyName: 'mech_of_action',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'mech_of_action'
+//     },
+//     {
+//       propertyName: 'class_or_type',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'class_or_type'
+//     },
+//     {
+//       propertyName: 'target',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'target'
+//     },
+    
+//     // Manufactured Drugs table
+//     {
+//       propertyName: 'manu_drug_uid',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'manu_drug_uid'
+//     },
+//     {
+//       propertyName: 'manu_drug_key',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'manu_drug_key'
+//     },
+//     {
+//       propertyName: 'drug_name',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'drug_name'
+//     },
+//     {
+//       propertyName: 'manufacturer',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'manufacturer'
+//     },
+//     {
+//       propertyName: 'brandkey',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'brandkey'
+//     },
+//     {
+//       propertyName: 'biosimilar_suffix',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'biosimilar_suffix'
+//     },
+//     {
+//       propertyName: 'biosimilar',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'biosimilar'
+//     },
+//     {
+//       propertyName: 'biosimilar_originator',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'biosimilar_originator'
+//     },
+    
+//     // Generic Routes table
+//     {
+//       propertyName: 'route_uid',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'route_uid'
+//     },
+//     {
+//       propertyName: 'route_key',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'route_key'
+//     },
+//     {
+//       propertyName: 'route_type',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'route_type'
+//     },
+//     {
+//       propertyName: 'load_measure',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'load_measure'
+//     },
+//     {
+//       propertyName: 'load_dose',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'load_dose'
+//     },
+//     {
+//       propertyName: 'load_reg',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'load_reg'
+//     },
+//     {
+//       propertyName: 'maintain_dose',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'maintain_dose'
+//     },
+//     {
+//       propertyName: 'maintain_measure',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'maintain_measure'
+//     },
+//     {
+//       propertyName: 'maintain_reg',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'maintain_reg'
+//     },
+//     {
+//       propertyName: 'montherapy',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'montherapy'
+//     },
+//     {
+//       propertyName: 'half_life',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'half_life'
+//     },
+    
+//     // Generic Approvals table
+//     {
+//       propertyName: 'approval_uid',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'approval_uid'
+//     },
+//     {
+//       propertyName: 'approval_route_type',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'approval_route_type'
+//     },
+//     {
+//       propertyName: 'country',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'country'
+//     },
+//     {
+//       propertyName: 'indication',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'indication'
+//     },
+//     {
+//       propertyName: 'populations',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'populations'
+//     },
+//     {
+//       propertyName: 'approval_date',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'approval_date'
+//     },
+//     {
+//       propertyName: 'discon_date',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'discon_date'
+//     },
+//     {
+//       propertyName: 'box_warning',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'box_warning'
+//     },
+//     {
+//       propertyName: 'box_warning_date',
+//       tableName: 'generic_drugs_wide_view',
+//       fieldName: 'box_warning_date'
+//     }
+//   ]
+// };
+
+// ============================================================================
+// REPORT MAPPINGS
+// ============================================================================
+
+/**
+ * Generic Drugs Wide View Report Mapping
+ * Maps the GenericDrugsWideView UI report to the generic_drugs_wide_view database view
+ */
+const genericDrugsWideViewReportMapping: ReportMapping = {
+  reportType: 'GenericDrugsWideView',
   tableName: 'generic_drugs_wide_view',
-  parentKeyField: 'generic_uid',
+  keyField: 'generic_uid',
   propertyMappings: [
     // Generic Drugs table (base table)
     {
@@ -571,7 +769,11 @@ export const drugBotModelMap: ModelMap = {
     GenericRoute: genericRoutesMapping,
     GenericApproval: genericApprovalsMapping,
     GenericManuDrugs: genericManuDrugsMapping,
-    GenericDrugsWideView: genericDrugsWideViewMapping
+    // GenericDrugsWideView: genericDrugsWideViewMapping
+  },
+  
+  reportMappings: {
+    GenericDrugsWideView: genericDrugsWideViewReportMapping
   }
 };
 
@@ -594,6 +796,13 @@ export function getAggregateMapping(aggregateType: string): AggregateMapping | u
 }
 
 /**
+ * Get report mapping by report type
+ */
+export function getReportMapping(reportType: string): ReportMapping | undefined {
+  return drugBotModelMap.reportMappings[reportType];
+}
+
+/**
  * Get all property mappings for a specific entity
  */
 export function getEntityPropertyMappings(entityType: string): PropertyMapping[] {
@@ -607,6 +816,14 @@ export function getEntityPropertyMappings(entityType: string): PropertyMapping[]
 export function getAggregatePropertyMappings(aggregateType: string): PropertyMapping[] {
   const aggregateMapping = getAggregateMapping(aggregateType);
   return aggregateMapping ? aggregateMapping.propertyMappings : [];
+}
+
+/**
+ * Get all property mappings for a specific report
+ */
+export function getReportPropertyMappings(reportType: string): PropertyMapping[] {
+  const reportMapping = getReportMapping(reportType);
+  return reportMapping ? reportMapping.propertyMappings : [];
 }
 
 /**
@@ -630,6 +847,16 @@ export function findAggregatePropertyMapping(aggregateType: string, propertyName
 }
 
 /**
+ * Find property mapping for a specific report property
+ */
+export function findReportPropertyMapping(reportType: string, propertyName: string): PropertyMapping | undefined {
+  const reportMapping = getReportMapping(reportType);
+  if (!reportMapping) return undefined;
+  
+  return reportMapping.propertyMappings.find(mapping => mapping.propertyName === propertyName);
+}
+
+/**
  * Get the database table name for an entity
  */
 export function getEntityTableName(entityType: string): string | undefined {
@@ -643,6 +870,14 @@ export function getEntityTableName(entityType: string): string | undefined {
 export function getAggregateTableName(aggregateType: string): string | undefined {
   const aggregateMapping = getAggregateMapping(aggregateType);
   return aggregateMapping?.tableName;
+}
+
+/**
+ * Get the database table name for a report
+ */
+export function getReportTableName(reportType: string): string | undefined {
+  const reportMapping = getReportMapping(reportType);
+  return reportMapping?.tableName;
 }
 
 /**

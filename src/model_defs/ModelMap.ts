@@ -115,6 +115,20 @@ export interface AggregateMapping {
   propertyMappings: PropertyMapping[];
 }
 
+export interface ReportMapping {
+  /** UI aggregate type identifier (matches UIAggregate.aggregateType) */
+  reportType: string;
+
+  /** Database table name for this aggregate */
+  tableName: string;
+  
+  /** Database field that links back to the parent entity (foreign key) */
+  keyField: string;
+  
+  /** Property mappings for all properties belonging to this aggregate */
+  propertyMappings: PropertyMapping[];
+}
+
 /**
  * ModelMap - Complete mapping configuration
  * 
@@ -140,6 +154,9 @@ export interface ModelMap {
   
   /** Aggregate mappings keyed by aggregate type (e.g., 'GenericRoute') */
   aggregateMappings: { [aggregateType: string]: AggregateMapping };
+  
+  /** Aggregate mappings keyed by aggregate type (e.g., 'GenericRoute') */
+  reportMappings: { [reportType: string]: ReportMapping };
 }
 
 // ============================================================================
@@ -222,6 +239,15 @@ export function isAggregateMapping(obj: any): obj is AggregateMapping {
     obj.propertyMappings.every((mapping: any) => isPropertyMapping(mapping));
 }
 
+export function isReportMapping(obj: any): obj is ReportMapping {
+  return obj && 
+    typeof obj.reportType === 'string' &&
+    typeof obj.tableName === 'string' &&
+    typeof obj.keyField === 'string' &&
+    Array.isArray(obj.propertyMappings) &&
+    obj.propertyMappings.every((mapping: any) => isPropertyMapping(mapping));
+}
+
 /**
  * Type guard to check if an object is a valid ModelMap
  */
@@ -231,8 +257,10 @@ export function isModelMap(obj: any): obj is ModelMap {
     typeof obj.version === 'string' &&
     obj.entityMappings &&
     obj.aggregateMappings &&
+    obj.reportMappings &&
     Object.values(obj.entityMappings).every((mapping: any) => isEntityMapping(mapping)) &&
-    Object.values(obj.aggregateMappings).every((mapping: any) => isAggregateMapping(mapping));
+    Object.values(obj.aggregateMappings).every((mapping: any) => isAggregateMapping(mapping)) &&
+    Object.values(obj.reportMappings).every((mapping: any) => isReportMapping(mapping));
 }
 
 // ============================================================================
@@ -251,6 +279,10 @@ export function findPropertyMapping(entityMapping: EntityMapping, propertyName: 
  */
 export function findAggregatePropertyMapping(aggregateMapping: AggregateMapping, propertyName: string): PropertyMapping | undefined {
   return aggregateMapping.propertyMappings.find(mapping => mapping.propertyName === propertyName);
+}
+
+export function findReportPropertyMapping(reportMapping: ReportMapping, propertyName: string): PropertyMapping | undefined {
+  return reportMapping.propertyMappings.find(mapping => mapping.propertyName === propertyName);
 }
 
 /**
