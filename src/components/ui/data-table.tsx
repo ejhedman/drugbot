@@ -124,7 +124,7 @@ export function DataTable({ data, columns, isLoading = false }: DataTableProps) 
       </div>
 
       {/* Table Container with Scrollbars */}
-      <div className="flex-1 min-h-0 max-h-[60vh] overflow-x-auto overflow-y-auto">
+      <div className="h-[70vh] overflow-x-auto overflow-y-auto">
         <table className="w-full min-w-max text-sm border-collapse">
           <thead>
             <tr className="bg-gray-50">
