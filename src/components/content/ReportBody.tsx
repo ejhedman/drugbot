@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { JsonViewer } from '@/components/ui/json-viewer';
-import { ReportDataTable } from './ReportDataTable';
 
 interface ReportBodyProps {
   selectedReport: Report | null;
@@ -41,7 +40,7 @@ export function ReportBody({
   }, [columns]);
 
   return (
-    <div className="flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl overflow-hidden">
+    <div className="flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl overflow-hidden border-6 border-red-700">
       {/* Card Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-100 rounded-t-xl min-h-[64px]">
         <h3 className="text-lg font-semibold text-gray-900">Report Data</h3>
@@ -61,9 +60,42 @@ export function ReportBody({
         )}
       </div>
       {/* Content */}
-      <div className="flex-1 min-h-0 p-4 overflow-hidden">
+      <div className="flex-1 min-h-0 p-4 border-6 border-blue-800">
         {selectedReport && reportDefinition && columns.length > 0 ? (
-          <ReportDataTable columns={columns} data={data} />
+          <div className="flex-1 min-h-0 border-l border-r border-b rounded-b-lg overflow-hidden">
+            <div className="h-full max-h-128 overflow-x-auto overflow-y-auto scrollbar-always-visible">
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 z-10">
+                  <tr>
+                    {columns.map((col) => (
+                      <th key={col.key} className="px-4 py-1 bg-slate-600 text-left font-semibold text-white border-r border-gray-400">
+                        {col.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.length === 0 ? (
+                    <tr>
+                      <td colSpan={columns.length} className="text-center py-8 text-gray-400">
+                        No data available.
+                      </td>
+                    </tr>
+                  ) : (
+                    data.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 border-b last:border-b-0">
+                        {columns.map((col) => (
+                          <td key={col.key} className="px-4 py-1 text-gray-900 text-left border-r border-gray-200">
+                            {row[col.key] ?? ''}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : (
           <div className="text-center text-gray-500 py-8">
             <p className="text-lg">Select a report to view data</p>

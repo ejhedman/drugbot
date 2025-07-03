@@ -7,7 +7,7 @@ import { theUIModel } from '@/model_instances/TheUIModel';
 import { useReports, type Report, type ReportDefinition, type ReportColumn } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { JsonViewer } from '@/components/ui/json-viewer';
@@ -25,6 +25,8 @@ import { ReportList } from '@/components/content/ReportList';
 import { ColumnList } from '@/components/content/ColumnList';
 import { ReportBody } from '@/components/content/ReportBody';
 
+type PanelState = 'RLISTE' | 'RLISTC' | 'RCROPEN' | 'RCCOPEN' | 'RCCCLOSED';
+
 export function ReportsPage() {
   const { user } = useAuth();
   const { reports, isLoading, createReport, updateReport, deleteReport } = useReports();
@@ -41,21 +43,20 @@ export function ReportsPage() {
   const [originalReportDefinition, setOriginalReportDefinition] = useState<ReportDefinition | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<Report | null>(null);
-  const [reportsCollapsed, setReportsCollapsed] = useState(false);
-  const [columnsCollapsed, setColumnsCollapsed] = useState(false);
+  const [panelState, setPanelState] = useState<PanelState>('RLISTE');
   const [creatingNewReport, setCreatingNewReport] = useState(false);
 
-  // Get available report types from the UI model
-  const reportTypes = theUIModel.getReportTypes();
+
 
   // Auto-collapse/expand Reports list based on report selection
   useEffect(() => {
+    if (creatingNewReport) return; // Do not override state when creating a new report
     if (selectedReport) {
-      setReportsCollapsed(true);
+      setPanelState('RCCOPEN');
     } else {
-      setReportsCollapsed(false);
+      setPanelState('RLISTE');
     }
-  }, [selectedReport]);
+  }, [selectedReport, creatingNewReport]);
 
   useEffect(() => {
     if (selectedReportType && (isInConfigEditMode || !selectedReport)) {
@@ -88,11 +89,55 @@ export function ReportsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedReportType, isInConfigEditMode]);
 
-  // Helper to start new report creation
+  // State machine transition helpers
+  const transition = (action: string) => {
+    setPanelState(prev => {
+      switch (prev) {
+        case 'RLISTE':
+          if (action === 'collapseReportList') return 'RLISTC';
+          if (action === 'clickNewReport') return 'RCCOPEN';
+          break;
+        case 'RLISTC':
+          if (action === 'expandReportList') return 'RLISTE';
+          break;
+        case 'RCROPEN':
+          if (action === 'collapseReportList') return 'RCCCLOSED';
+          if (action === 'expandColumnList') return 'RCCOPEN';
+          if (action === 'clickNewReport') return 'RCCOPEN';
+          break;
+        case 'RCCOPEN':
+          if (action === 'collapseColumnList') return 'RCCCLOSED';
+          if (action === 'expandReportList') return 'RCROPEN';
+          break;
+        case 'RCCCLOSED':
+          if (action === 'expandReportList') return 'RCROPEN';
+          if (action === 'expandColumnList') return 'RCCOPEN';
+          break;
+        default:
+          return prev;
+      }
+      return prev;
+    });
+  };
+
+  // Handlers for expand/collapse buttons
+  const handleSetReportsCollapsed = (collapsed: boolean) => {
+    if (panelState === 'RLISTE' && collapsed) transition('collapseReportList');
+    else if (panelState === 'RLISTC' && !collapsed) transition('expandReportList');
+    else if (panelState === 'RCROPEN' && collapsed) transition('collapseReportList');
+    else if (panelState === 'RCCOPEN' && !collapsed) transition('expandReportList');
+    else if (panelState === 'RCCCLOSED' && !collapsed) transition('expandReportList');
+  };
+  const handleSetColumnsCollapsed = (collapsed: boolean) => {
+    if (panelState === 'RCCOPEN' && collapsed) transition('collapseColumnList');
+    else if (panelState === 'RCROPEN' && !collapsed) transition('expandColumnList');
+    else if (panelState === 'RCCCLOSED' && !collapsed) transition('expandColumnList');
+  };
+
+  // New report button handler
   const handleStartCreateReport = () => {
     setCreatingNewReport(true);
     setSelectedReport(null);
-    setColumnsCollapsed(false);
     setIsEditingName(true);
     setEditingName('');
     setSelectedReportType('');
@@ -104,7 +149,9 @@ export function ReportsPage() {
       tableName: '',
       columnList: {}
     });
-    setReportsCollapsed(true);
+    // State machine transition
+    if (panelState === 'RLISTE' || panelState === 'RCROPEN') transition('clickNewReport');
+    else setPanelState('RCCOPEN'); // fallback
   };
 
   const updateReportName = async () => {
@@ -355,44 +402,23 @@ export function ReportsPage() {
 
   // Save new report (when creating)
   const handleSaveNewReport = async () => {
-    if (!editingName.trim() || !selectedReportType || !reportDefinition) return;
-    
-    const tableName = getReportTableName(selectedReportType);
-    const newColumnList: Record<string, ReportColumn> = {};
-    if (selectedReportType) {
-      const reportMeta = theUIModel.getReport(selectedReportType);
-      if (reportMeta && reportMeta.propertyDefs) {
-        reportMeta.propertyDefs.filter(prop => prop.isVisible).forEach((prop, idx) => {
-          newColumnList[prop.propertyName] = {
-            isActive: true,
-            isSortColumn: false,
-            filter: {},
-            ordinal: idx,
-            displayName: getReportColumnDisplayName(selectedReportType, prop.propertyName) || prop.propertyName
-          };
-        });
-      }
-    }
+    if (!editingName.trim() || !reportDefinition) return;
     const newReportDefinition: ReportDefinition = {
-      ...reportDefinition,
       name: editingName,
-      reportType: selectedReportType || '',
       owner: user?.email || '',
       public: reportDefinition.public,
-      tableName: tableName,
-      columnList: newColumnList
+      reportType: '',
+      columnList: {},
     };
     try {
       const newReport = await createReport({
         name: editingName.toLowerCase().replace(/\s+/g, '_'),
         display_name: editingName,
-        report_type: selectedReportType || '',
+        report_type: '',
         report_definition: newReportDefinition,
         is_public: newReportDefinition.public
       });
       setSelectedReport(newReport);
-      setSelectedReportType(selectedReportType || '');
-      setSelectedColumns(Object.keys(newColumnList));
       setReportDefinition(newReportDefinition);
       setIsEditingName(false);
       setEditingName('');
@@ -403,15 +429,55 @@ export function ReportsPage() {
   };
 
   const handleEditReport = (report: Report) => {
-    // Select the report and put it into edit mode
-    handleReportSelect(report);
+    // Set the report and put it into edit mode without calling handleReportSelect
+    setSelectedReport(report);
+    try {
+      const definition = report.report_definition as ReportDefinition;
+      // Ensure the public flag is set from the report if not in definition
+      if (definition && typeof definition.public === 'undefined') {
+        definition.public = report.is_public;
+      }
+      setReportDefinition(definition);
+      setOriginalReportDefinition(definition);
+      // Set report type and columns from the JSON
+      setSelectedReportType(definition?.reportType || '');
+      if (definition?.columnList) {
+        const activeColumns = Object.entries(definition.columnList)
+          .filter(([_, col]) => col.isActive)
+          .map(([colName]) => colName);
+        setSelectedColumns(activeColumns);
+      } else {
+        setSelectedColumns([]);
+      }
+    } catch (error) {
+      // fallback
+      setReportDefinition(null);
+      setOriginalReportDefinition(null);
+      setSelectedReportType('');
+      setSelectedColumns([]);
+    }
+    // Set edit mode to true for editing
     setIsInConfigEditMode(true);
   };
+
+  // Collapsed prop for children
+  const reportListCollapsed = panelState !== 'RLISTE' && panelState !== 'RCROPEN';
+  const columnListCollapsed = panelState !== 'RCCOPEN';
+
+  // Only one panel can be open at a time
+  const reportListWidth = reportListCollapsed ? 'w-12 flex-none' : 'w-1/8 flex-none';
+  let columnListWidth = columnListCollapsed ? 'w-12 flex-none' : 'w-1/8 flex-none';
+
+  // If both are open (shouldn't happen), force only one open
+  if (!reportListCollapsed && !columnListCollapsed) {
+    // Default to report list open, column list collapsed
+    columnListWidth = 'w-12 flex-none';
+  }
 
   return (
     <div className="flex flex-1 min-h-0 gap-4 p-4 bg-gray-50">
       {/* Report List Card */}
-      <div className={`${reportsCollapsed ? 'w-12' : (selectedReport ? 'w-1/8' : 'w-1/4')} bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-all duration-200`}>
+      <div className={`${reportListWidth} min-w-0 ${!reportListCollapsed ? 'min-w-[360px] flex-none' : ''} bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-all duration-200`}>
         <ReportList
           isLoading={isLoading}
           userReports={reports.filter(r => isOwner(r))}
@@ -429,17 +495,18 @@ export function ReportsPage() {
           isCreateDialogOpen={isCreateDialogOpen}
           setIsCreateDialogOpen={setIsCreateDialogOpen}
           handleCreateReport={handleStartCreateReport}
-          collapsed={reportsCollapsed}
-          setCollapsed={setReportsCollapsed}
+          collapsed={reportListCollapsed}
+          setCollapsed={handleSetReportsCollapsed}
           onEditReport={handleEditReport}
+          panelState={panelState}
         />
       </div>
 
-      {/* Only show Column List and Report Data if a report is selected or creatingNewReport */}
-      {(selectedReport || creatingNewReport) && (
+      {/* Only show one of Column List or Report List open at a time */}
+      {(selectedReport || creatingNewReport) && panelState !== 'RLISTE' && (
         <>
-          {/* Column List Card */}
-          <div className={`${columnsCollapsed ? 'w-12' : 'w-1/10'} bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-all duration-200`}>
+          {/* Column List Card: always render, but width and content depend on collapsed state */}
+          <div className={`${columnListWidth} min-w-0 ${!columnListCollapsed ? 'min-w-[360px] flex-none' : ''} bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-all duration-200`}>
             <ColumnList
               reportDefinition={reportDefinition}
               selectedReportType={selectedReportType}
@@ -454,84 +521,28 @@ export function ReportsPage() {
               updateReportName={creatingNewReport ? handleSaveNewReport : updateReportName}
               originalReportDefinition={originalReportDefinition}
               setReportDefinition={setReportDefinition}
-              collapsed={columnsCollapsed}
-              setCollapsed={setColumnsCollapsed}
+              collapsed={columnListCollapsed}
+              setCollapsed={handleSetColumnsCollapsed}
               creatingNewReport={creatingNewReport}
               setCreatingNewReport={setCreatingNewReport}
-            >
-              {/* Report type dropdown and edit controls, as before */}
-              <div className="p-4 border-b border-gray-200">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Report Type
-                    </label>
-                    <div className="flex items-center space-x-1">
-                      {selectedReport && isOwner(selectedReport) && !isInConfigEditMode && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setIsInConfigEditMode(true)}
-                          className="h-6 w-6 p-0"
-                          title="Edit report type and columns"
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                      )}
-                      {selectedReport && isOwner(selectedReport) && isInConfigEditMode && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={saveReportChanges}
-                            className="h-6 w-6 p-0 text-green-600"
-                            title="Save changes"
-                          >
-                            <Check className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={cancelReportChanges}
-                            className="h-6 w-6 p-0 text-red-600"
-                            title="Cancel changes"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <Select
-                    value={selectedReportType}
-                    onValueChange={handleReportTypeChange}
-                    disabled={!isInConfigEditMode}
-                  >
-                    <SelectTrigger disabled={!isInConfigEditMode}>
-                      <SelectValue placeholder="Select report type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {reportTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {theUIModel.getReportDisplayName(type)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </ColumnList>
-          </div>
-
-          {/* Report Data Card */}
-          <div className="flex-1 bg-white rounded-xl shadow-md overflow-hidden flex flex-col">
-            <ReportBody
-              selectedReport={selectedReport}
-              reportDefinition={reportDefinition}
-              isJsonViewerOpen={isJsonViewerOpen}
-              setIsJsonViewerOpen={setIsJsonViewerOpen}
+              onReportTypeChange={handleReportTypeChange}
+              onSaveChanges={saveReportChanges}
+              onCancelChanges={cancelReportChanges}
+              onEditConfig={() => setIsInConfigEditMode(true)}
             />
           </div>
+
+          {/* Report Data Card - hide when creating new report */}
+          {!creatingNewReport && (
+            <div className="flex-1 min-w-0 bg-white rounded-xl shadow-md overflow-hidden flex flex-col">
+              <ReportBody
+                selectedReport={selectedReport}
+                reportDefinition={reportDefinition}
+                isJsonViewerOpen={isJsonViewerOpen}
+                setIsJsonViewerOpen={setIsJsonViewerOpen}
+              />
+            </div>
+          )}
         </>
       )}
 

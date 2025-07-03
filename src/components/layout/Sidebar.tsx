@@ -204,7 +204,7 @@ export function Sidebar({ activeFeature, onFeatureChange }: SidebarProps) {
   };
 
   return (
-    <div className="w-16 bg-gray-100 border-r border-gray-200 flex flex-col items-center py-4 h-full">
+    <div className="w-16 flex-none bg-gray-100 border-r border-gray-200 flex flex-col items-center py-4 h-full">
       {/* Top section with feature navigation */}
       <div className="flex flex-col items-center space-y-4">
         {features.map((feature) => {
@@ -221,14 +221,8 @@ export function Sidebar({ activeFeature, onFeatureChange }: SidebarProps) {
                   ? "bg-blue-500 text-white shadow-md" 
                   : "bg-white text-gray-600 hover:bg-gray-200 hover:text-gray-800"
               )}
-              title={feature.label}
             >
               <Icon size={20} />
-              
-              {/* Tooltip */}
-              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
-                {feature.label}
-              </div>
             </button>
           );
         })}
@@ -248,12 +242,8 @@ export function Sidebar({ activeFeature, onFeatureChange }: SidebarProps) {
           <DialogTrigger asChild>
             <button
               className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200 group relative bg-white text-gray-600 hover:bg-gray-200 hover:text-gray-800"
-              title="Export Data"
             >
               <Download size={20} />
-              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
-                Export Data
-              </div>
             </button>
           </DialogTrigger>
           <DialogContent>
@@ -286,12 +276,8 @@ export function Sidebar({ activeFeature, onFeatureChange }: SidebarProps) {
           <DialogTrigger asChild>
             <button
               className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200 group relative bg-white text-gray-600 hover:bg-gray-200 hover:text-gray-800"
-              title="Upload File"
             >
               <Upload size={20} />
-              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
-                Upload File
-              </div>
             </button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
@@ -429,12 +415,8 @@ export function Sidebar({ activeFeature, onFeatureChange }: SidebarProps) {
         <button
           onClick={handleDocsClick}
           className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200 group relative bg-white text-gray-600 hover:bg-gray-200 hover:text-gray-800"
-          title="Documentation"
         >
           <HelpCircle size={20} />
-          <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
-            Help & Documentation
-          </div>
         </button>
 
       </div>

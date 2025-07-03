@@ -26,6 +26,7 @@ interface ReportListProps {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
   onEditReport?: (report: Report) => void;
+  panelState: string;
 }
 
 export function ReportList({
@@ -47,7 +48,8 @@ export function ReportList({
   handleCreateReport,
   collapsed,
   setCollapsed,
-  onEditReport
+  onEditReport,
+  panelState
 }: ReportListProps) {
   return (
     <div className="flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl">
