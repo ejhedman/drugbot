@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Report } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Settings, Download, Code } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { JsonViewer } from '@/components/ui/json-viewer';
 import { DataTable } from '@/components/ui/data-table';
@@ -12,6 +12,43 @@ interface ReportBodyProps {
   reportDefinition: any;
   isJsonViewerOpen: boolean;
   setIsJsonViewerOpen: (open: boolean) => void;
+}
+
+// Helper to convert array of objects to CSV
+function arrayToCSV(data: any[], columns: any[]): string {
+  if (!data.length) return '';
+  const header = columns.map((col: any) => '"' + (col.displayName || col.key) + '"').join(',');
+  const rows = data.map(row =>
+    columns.map((col: any) => {
+      const val = row[col.key];
+      if (val == null) return '';
+      return '"' + String(val).replace(/"/g, '""') + '"';
+    }).join(',')
+  );
+  return [header, ...rows].join('\n');
+}
+
+async function fetchAllReportData(reportDefinition: any, pageSize = 1000, onProgress?: (loaded: number, total: number) => void) {
+  let allRows: any[] = [];
+  let offset = 0;
+  let totalRows = 0;
+  let columns: any[] = [];
+  while (true) {
+    const response = await fetch('/api/reports/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reportDefinition, offset, limit: pageSize })
+    });
+    if (!response.ok) throw new Error('Failed to fetch report data');
+    const result = await response.json();
+    if (!columns.length) columns = result.columns;
+    if (!totalRows) totalRows = result.totalRows;
+    allRows = allRows.concat(result.data || []);
+    if (onProgress) onProgress(allRows.length, totalRows);
+    if (allRows.length >= totalRows || !result.data || result.data.length < pageSize) break;
+    offset += pageSize;
+  }
+  return { allRows, columns };
 }
 
 export function ReportBody({
@@ -36,6 +73,48 @@ export function ReportBody({
 
   // Use the report data hook (paged)
   const { data, columns, totalRows, isLoading, error, hasMore, fetchMore } = useReportData(reportDefinition, 200);
+
+  // Download dialog state
+  const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadTotal, setDownloadTotal] = useState(0);
+  const [downloadComplete, setDownloadComplete] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadCSV = async () => {
+    if (!reportDefinition) return;
+    setDownloadDialogOpen(true);
+    setDownloadProgress(0);
+    setDownloadTotal(0);
+    setDownloadComplete(false);
+    setDownloading(true);
+    try {
+      const { allRows, columns: allColumns } = await fetchAllReportData(
+        reportDefinition,
+        1000,
+        (loaded, total) => {
+          setDownloadProgress(loaded);
+          setDownloadTotal(total);
+        }
+      );
+      const csv = arrayToCSV(allRows, allColumns);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'report.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setDownloadComplete(true);
+    } catch (err) {
+      alert('Failed to download CSV: ' + (err instanceof Error ? err.message : err));
+      setDownloadDialogOpen(false);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   // Handle filter changes
   const handleFiltersChange = (newFilters: Record<string, string[]>) => {
@@ -71,17 +150,59 @@ export function ReportBody({
           <div className="flex items-center space-x-2">
             <Button
               size="sm"
+              variant="ghost"
+              onClick={handleDownloadCSV}
+              className="flex items-center rounded-xl"
+              title="Download CSV"
+              disabled={downloading}
+            >
+              <Download className="h-5 w-5" />
+            </Button>
+            <Button
+              size="sm"
               variant="outline"
               onClick={() => setIsJsonViewerOpen(true)}
-              className="flex items-center space-x-2 rounded-xl"
+              className="flex items-center rounded-xl"
               title="View Report Configuration"
             >
-              <Settings className="h-4 w-4" />
-              <span>View Config</span>
+              <Code className="h-5 w-5" />
             </Button>
           </div>
         )}
       </div>
+      {/* Download Progress Dialog */}
+      <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Download CSV</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            {!downloadComplete ? (
+              <>
+                <div className="mb-2 text-gray-700 text-sm">
+                  Downloading {downloadTotal > 0 ? `${downloadTotal}` : ''} rows
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                  <div
+                    className="bg-blue-500 h-3 rounded-full transition-all duration-200"
+                    style={{ width: downloadTotal > 0 ? `${Math.round((downloadProgress / downloadTotal) * 100)}%` : '0%' }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {downloadTotal > 0
+                    ? `${downloadProgress} of ${downloadTotal} rows loaded (${Math.round((downloadProgress / downloadTotal) * 100)}%)`
+                    : 'Starting download...'}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mb-2 text-green-700 text-sm">Extract is complete.</div>
+                <Button onClick={() => setDownloadDialogOpen(false)} className="mt-2">Close</Button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Content */}
       <div className="flex-1 min-h-0 p-4">
         {selectedReport && reportDefinition ? (

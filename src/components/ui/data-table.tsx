@@ -355,7 +355,7 @@ export function DataTable({
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className="border border-gray-200 border-b-4 border-b-gray-400 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 min-w-[120px] sticky top-[-1px] z-10"
+                  className="border border-gray-200 border-b-4 border-b-gray-400 bg-gray-200 px-2 py-2 text-left font-medium text-gray-700 min-w-[120px] sticky top-[-1px] z-10"
                   style={{ background: 'inherit' }}
                 >
                   <div className="flex items-center justify-between">
