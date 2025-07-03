@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Report } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
@@ -20,8 +20,47 @@ export function ReportBody({
   isJsonViewerOpen,
   setIsJsonViewerOpen
 }: ReportBodyProps) {
-  // Use the report data hook
-  const { data, isLoading, error } = useReportData(reportDefinition);
+  // Extract filters from report definition
+  const filters = useMemo(() => {
+    if (!reportDefinition?.columnList) return {};
+    const filterObj: Record<string, string[]> = {};
+    Object.entries(reportDefinition.columnList).forEach(([columnName, column]) => {
+      const col = column as any;
+      if (col.filter && Object.keys(col.filter).length > 0) {
+        // Convert filter object to array of selected values
+        filterObj[columnName] = Object.keys(col.filter).filter(key => col.filter[key]);
+      }
+    });
+    return filterObj;
+  }, [reportDefinition]);
+
+  // Use the report data hook (paged)
+  const { data, columns, totalRows, isLoading, error, hasMore, fetchMore } = useReportData(reportDefinition, 200);
+
+  // Handle filter changes
+  const handleFiltersChange = (newFilters: Record<string, string[]>) => {
+    if (!reportDefinition) return;
+    
+    // Update the report definition with new filters
+    const updatedColumnList = { ...reportDefinition.columnList };
+    Object.entries(updatedColumnList).forEach(([columnName, column]) => {
+      const col = column as any;
+      if (newFilters[columnName]) {
+        // Convert array of selected values to filter object
+        const filterObj: Record<string, boolean> = {};
+        newFilters[columnName].forEach(value => {
+          filterObj[value] = true;
+        });
+        col.filter = filterObj;
+      } else {
+        col.filter = {};
+      }
+    });
+    // Note: In a real implementation, you would want to save this back to the database
+    // For now, we'll just update the local state
+    console.log('Filters updated:', newFilters);
+    console.log('Updated report definition:', { ...reportDefinition, columnList: updatedColumnList });
+  };
 
   return (
     <div className="flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl overflow-hidden">
@@ -54,9 +93,15 @@ export function ReportBody({
               </div>
             ) : data ? (
               <DataTable
-                data={data.data}
-                columns={data.columns}
+                data={data}
+                columns={columns}
                 isLoading={isLoading}
+                reportDefinition={reportDefinition}
+                filters={filters}
+                onFiltersChange={handleFiltersChange}
+                hasMore={hasMore}
+                fetchMore={fetchMore}
+                totalRows={totalRows}
               />
             ) : (
               <div className="text-center text-gray-500 py-8">

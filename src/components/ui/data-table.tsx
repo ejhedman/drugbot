@@ -1,8 +1,17 @@
-import React, { useState, useMemo } from 'react';
-import { Filter, X } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Filter, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useColumnValues } from '@/hooks/useColumnValues';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export interface Column {
   key: string;
@@ -14,58 +23,267 @@ export interface DataTableProps {
   data: Record<string, any>[];
   columns: Column[];
   isLoading?: boolean;
+  reportDefinition?: any;
+  onFiltersChange?: (filters: Record<string, string[]>) => void;
+  filters?: Record<string, string[]>;
+  hasMore?: boolean;
+  fetchMore?: () => void;
+  totalRows?: number;
 }
 
-export function DataTable({ data, columns, isLoading = false }: DataTableProps) {
-  const [filters, setFilters] = useState<Record<string, string>>({});
-  const [filterDialogOpen, setFilterDialogOpen] = useState<string | null>(null);
+interface FilterDropdownProps {
+  column: Column;
+  selectedValues: string[];
+  onFilterChange: (values: string[]) => void;
+  onClear: () => void;
+  reportDefinition?: any;
+}
 
-  // Apply filters to data
-  const filteredData = useMemo(() => {
-    if (Object.keys(filters).length === 0) return data;
-    
-    return data.filter(row => {
-      return Object.entries(filters).every(([columnKey, filterValue]) => {
-        if (!filterValue.trim()) return true;
-        const cellValue = row[columnKey];
-        if (cellValue == null) return false;
-        return String(cellValue).toLowerCase().includes(filterValue.toLowerCase());
-      });
+function FilterDropdown({
+  column,
+  selectedValues,
+  onFilterChange,
+  onClear,
+  reportDefinition
+}: FilterDropdownProps) {
+  const { values: availableValues, isLoading: isLoadingValues } = useColumnValues(reportDefinition, column.key);
+  const [localSelectedValues, setLocalSelectedValues] = useState<string[]>(selectedValues);
+  const [dropdownWidth, setDropdownWidth] = useState<number>(240);
+  const [isOpen, setIsOpen] = useState(false);
+  const measureRef = useRef<HTMLDivElement>(null);
+
+  // Sync local state with prop changes
+  useEffect(() => {
+    setLocalSelectedValues(selectedValues);
+  }, [selectedValues, isOpen]);
+
+  // Dynamically measure the width needed for the longest value
+  useEffect(() => {
+    if (!availableValues.length) return;
+    const span = document.createElement('span');
+    span.style.visibility = 'hidden';
+    span.style.position = 'absolute';
+    span.style.whiteSpace = 'nowrap';
+    span.style.fontSize = '14px';
+    span.style.fontFamily = 'inherit';
+    span.style.fontWeight = '400';
+    span.style.padding = '8px';
+    span.style.left = '-9999px';
+    document.body.appendChild(span);
+    let maxWidth = 0;
+    availableValues.forEach((value) => {
+      span.textContent = value;
+      maxWidth = Math.max(maxWidth, span.offsetWidth);
     });
-  }, [data, filters]);
+    document.body.removeChild(span);
+    setDropdownWidth(Math.min(Math.max(240, maxWidth + 56), 400));
+  }, [availableValues]);
 
-  const handleFilterChange = (columnKey: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [columnKey]: value
-    }));
+  // Only apply filter when dropdown closes and selection has changed
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      // Compare arrays (order-insensitive)
+      const a = [...selectedValues].sort();
+      const b = [...localSelectedValues].sort();
+      const changed = a.length !== b.length || a.some((v, i) => v !== b[i]);
+      if (changed) {
+        onFilterChange(localSelectedValues);
+      }
+    }
   };
 
-  const clearFilter = (columnKey: string) => {
-    setFilters(prev => {
-      const newFilters = { ...prev };
-      delete newFilters[columnKey];
-      return newFilters;
-    });
+  const handleValueToggle = (value: string) => {
+    setLocalSelectedValues(prev =>
+      prev.includes(value)
+        ? prev.filter(v => v !== value)
+        : [...prev, value]
+    );
   };
 
-  const clearAllFilters = () => {
-    setFilters({});
+  const handleClear = () => {
+    setLocalSelectedValues([]);
   };
 
-  const getFilterIcon = (columnKey: string) => {
-    const hasFilter = filters[columnKey] && filters[columnKey].trim() !== '';
-    return (
-      <div className="flex items-center gap-1">
+  const handleSelectAll = () => {
+    setLocalSelectedValues(availableValues);
+  };
+
+  const handleSelectNone = () => {
+    setLocalSelectedValues([]);
+  };
+
+  return (
+    <DropdownMenu open={isOpen} onOpenChange={handleOpenChange}>
+      <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
           className="h-6 w-6 p-0 hover:bg-gray-200"
-          onClick={() => setFilterDialogOpen(columnKey)}
           title="Filter column"
         >
-          <Filter className={`h-3 w-3 ${hasFilter ? 'text-blue-600' : 'text-gray-400'}`} />
+          <Filter className={`h-3 w-3 ${selectedValues.length > 0 ? 'text-blue-600' : 'text-gray-400'}`} />
         </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        style={{ minWidth: dropdownWidth, maxWidth: 400, padding: 0 }}
+        className="!overflow-visible"
+      >
+        <div className="px-2 py-1.5 text-sm font-medium text-gray-700 border-b">
+          Filter {column.displayName}
+        </div>
+        {isLoadingValues ? (
+          <div className="px-2 py-2 text-sm text-gray-500">Loading values...</div>
+        ) : availableValues.length === 0 ? (
+          <div className="px-2 py-2 text-sm text-gray-500">No values available</div>
+        ) : (
+          <>
+            <div className="px-2 py-1 flex gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSelectAll}
+                className="text-xs h-6"
+              >
+                Select All
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSelectNone}
+                className="text-xs h-6"
+              >
+                Select None
+              </Button>
+              {localSelectedValues.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClear}
+                  className="text-xs h-6"
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+            <DropdownMenuSeparator />
+            <div
+              ref={measureRef}
+              className="max-h-60 overflow-y-auto px-1 py-1"
+              style={{ minWidth: dropdownWidth - 8, maxWidth: 400 }}
+            >
+              {availableValues.map((value) => (
+                <div
+                  key={value}
+                  className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-100 rounded"
+                  onClick={() => handleValueToggle(value)}
+                  role="checkbox"
+                  aria-checked={localSelectedValues.includes(value)}
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') handleValueToggle(value); }}
+                >
+                  <Checkbox
+                    checked={localSelectedValues.includes(value)}
+                    onCheckedChange={() => handleValueToggle(value)}
+                    tabIndex={-1}
+                    onClick={e => e.stopPropagation()}
+                  />
+                  <span className="text-sm select-none" style={{ whiteSpace: 'nowrap' }}>{value}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function DataTable({ 
+  data, 
+  columns, 
+  isLoading = false, 
+  reportDefinition,
+  onFiltersChange,
+  filters = {},
+  hasMore = false,
+  fetchMore,
+  totalRows
+}: DataTableProps) {
+  const [localFilters, setLocalFilters] = useState<Record<string, string[]>>(filters);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll handler
+  useEffect(() => {
+    if (!fetchMore || !hasMore) return;
+    const handleScroll = () => {
+      const container = tableContainerRef.current;
+      if (!container) return;
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      if (scrollHeight - scrollTop - clientHeight < 200) {
+        fetchMore();
+      }
+    };
+    const container = tableContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+    }
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [fetchMore, hasMore]);
+
+  // Apply filters to data
+  const filteredData = useMemo(() => {
+    if (Object.keys(localFilters).length === 0) return data;
+    
+    return data.filter(row => {
+      return Object.entries(localFilters).every(([columnKey, filterValues]) => {
+        if (!filterValues || filterValues.length === 0) return true;
+        const cellValue = row[columnKey];
+        if (cellValue == null) return false;
+        return filterValues.includes(String(cellValue));
+      });
+    });
+  }, [data, localFilters]);
+
+  const handleFilterChange = (columnKey: string, values: string[]) => {
+    const newFilters = { ...localFilters };
+    if (values.length === 0) {
+      delete newFilters[columnKey];
+    } else {
+      newFilters[columnKey] = values;
+    }
+    setLocalFilters(newFilters);
+    onFiltersChange?.(newFilters);
+  };
+
+  const clearFilter = (columnKey: string) => {
+    const newFilters = { ...localFilters };
+    delete newFilters[columnKey];
+    setLocalFilters(newFilters);
+    onFiltersChange?.(newFilters);
+  };
+
+  const clearAllFilters = () => {
+    setLocalFilters({});
+    onFiltersChange?.({});
+  };
+
+  const getFilterIcon = (columnKey: string) => {
+    const hasFilter = localFilters[columnKey] && localFilters[columnKey].length > 0;
+    return (
+      <div className="flex items-center gap-1">
+        <FilterDropdown
+          column={columns.find(col => col.key === columnKey)!}
+          selectedValues={localFilters[columnKey] || []}
+          onFilterChange={(values) => handleFilterChange(columnKey, values)}
+          onClear={() => clearFilter(columnKey)}
+          reportDefinition={reportDefinition}
+        />
         {hasFilter && (
           <Button
             variant="ghost"
@@ -81,7 +299,13 @@ export function DataTable({ data, columns, isLoading = false }: DataTableProps) 
     );
   };
 
-  if (isLoading) {
+  // Spinner component
+  const Spinner = () => (
+    <span className="inline-block w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin align-middle"></span>
+  );
+
+  if (isLoading && data.length === 0) {
+    // Only show skeleton for initial load
     return (
       <div className="flex-1 min-h-0 flex flex-col bg-white rounded-lg border overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
@@ -107,10 +331,10 @@ export function DataTable({ data, columns, isLoading = false }: DataTableProps) 
       {/* Table Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
         <h3 className="text-sm font-medium text-gray-900">
-          {filteredData.length} of {data.length} rows
+          {data.length} of {totalRows ?? data.length} rows
         </h3>
         <div className="flex items-center gap-2">
-          {Object.keys(filters).length > 0 && (
+          {Object.keys(localFilters).length > 0 && (
             <Button
               variant="outline"
               size="sm"
@@ -124,14 +348,14 @@ export function DataTable({ data, columns, isLoading = false }: DataTableProps) 
       </div>
 
       {/* Table Container with Scrollbars */}
-      <div className="h-[70vh] overflow-x-auto overflow-y-auto">
+      <div ref={tableContainerRef} className="h-[70vh] overflow-x-auto overflow-y-auto">
         <table className="w-full min-w-max text-sm border-collapse">
           <thead>
             <tr className="bg-gray-50">
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className="border border-gray-200 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 min-w-[120px] sticky top-0 z-10"
+                  className="border border-gray-200 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 min-w-[120px] sticky top-[-1px] z-10"
                   style={{ background: 'inherit' }}
                 >
                   <div className="flex items-center justify-between">
@@ -146,7 +370,7 @@ export function DataTable({ data, columns, isLoading = false }: DataTableProps) 
             {filteredData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="border border-gray-200 px-4 py-8 text-center text-gray-500">
-                  {Object.keys(filters).length > 0 ? 'No data matches the current filters.' : 'No data available.'}
+                  {Object.keys(localFilters).length > 0 ? 'No data matches the current filters.' : 'No data available.'}
                 </td>
               </tr>
             ) : (
@@ -162,50 +386,17 @@ export function DataTable({ data, columns, isLoading = false }: DataTableProps) 
                 </tr>
               ))
             )}
+            {/* Infinite scroll loading indicator */}
+            {hasMore && isLoading && data.length > 0 && (
+              <tr>
+                <td colSpan={columns.length} className="border border-gray-200 px-4 py-4 text-center text-gray-500">
+                  <Spinner /> Loading more rows...
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
-
-      {/* Filter Dialogs */}
-      {columns.map((column) => (
-        <Dialog
-          key={column.key}
-          open={filterDialogOpen === column.key}
-          onOpenChange={(open) => setFilterDialogOpen(open ? column.key : null)}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Filter {column.displayName}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Filter value
-                </label>
-                <Input
-                  value={filters[column.key] || ''}
-                  onChange={(e) => handleFilterChange(column.key, e.target.value)}
-                  placeholder={`Filter ${column.displayName}...`}
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => clearFilter(column.key)}
-                >
-                  Clear
-                </Button>
-                <Button
-                  onClick={() => setFilterDialogOpen(null)}
-                >
-                  Apply
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      ))}
     </div>
   );
 } 

@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { reportDefinition } = body;
+    const { reportDefinition, offset, limit } = body;
 
     if (!reportDefinition || !reportDefinition.columnList) {
       return NextResponse.json({ error: 'Invalid report definition' }, { status: 400 });
@@ -38,12 +38,25 @@ export async function POST(request: NextRequest) {
     // Build the select query with only the active columns
     const selectFields = activeColumns.map(col => col.fieldName).join(', ');
     
-    // Query the database
-    const { data: rows, error } = await supabase
-      .from(tableName)
-      .select(selectFields)
-      .limit(1000); // Limit to prevent overwhelming response
-
+    // Build query with filters
+    let query = supabase.from(tableName).select(selectFields, { count: 'exact' });
+    
+    // Apply filters from report definition
+    Object.entries(reportDefinition.columnList).forEach(([columnName, column]) => {
+      const col = column as any;
+      if (col.filter && Object.keys(col.filter).length > 0) {
+        // Get the selected values for this column
+        const selectedValues = Object.keys(col.filter).filter(key => col.filter[key]);
+        if (selectedValues.length > 0) {
+          query = query.in(columnName, selectedValues);
+        }
+      }
+    });
+    
+    // Pagination
+    const pageOffset = typeof offset === 'number' ? offset : 0;
+    const pageLimit = typeof limit === 'number' ? limit : 1000;
+    const { data: rows, error, count } = await query.range(pageOffset, pageOffset + pageLimit - 1);
     if (error) {
       console.error('Error fetching report data:', error);
       return NextResponse.json({ error: 'Failed to fetch report data' }, { status: 500 });
@@ -52,7 +65,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       data: rows || [],
       columns: activeColumns,
-      totalRows: rows?.length || 0
+      totalRows: count ?? (rows ? rows.length : 0),
+      offset: pageOffset,
+      limit: pageLimit
     });
   } catch (error) {
     console.error('Report data POST error:', error);
