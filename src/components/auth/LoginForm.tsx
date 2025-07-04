@@ -9,9 +9,10 @@ import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 
 interface LoginFormProps {
   onSuccess: () => void;
+  hideCreateAccount?: boolean;
 }
 
-export function LoginForm({ onSuccess }: LoginFormProps) {
+export function LoginForm({ onSuccess, hideCreateAccount }: LoginFormProps) {
   const { signInWithEmail, signUpWithEmail, signInWithOtp, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -170,7 +171,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
              isMagicLink ? 'Send Magic Link' : 'Sign In'}
           </Button>
 
-          {!isMagicLink && (
+          {!isMagicLink && !hideCreateAccount && (
             <Button
               type="button"
               onClick={handleEmailSignUp}

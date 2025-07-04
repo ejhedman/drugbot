@@ -1,7 +1,6 @@
 import { LoginForm } from '@/components/auth/LoginForm';
-import { LoginHelpForm } from '@/components/auth/LoginHelpForm';
 import { useState } from 'react';
-import { useLoginHelpSubmission } from '@/hooks/useLoginHelpSubmission';
+import { RequestAccessForm } from '@/components/auth/RequestAccessForm';
 
 interface SharedReportAuthProps {
   reportSlug: string;
@@ -9,24 +8,35 @@ interface SharedReportAuthProps {
 }
 
 export function SharedReportAuth({ reportSlug, onLoginSuccess }: SharedReportAuthProps) {
-  const [showLoginHelp, setShowLoginHelp] = useState(false);
-  const { submitHelpRequest } = useLoginHelpSubmission();
+  const [showRequestAccess, setShowRequestAccess] = useState(false);
 
-  const handleLoginHelpClick = () => {
-    setShowLoginHelp(true);
+  const handleRequestAccessClick = () => {
+    setShowRequestAccess(true);
   };
 
-  const handleLoginHelpCancel = () => {
-    setShowLoginHelp(false);
+  const handleRequestAccessCancel = () => {
+    setShowRequestAccess(false);
   };
 
-  if (showLoginHelp) {
+  const handleRequestAccessSubmit = async (data: { email: string; fullName: string }) => {
+    const res = await fetch('/api/request-access', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to send request');
+    }
+  };
+
+  if (showRequestAccess) {
     return (
       <div className="flex items-center justify-center flex-1 bg-gradient-to-br from-indigo-50 via-white to-indigo-100 p-4">
         <div className="w-full max-w-md">
-          <LoginHelpForm 
-            onSubmit={submitHelpRequest}
-            onCancel={handleLoginHelpCancel}
+          <RequestAccessForm
+            onSubmit={handleRequestAccessSubmit}
+            onCancel={handleRequestAccessCancel}
           />
         </div>
       </div>
@@ -44,17 +54,15 @@ export function SharedReportAuth({ reportSlug, onLoginSuccess }: SharedReportAut
             Sign in to view the report: <span className="font-medium text-indigo-600">{reportSlug}</span>
           </p>
         </div>
-        
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <LoginForm onSuccess={onLoginSuccess} />
+          <LoginForm onSuccess={onLoginSuccess} hideCreateAccount={true} />
         </div>
-        
         <div className="text-center mt-6">
           <button
-            onClick={handleLoginHelpClick}
+            onClick={handleRequestAccessClick}
             className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
           >
-            Need help signing in?
+            Request access
           </button>
         </div>
       </div>
