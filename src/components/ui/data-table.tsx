@@ -12,6 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import sha1 from 'crypto-js/sha1';
+import encHex from 'crypto-js/enc-hex';
 
 export interface Column {
   key: string;
@@ -214,6 +216,17 @@ function FilterDropdown({
   );
 }
 
+// Helper to compute row signature
+function getRowSignature(row: Record<string, any>, columns: Column[]): string {
+  const concat = columns.map(col => {
+    const val = row[col.key];
+    return (val === null || val === undefined || val === '') ? '-' : String(val);
+  }).join('|');
+  // Compute sha1 hash and return rightmost 8 hex digits
+  const hash = sha1(concat).toString(encHex);
+  return hash.slice(-8);
+}
+
 export function DataTable({ 
   data, 
   columns, 
@@ -263,6 +276,17 @@ export function DataTable({
       });
     });
   }, [data, localFilters]);
+
+  // Compute all signatures for the current filteredData
+  const allSignatures = useMemo(() => {
+    return filteredData.map(row => getRowSignature(row, columns));
+  }, [filteredData, columns]);
+  // Find duplicates
+  const duplicateSignatures = useMemo(() => {
+    const sigCount: Record<string, number> = {};
+    allSignatures.forEach(sig => { sigCount[sig] = (sigCount[sig] || 0) + 1; });
+    return new Set(Object.entries(sigCount).filter(([_, count]) => count > 1).map(([sig]) => sig));
+  }, [allSignatures]);
 
   const handleFilterChange = (columnKey: string, values: string[]) => {
     const newFilters = { ...localFilters };
@@ -366,6 +390,12 @@ export function DataTable({
         <table className="w-full min-w-max text-sm border-collapse">
           <thead>
             <tr className="bg-gray-50">
+              <th className="border border-gray-200 border-b-4 border-b-gray-400 bg-gray-200 px-2 py-2 text-left font-medium text-gray-700 min-w-[60px] sticky top-[-1px] z-10" style={{ background: 'inherit' }}>
+                #
+              </th>
+              <th className="border border-gray-200 border-b-4 border-b-gray-400 bg-gray-200 px-2 py-2 text-left font-medium text-gray-700 min-w-[100px] sticky top-[-1px] z-10" style={{ background: 'inherit' }}>
+                Sig
+              </th>
               {columns.map((column) => (
                 <th
                   key={column.key}
@@ -383,13 +413,19 @@ export function DataTable({
           <tbody>
             {filteredData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="border border-gray-200 px-4 py-8 text-center text-gray-500">
+                <td colSpan={columns.length + 2} className="border border-gray-200 px-4 py-8 text-center text-gray-500">
                   {Object.keys(localFilters).length > 0 ? 'No data matches the current filters.' : 'No data available.'}
                 </td>
               </tr>
             ) : (
               filteredData.map((row, rowIndex) => (
                 <tr key={rowIndex} className="hover:bg-gray-50">
+                  <td className="border border-gray-200 px-2 py-1 text-gray-500 text-right font-mono">{rowIndex + 1}</td>
+                  <td className={
+                    `border border-gray-200 px-2 py-1 text-right font-mono ${duplicateSignatures.has(getRowSignature(row, columns)) ? 'bg-red-100 text-red-700 font-bold' : 'text-gray-500'}`
+                  }>
+                    {getRowSignature(row, columns)}
+                  </td>
                   {columns.map((column) => (
                     <td key={column.key} className="border border-gray-200 px-2 py-1 text-gray-900">
                       <div className="truncate" title={String(row[column.key] ?? '')}>
