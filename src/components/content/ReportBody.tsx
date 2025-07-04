@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Report } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
-import { Settings, Download, Code, Edit, Check, X, Copy, ChevronDown } from 'lucide-react';
+import { Settings, Download, Code, Edit, Check, X, Copy, ChevronDown, Share2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { JsonViewer } from '@/components/ui/json-viewer';
 import { DataTable } from '@/components/ui/data-table';
 import { useDistinctData } from '@/hooks/useDistinctData';
+import { ShareDialog } from '@/components/ui/share-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -204,6 +205,13 @@ export function ReportBody({
   onReportUpdate,
   onDuplicateReport
 }: ReportBodyProps) {
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+
+  const handleShareClick = () => {
+    if (selectedReport) {
+      setShareDialogOpen(true);
+    }
+  };
   // Local state for report definition with filter updates
   const [localReportDefinition, setLocalReportDefinition] = useState(reportDefinition);
   
@@ -549,6 +557,15 @@ export function ReportBody({
             <Button
               size="sm"
               variant="ghost"
+              onClick={handleShareClick}
+              className="flex items-center rounded-xl"
+              title="Copy Share URL"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={() => setIsJsonViewerOpen(true)}
               className="flex items-center rounded-xl"
               title="View Report Configuration"
@@ -652,6 +669,16 @@ export function ReportBody({
           </DialogContent>
         </Dialog>
       </div>
+      
+      {/* Share Dialog */}
+      {selectedReport && (
+        <ShareDialog
+          isOpen={shareDialogOpen}
+          onClose={() => setShareDialogOpen(false)}
+          shareUrl={`${window.location.origin}/reports/${selectedReport.name}`}
+          reportName={selectedReport.display_name}
+        />
+      )}
     </div>
   );
 } 

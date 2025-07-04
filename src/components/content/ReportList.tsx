@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Globe, ShieldOff, Trash, Plus, Search, ArrowLeftFromLine, ArrowRightFromLine, Edit, Copy } from 'lucide-react';
+import { Globe, ShieldOff, Trash, Plus, Search, ArrowLeftFromLine, ArrowRightFromLine, Edit, Copy, Share2 } from 'lucide-react';
 import { Report } from '@/hooks/useReports';
 import { User } from '@supabase/supabase-js';
+import { ShareDialog } from '@/components/ui/share-dialog';
 
 // Helper function to get report type from report definition
 const getReportType = (report: Report): string => {
@@ -89,6 +90,16 @@ export function ReportList({
   onDuplicateReport,
   panelState
 }: ReportListProps) {
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
+  const [shareReportName, setShareReportName] = useState('');
+
+  const handleShareClick = (report: Report) => {
+    const url = `${window.location.origin}/reports/${report.name}`;
+    setShareUrl(url);
+    setShareReportName(report.display_name);
+    setShareDialogOpen(true);
+  };
   return (
     <div className="flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl">
       {/* Header */}
@@ -174,37 +185,51 @@ export function ReportList({
                             </div>
                           </div>
                         </button>
-                        {isOwner(report) && (
-                          <div className="flex items-center gap-1 mr-2">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-50 rounded-lg"
-                              onClick={e => {
-                                e.stopPropagation();
-                                if (onDuplicateReport) {
-                                  onDuplicateReport(report);
-                                }
-                              }}
-                              title="Duplicate report"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-red-600 hover:bg-red-50 rounded-lg"
-                              onClick={e => {
-                                e.stopPropagation();
-                                setReportToDelete(report);
-                                setDeleteDialogOpen(true);
-                              }}
-                              title="Delete report"
-                            >
-                              <Trash className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1 mr-2">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-green-600 hover:bg-green-50 rounded-lg"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleShareClick(report);
+                            }}
+                            title="Share report"
+                          >
+                            <Share2 className="h-3 w-3" />
+                          </Button>
+                          {isOwner(report) && (
+                            <>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  if (onDuplicateReport) {
+                                    onDuplicateReport(report);
+                                  }
+                                }}
+                                title="Duplicate report"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 text-red-600 hover:bg-red-50 rounded-lg"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setReportToDelete(report);
+                                  setDeleteDialogOpen(true);
+                                }}
+                                title="Delete report"
+                              >
+                                <Trash className="h-3 w-3" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     ))}
                     {publicReports.length > 0 && (
@@ -252,8 +277,20 @@ export function ReportList({
                             </div>
                           </div>
                         </button>
-                        {/* Duplicate button for public reports */}
+                        {/* Action buttons for public reports */}
                         <div className="flex items-center gap-1 mr-2">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-green-600 hover:bg-green-50 rounded-lg"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleShareClick(report);
+                            }}
+                            title="Share report"
+                          >
+                            <Share2 className="h-3 w-3" />
+                          </Button>
                           <Button
                             size="icon"
                             variant="ghost"
@@ -284,6 +321,14 @@ export function ReportList({
           </div>
         </>
       )}
+      
+      {/* Share Dialog */}
+      <ShareDialog
+        isOpen={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+        shareUrl={shareUrl}
+        reportName={shareReportName}
+      />
     </div>
   );
 } 
