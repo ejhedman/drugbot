@@ -560,7 +560,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
           </div>
         )}
         {isAddingNew ? (
-          <div className="p-4 rounded-b-lg flex-1 min-h-0 overflow-y-auto overflow-x-auto scrollbar-always-visible">
+          <div className="p-4 rounded-b-lg flex-1 min-h-0 overflow-y-auto overflow-x-auto scrollbar-always-visible max-h-[75vh]">
             <form onSubmit={(e) => { e.preventDefault(); handleSubmitAdd(); }} className="space-y-4">
               <div className="text-sm text-gray-600 mb-4">Add the first item to this collection:</div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -645,7 +645,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
         </div>
       )}
       {isAddingNew ? (
-        <div className="p-4 rounded-b-lg flex-1 min-h-0 overflow-y-auto overflow-x-auto scrollbar-always-visible">
+        <div className="p-4 rounded-b-lg flex-1 min-h-0 overflow-y-auto overflow-x-auto scrollbar-always-visible max-h-[75vh]">
           <form onSubmit={(e) => { e.preventDefault(); handleSubmitAdd(); }} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {isUsingUIEntityData ? (
@@ -705,7 +705,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       ) : (
         <div className="flex-1 min-h-0 border-l border-r border-b rounded-b-lg overflow-hidden">
           {/* Table container with fixed height that works */}
-          <div className="h-full max-h-128 overflow-y-auto overflow-x-auto scrollbar-always-visible">
+          <div className="overflow-y-auto overflow-x-auto scrollbar-always-visible max-h-[65vh]">
             <table className="min-w-full text-sm">
               <thead className="sticky top-0 z-10">
                 <tr>
