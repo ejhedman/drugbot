@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Report } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
-import { Settings, Download, Code, Edit, Check, X } from 'lucide-react';
+import { Settings, Download, Code, Edit, Check, X, Copy } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { JsonViewer } from '@/components/ui/json-viewer';
 import { DataTable } from '@/components/ui/data-table';
@@ -14,6 +14,7 @@ interface ReportBodyProps {
   setIsJsonViewerOpen: (open: boolean) => void;
   isOwner: (report: Report) => boolean;
   onReportUpdate?: (updatedReport: Report) => void;
+  onDuplicateReport?: (originalReport: Report) => void;
 }
 
 // Helper to convert array of objects to CSV
@@ -89,7 +90,8 @@ export function ReportBody({
   isJsonViewerOpen,
   setIsJsonViewerOpen,
   isOwner,
-  onReportUpdate
+  onReportUpdate,
+  onDuplicateReport
 }: ReportBodyProps) {
   // Local state for report definition with filter updates
   const [localReportDefinition, setLocalReportDefinition] = useState(reportDefinition);
@@ -315,38 +317,63 @@ export function ReportBody({
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-100 rounded-t-xl min-h-[64px]">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold text-gray-900">Report Data</h3>
-          {selectedReport && isOwner(selectedReport) && (
+          {selectedReport && (
             <div className="flex items-center gap-1">
-              {isInEditMode ? (
-                <>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleSaveChanges}
-                    className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl"
-                    title="Save changes"
-                  >
-                    <Check className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleEditToggle}
-                    className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl"
-                    title="Cancel changes"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </>
+              {isOwner(selectedReport) ? (
+                // Owner can edit and duplicate
+                isInEditMode ? (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleSaveChanges}
+                      className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl"
+                      title="Save changes"
+                    >
+                      <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleEditToggle}
+                      className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl"
+                      title="Cancel changes"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleEditToggle}
+                      className="h-6 w-6 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-xl"
+                      title="Edit filters"
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onDuplicateReport?.(selectedReport)}
+                      className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl"
+                      title="Duplicate report"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </>
+                )
               ) : (
+                // Non-owner can only duplicate
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={handleEditToggle}
-                  className="h-6 w-6 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-xl"
-                  title="Edit filters"
+                  onClick={() => onDuplicateReport?.(selectedReport)}
+                  className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl"
+                  title="Duplicate report"
                 >
-                  <Edit className="h-3 w-3" />
+                  <Copy className="h-3 w-3" />
                 </Button>
               )}
             </div>

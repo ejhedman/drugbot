@@ -227,6 +227,58 @@ export function ReportsPage() {
     }
   };
 
+  const handleDuplicateReport = async (originalReport: Report) => {
+    try {
+      // Create a copy of the report definition
+      const originalDefinition = originalReport.report_definition as ReportDefinition;
+      const duplicatedDefinition: ReportDefinition = {
+        ...originalDefinition,
+        name: originalDefinition.name + '-copy',
+        public: false, // Make the duplicate private by default
+        owner: user?.email || ''
+      };
+
+      // Create the new report name
+      const newReportName = originalReport.display_name + ' - Copy';
+      const newInternalName = (originalReport.name + '-copy').toLowerCase().replace(/\s+/g, '_');
+
+      // Create the new report
+      const newReport = await createReport({
+        name: newInternalName,
+        display_name: newReportName,
+        report_type: originalReport.report_type,
+        report_definition: duplicatedDefinition,
+        is_public: false
+      });
+
+      // Select the new report
+      setSelectedReport(newReport);
+      setReportDefinition(duplicatedDefinition);
+      setOriginalReportDefinition(duplicatedDefinition);
+      setSelectedReportType(duplicatedDefinition.reportType || '');
+      
+      // Set selected columns from the duplicated definition
+      if (duplicatedDefinition.columnList) {
+        const activeColumns = Object.entries(duplicatedDefinition.columnList)
+          .filter(([_, col]) => col.isActive)
+          .map(([colName]) => colName);
+        setSelectedColumns(activeColumns);
+      } else {
+        setSelectedColumns([]);
+      }
+
+      // Exit any edit modes
+      setIsInConfigEditMode(false);
+      setIsEditingName(false);
+      setEditingName('');
+
+      console.log('Report duplicated successfully:', newReport);
+    } catch (error) {
+      console.error('Error duplicating report:', error);
+      alert('Failed to duplicate report. Please try again.');
+    }
+  };
+
   const handleColumnToggle = (columnName: string) => {
     // Update selectedColumns for legacy/compat
     setSelectedColumns(prev =>
@@ -515,6 +567,7 @@ export function ReportsPage() {
           collapsed={reportListCollapsed}
           setCollapsed={handleSetReportsCollapsed}
           onEditReport={handleEditReport}
+          onDuplicateReport={handleDuplicateReport}
           panelState={panelState}
         />
       </div>
@@ -559,6 +612,7 @@ export function ReportsPage() {
           setIsJsonViewerOpen={setIsJsonViewerOpen}
           isOwner={isOwner}
           onReportUpdate={handleReportUpdate}
+          onDuplicateReport={handleDuplicateReport}
         />
             </div>
           )}

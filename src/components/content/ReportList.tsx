@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Globe, Trash, Plus, Search, ArrowLeftFromLine, ArrowRightFromLine, Edit } from 'lucide-react';
+import { Globe, Trash, Plus, Search, ArrowLeftFromLine, ArrowRightFromLine, Edit, Copy } from 'lucide-react';
 import { Report } from '@/hooks/useReports';
 import { User } from '@supabase/supabase-js';
 
@@ -26,6 +26,7 @@ interface ReportListProps {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
   onEditReport?: (report: Report) => void;
+  onDuplicateReport?: (report: Report) => void;
   panelState: string;
 }
 
@@ -49,6 +50,7 @@ export function ReportList({
   collapsed,
   setCollapsed,
   onEditReport,
+  onDuplicateReport,
   panelState
 }: ReportListProps) {
   return (
@@ -147,6 +149,20 @@ export function ReportList({
                             <Button
                               size="icon"
                               variant="ghost"
+                              className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-50 rounded-lg"
+                              onClick={e => {
+                                e.stopPropagation();
+                                if (onDuplicateReport) {
+                                  onDuplicateReport(report);
+                                }
+                              }}
+                              title="Duplicate report"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               className="h-6 w-6 p-0 text-red-600 hover:bg-red-50 rounded-lg"
                               onClick={e => {
                                 e.stopPropagation();
@@ -197,6 +213,23 @@ export function ReportList({
                             </div>
                           </div>
                         </button>
+                        {/* Duplicate button for public reports */}
+                        <div className="flex items-center gap-1 mr-2">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-50 rounded-lg"
+                            onClick={e => {
+                              e.stopPropagation();
+                              if (onDuplicateReport) {
+                                onDuplicateReport(report);
+                              }
+                            }}
+                            title="Duplicate report"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
