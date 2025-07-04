@@ -3,7 +3,7 @@ import { Report, ReportDefinition } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Globe, Lock, Edit, Check, X, ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react';
+import { Globe, ShieldOff, Edit, Check, X, ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react';
 import { theUIModel } from '@/model_instances/TheUIModel';
 
 interface ColumnListProps {
@@ -111,7 +111,7 @@ export function ColumnList({
                         {reportDefinition?.public ? (
                           <Globe className="h-5 w-5 text-green-600" />
                         ) : (
-                          <Lock className="h-5 w-5 text-gray-700" />
+                          <ShieldOff className="h-5 w-5 text-gray-700" />
                         )}
                       </Button>
                     </div>
@@ -127,7 +127,7 @@ export function ColumnList({
                         </div>
                       ) : (
                         <div className="group relative">
-                          <Lock className="h-4 w-4 text-gray-500" />
+                          <ShieldOff className="h-4 w-4 text-gray-500" />
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
                             Private Report
                             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>

@@ -2,9 +2,45 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Globe, Trash, Plus, Search, ArrowLeftFromLine, ArrowRightFromLine, Edit, Copy } from 'lucide-react';
+import { Globe, ShieldOff, Trash, Plus, Search, ArrowLeftFromLine, ArrowRightFromLine, Edit, Copy } from 'lucide-react';
 import { Report } from '@/hooks/useReports';
 import { User } from '@supabase/supabase-js';
+
+// Helper function to get report type from report definition
+const getReportType = (report: Report): string => {
+  try {
+    if (report.report_definition && typeof report.report_definition === 'object') {
+      return report.report_definition.reportType || report.report_type || 'No type selected';
+    }
+  } catch (error) {
+    console.warn('Error parsing report definition:', error);
+  }
+  return report.report_type || 'No type selected';
+};
+
+// Helper function to get the appropriate icon for a report based on its public status
+const getReportIcon = (report: Report) => {
+  try {
+    if (report.report_definition && typeof report.report_definition === 'object') {
+      const isPublic = report.report_definition.public !== false; // Default to public if not specified
+      return isPublic ? Globe : ShieldOff;
+    }
+  } catch (error) {
+    console.warn('Error parsing report definition for icon:', error);
+  }
+  // Fallback to checking the report's is_public field
+  return report.is_public ? Globe : ShieldOff;
+};
+
+// Helper function to get the icon color and background for a report
+const getReportIconStyle = (report: Report) => {
+  const isPublic = getReportIcon(report) === Globe;
+  return {
+    icon: isPublic ? Globe : ShieldOff,
+    bgColor: isPublic ? 'bg-green-500' : 'bg-gray-500',
+    iconColor: 'text-white'
+  };
+};
 
 interface ReportListProps {
   isLoading: boolean;
@@ -121,35 +157,25 @@ export function ReportList({
                           className="flex-1 text-left px-4 py-2 transition-colors text-sm rounded-xl"
                         >
                           <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
-                              {getUserInitials(user?.email || '')}
+                            <div className={`w-8 h-8 rounded-full ${getReportIconStyle(report).bgColor} flex items-center justify-center text-white text-sm group relative`}>
+                              {React.createElement(getReportIconStyle(report).icon, { className: "h-4 w-4" })}
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+                                {getReportIconStyle(report).icon === Globe ? 'Public Report' : 'Private Report'}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-medium text-gray-900 truncate">
                                 {report.display_name}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {report.report_type || 'No type selected'}
+                                {getReportType(report)}
                               </div>
                             </div>
                           </div>
                         </button>
                         {isOwner(report) && (
                           <div className="flex items-center gap-1 mr-2">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-100 rounded-lg"
-                              onClick={e => {
-                                e.stopPropagation();
-                                if (onEditReport) {
-                                  onEditReport(report);
-                                }
-                              }}
-                              title="Edit report"
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
                             <Button
                               size="icon"
                               variant="ghost"
@@ -182,7 +208,12 @@ export function ReportList({
                       </div>
                     ))}
                     {publicReports.length > 0 && (
-                      <Separator className="my-4" />
+                      <>
+                        <Separator className="my-4" />
+                        <div className="text-center">
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Shared</span>
+                        </div>
+                      </>
                     )}
                   </>
                 )}
@@ -204,15 +235,19 @@ export function ReportList({
                           className="flex-1 text-left px-4 py-2 transition-colors text-sm rounded-xl"
                         >
                           <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm">
-                              <Globe className="h-4 w-4" />
+                            <div className={`w-8 h-8 rounded-full ${getReportIconStyle(report).bgColor} flex items-center justify-center text-white text-sm group relative`}>
+                              {React.createElement(getReportIconStyle(report).icon, { className: "h-4 w-4" })}
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+                                {getReportIconStyle(report).icon === Globe ? 'Public Report' : 'Private Report'}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-medium text-gray-900 truncate">
                                 {report.display_name}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {report.report_type || 'No type selected'}
+                                {getReportType(report)}
                               </div>
                             </div>
                           </div>
