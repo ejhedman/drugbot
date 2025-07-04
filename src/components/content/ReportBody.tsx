@@ -1,11 +1,19 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Report } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
-import { Settings, Download, Code, Edit, Check, X, Copy } from 'lucide-react';
+import { Settings, Download, Code, Edit, Check, X, Copy, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { JsonViewer } from '@/components/ui/json-viewer';
 import { DataTable } from '@/components/ui/data-table';
 import { useDistinctData } from '@/hooks/useDistinctData';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
 
 interface ReportBodyProps {
   selectedReport: Report | null;
@@ -29,6 +37,107 @@ function arrayToCSV(data: any[], columns: any[]): string {
     }).join(',')
   );
   return [header, ...rows].join('\n');
+}
+
+// Helper to convert array of objects to XLSX
+function arrayToXLSX(data: any[], columns: any[]): ArrayBuffer {
+  if (!data.length) {
+    // Create empty workbook with headers
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet([columns.map((col: any) => col.displayName || col.key)]);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report Data');
+    return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+  }
+
+  // Transform data to include only the columns we want
+  const transformedData = data.map(row => {
+    const transformedRow: any = {};
+    columns.forEach((col: any) => {
+      transformedRow[col.displayName || col.key] = row[col.key] || '';
+    });
+    return transformedRow;
+  });
+
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet(transformedData);
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Report Data');
+  return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+}
+
+// Helper to convert array of objects to JSON
+function arrayToJSON(data: any[], columns: any[]): string {
+  if (!data.length) return JSON.stringify([], null, 2);
+  
+  // Transform data to include only the columns we want
+  const transformedData = data.map(row => {
+    const transformedRow: any = {};
+    columns.forEach((col: any) => {
+      transformedRow[col.displayName || col.key] = row[col.key] || null;
+    });
+    return transformedRow;
+  });
+  
+  return JSON.stringify(transformedData, null, 2);
+}
+
+// Helper to convert array of objects to PDF (robust browser fix)
+async function arrayToPDF(data: any[], columns: any[], reportName: string = 'Report'): Promise<ArrayBuffer> {
+  const { default: jsPDF } = await import('jspdf');
+  // Ensure jspdf-autotable is attached to jsPDF prototype in the browser
+  if (typeof window !== 'undefined') {
+    if (!(jsPDF as any).API.autoTable) {
+      (window as any).jsPDF = jsPDF;
+      await import('jspdf-autotable');
+    }
+  }
+
+  // Use landscape mode for better column fitting
+  const doc = new jsPDF({ orientation: 'landscape' });
+  doc.setFontSize(16);
+  doc.text(reportName, 14, 22);
+
+  // Remove any existing '#' or row number column from columns
+  const filteredColumns = columns.filter((col: any) =>
+    (col.displayName || col.key) !== '#'
+  );
+  // Now prepend the row number
+  const headers = ['#', ...filteredColumns.map((col: any) => col.displayName || col.key)];
+  const tableData = data.map((row, idx) => [
+    (idx + 1).toString(),
+    ...filteredColumns.map((col: any) => {
+      const val = row[col.key];
+      return val != null ? String(val) : '';
+    })
+  ]);
+
+  // @ts-expect-error: autoTable is a plugin method not in jsPDF types
+  doc.autoTable({
+    head: [headers],
+    body: tableData,
+    startY: 30,
+    styles: { fontSize: 7 }, // smaller font for more columns
+    headStyles: { fillColor: [66, 139, 202] },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    margin: { top: 30 },
+    tableWidth: 'auto', // fit table to page width
+    horizontalPageBreak: true,
+    horizontalPageBreakRepeat: 1, // repeat first column on each horizontal page
+  });
+
+  return doc.output('arraybuffer');
+}
+
+// Helper to trigger file download
+function downloadFile(content: string | ArrayBuffer, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // Helper to map report definition to distinct data params
@@ -187,13 +296,17 @@ export function ReportBody({
   const [downloadComplete, setDownloadComplete] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
-  const handleDownloadCSV = async () => {
+  const [downloadFormat, setDownloadFormat] = useState<'csv' | 'xlsx' | 'json' | 'pdf'>('csv');
+
+  const handleDownload = async (format: 'csv' | 'xlsx' | 'json' | 'pdf') => {
     if (!localReportDefinition) return;
+    setDownloadFormat(format);
     setDownloadDialogOpen(true);
     setDownloadProgress(0);
     setDownloadTotal(0);
     setDownloadComplete(false);
     setDownloading(true);
+    
     try {
       const { allRows, columns: allColumns } = await fetchAllReportData(
         localReportDefinition,
@@ -203,19 +316,41 @@ export function ReportBody({
           setDownloadTotal(total);
         }
       );
-      const csv = arrayToCSV(allRows, allColumns);
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'report.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      
+      const reportName = selectedReport?.name || 'Report';
+      let content: string | ArrayBuffer;
+      let filename: string;
+      let mimeType: string;
+      
+      switch (format) {
+        case 'csv':
+          content = arrayToCSV(allRows, allColumns);
+          filename = `${reportName}.csv`;
+          mimeType = 'text/csv';
+          break;
+        case 'xlsx':
+          content = arrayToXLSX(allRows, allColumns);
+          filename = `${reportName}.xlsx`;
+          mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          break;
+        case 'json':
+          content = arrayToJSON(allRows, allColumns);
+          filename = `${reportName}.json`;
+          mimeType = 'application/json';
+          break;
+        case 'pdf':
+          content = await arrayToPDF(allRows, allColumns, reportName);
+          filename = `${reportName}.pdf`;
+          mimeType = 'application/pdf';
+          break;
+        default:
+          throw new Error('Unsupported format');
+      }
+      
+      downloadFile(content, filename, mimeType);
       setDownloadComplete(true);
     } catch (err) {
-      alert('Failed to download CSV: ' + (err instanceof Error ? err.message : err));
+      alert(`Failed to download ${format.toUpperCase()}: ` + (err instanceof Error ? err.message : err));
       setDownloadDialogOpen(false);
     } finally {
       setDownloading(false);
@@ -381,16 +516,34 @@ export function ReportBody({
         </div>
         {selectedReport && (
           <div className="flex items-center space-x-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleDownloadCSV}
-              className="flex items-center rounded-xl"
-              title="Download CSV"
-              disabled={downloading}
-            >
-              <Download className="h-5 w-5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="flex items-center rounded-xl"
+                  title="Download Report Data"
+                  disabled={downloading}
+                >
+                  <Download className="h-5 w-5" />
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleDownload('csv')}>
+                  Download CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('xlsx')}>
+                  Download Excel (XLSX)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('json')}>
+                  Download JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('pdf')}>
+                  Download PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               size="sm"
               variant="ghost"
@@ -407,7 +560,7 @@ export function ReportBody({
       <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Download CSV</DialogTitle>
+            <DialogTitle>Download {downloadFormat.toUpperCase()}</DialogTitle>
           </DialogHeader>
           <div className="py-2">
             {!downloadComplete ? (
