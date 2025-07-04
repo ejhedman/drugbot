@@ -210,6 +210,23 @@ export function ReportsPage() {
     setIsInConfigEditMode(false);
   };
 
+  const handleReportUpdate = (updatedReport: Report) => {
+    setSelectedReport(updatedReport);
+    try {
+      const definition = updatedReport.report_definition as ReportDefinition;
+      // Ensure the public flag is set from the report if not in definition
+      if (definition && typeof definition.public === 'undefined') {
+        definition.public = updatedReport.is_public;
+      }
+      setReportDefinition(definition);
+      setOriginalReportDefinition(definition);
+    } catch (error) {
+      // fallback
+      setReportDefinition(null);
+      setOriginalReportDefinition(null);
+    }
+  };
+
   const handleColumnToggle = (columnName: string) => {
     // Update selectedColumns for legacy/compat
     setSelectedColumns(prev =>
@@ -535,12 +552,14 @@ export function ReportsPage() {
           {/* Report Data Card - hide when creating new report */}
           {!creatingNewReport && (
             <div className="flex-1 min-w-0 bg-white rounded-xl shadow-md overflow-hidden flex flex-col">
-              <ReportBody
-                selectedReport={selectedReport}
-                reportDefinition={reportDefinition}
-                isJsonViewerOpen={isJsonViewerOpen}
-                setIsJsonViewerOpen={setIsJsonViewerOpen}
-              />
+                      <ReportBody
+          selectedReport={selectedReport}
+          reportDefinition={reportDefinition}
+          isJsonViewerOpen={isJsonViewerOpen}
+          setIsJsonViewerOpen={setIsJsonViewerOpen}
+          isOwner={isOwner}
+          onReportUpdate={handleReportUpdate}
+        />
             </div>
           )}
         </>

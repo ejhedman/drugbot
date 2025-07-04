@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Report } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
-import { Settings, Download, Code } from 'lucide-react';
+import { Settings, Download, Code, Edit, Check, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { JsonViewer } from '@/components/ui/json-viewer';
 import { DataTable } from '@/components/ui/data-table';
@@ -12,6 +12,8 @@ interface ReportBodyProps {
   reportDefinition: any;
   isJsonViewerOpen: boolean;
   setIsJsonViewerOpen: (open: boolean) => void;
+  isOwner: (report: Report) => boolean;
+  onReportUpdate?: (updatedReport: Report) => void;
 }
 
 // Helper to convert array of objects to CSV
@@ -85,14 +87,29 @@ export function ReportBody({
   selectedReport,
   reportDefinition,
   isJsonViewerOpen,
-  setIsJsonViewerOpen
+  setIsJsonViewerOpen,
+  isOwner,
+  onReportUpdate
 }: ReportBodyProps) {
   // Local state for report definition with filter updates
   const [localReportDefinition, setLocalReportDefinition] = useState(reportDefinition);
+  
+  // Edit mode state
+  const [isInEditMode, setIsInEditMode] = useState(false);
+  const [originalReportDefinition, setOriginalReportDefinition] = useState(reportDefinition);
+  
+  // Separate state for editing filters (only used in edit mode)
+  const [editingFilters, setEditingFilters] = useState<Record<string, string[]>>({});
+  
+  // Force refresh counter to ensure data refetch when canceling
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
   // Update local report definition when prop changes
   useEffect(() => {
     setLocalReportDefinition(reportDefinition);
+    setOriginalReportDefinition(reportDefinition);
+    setEditingFilters({}); // Reset editing filters when report changes
+    setRefreshCounter(0); // Reset refresh counter
   }, [reportDefinition]);
 
   // Extract filters from local report definition
@@ -109,6 +126,16 @@ export function ReportBody({
     return filterObj;
   }, [localReportDefinition]);
 
+  // Use editing filters when in edit mode, otherwise use saved filters
+  // When canceling, we want to immediately use the saved filters, not the editing filters
+  const currentFilters = useMemo(() => {
+    if (isInEditMode) {
+      return editingFilters;
+    } else {
+      return filters;
+    }
+  }, [isInEditMode, editingFilters, filters]);
+
   // Map report definition to distinct data params
   const distinctParams = useMemo(() => {
     if (!localReportDefinition || !localReportDefinition.columnList) return null;
@@ -117,26 +144,39 @@ export function ReportBody({
       .sort(([, a], [, b]) => ((a as any).ordinal ?? 0) - ((b as any).ordinal ?? 0))
       .map(([key]) => key);
     if (activeColumns.length === 0) return null;
-    // Build filters in the format expected by the API
+    
+    // Use current filters (either editing or saved)
     const filters: Record<string, any> = {};
-    Object.entries(localReportDefinition.columnList).forEach(([columnName, column]) => {
-      const col = column as any;
-      if (col.filter && Object.keys(col.filter).length > 0) {
-        const selectedValues = Object.keys(col.filter).filter(key => col.filter[key]);
-        if (selectedValues.length > 0) {
-          filters[columnName] = selectedValues.length === 1 ? selectedValues[0] : selectedValues;
+    if (isInEditMode) {
+      // Use editing filters
+      Object.entries(currentFilters).forEach(([columnName, values]) => {
+        if (values && values.length > 0) {
+          filters[columnName] = values.length === 1 ? values[0] : values;
         }
-      }
-    });
+      });
+    } else {
+      // Use saved filters from report definition
+      Object.entries(localReportDefinition.columnList).forEach(([columnName, column]) => {
+        const col = column as any;
+        if (col.filter && Object.keys(col.filter).length > 0) {
+          const selectedValues = Object.keys(col.filter).filter(key => col.filter[key]);
+          if (selectedValues.length > 0) {
+            filters[columnName] = selectedValues.length === 1 ? selectedValues[0] : selectedValues;
+          }
+        }
+      });
+    }
+    
     return {
       tableName: localReportDefinition.tableName || 'generic_drugs_wide_view',
       columnList: activeColumns,
       filters,
-      orderBy: activeColumns[0] // Default order by first active column
+      orderBy: activeColumns[0], // Default order by first active column
+      refreshCounter // Include refresh counter to force refetch when canceling
     };
-  }, [localReportDefinition]);
+  }, [localReportDefinition, isInEditMode, currentFilters, refreshCounter]);
 
-  const { data, columns, totalRows, isLoading, error, hasMore, fetchMore } = useDistinctData(distinctParams, 200);
+  const { data, columns, totalRows, isLoading, error, hasMore, fetchMore, refetch } = useDistinctData(distinctParams, 200);
 
   // Download dialog state
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
@@ -180,42 +220,138 @@ export function ReportBody({
     }
   };
 
-  // Handle filter changes
+  // Handle filter changes - only update editing filters when in edit mode
   const handleFiltersChange = (newFilters: Record<string, string[]>) => {
-    if (!localReportDefinition) return;
+    if (isInEditMode) {
+      // Only update editing filters, don't modify the report definition yet
+      setEditingFilters(newFilters);
+      console.log('Editing filters updated:', newFilters);
+    }
+  };
+
+  // Handle edit mode toggle
+  const handleEditToggle = () => {
+    if (isInEditMode) {
+      // Cancel edit mode - restore original definition and clear editing filters
+      // Force immediate update to ensure data refetch with original filters
+      setLocalReportDefinition(originalReportDefinition);
+      setEditingFilters({});
+      setIsInEditMode(false);
+      // Increment refresh counter to force distinctParams to change
+      setRefreshCounter(prev => prev + 1);
+    } else {
+      // Enter edit mode - initialize editing filters with current saved filters
+      setEditingFilters(filters);
+      setIsInEditMode(true);
+    }
+  };
+
+  // Handle save changes
+  const handleSaveChanges = async () => {
+    if (!selectedReport || !localReportDefinition) return;
     
-    // Update the report definition with new filters
-    const updatedColumnList = { ...localReportDefinition.columnList };
-    Object.entries(updatedColumnList).forEach(([columnName, column]) => {
-      const col = column as any;
-      if (newFilters[columnName]) {
-        // Convert array of selected values to filter object
-        const filterObj: Record<string, boolean> = {};
-        newFilters[columnName].forEach(value => {
-          filterObj[value] = true;
-        });
-        col.filter = filterObj;
-      } else {
-        col.filter = {};
+    try {
+      // Create updated report definition with the editing filters
+      const updatedColumnList = { ...localReportDefinition.columnList };
+      Object.entries(updatedColumnList).forEach(([columnName, column]) => {
+        const col = column as any;
+        if (editingFilters[columnName]) {
+          // Convert array of selected values to filter object
+          const filterObj: Record<string, boolean> = {};
+          editingFilters[columnName].forEach(value => {
+            filterObj[value] = true;
+          });
+          col.filter = filterObj;
+        } else {
+          col.filter = {};
+        }
+      });
+      
+      const updatedReportDefinition = {
+        ...localReportDefinition,
+        columnList: updatedColumnList
+      };
+      
+      // Save the updated report definition to the backend
+      const response = await fetch('/api/reports', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: selectedReport.uid,
+          name: selectedReport.name,
+          display_name: selectedReport.display_name,
+          is_public: selectedReport.is_public,
+          report_definition: updatedReportDefinition
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save report changes');
       }
-    });
-    
-    // Update local report definition to trigger data refetch
-    const updatedReportDefinition = {
-      ...localReportDefinition,
-      columnList: updatedColumnList
-    };
-    setLocalReportDefinition(updatedReportDefinition);
-    
-    console.log('Filters updated:', newFilters);
-    console.log('Updated report definition:', updatedReportDefinition);
+      
+      const { report } = await response.json();
+      
+      // Update the local and original definitions and exit edit mode
+      setLocalReportDefinition(updatedReportDefinition);
+      setOriginalReportDefinition(updatedReportDefinition);
+      setEditingFilters({});
+      setIsInEditMode(false);
+      
+      // Notify parent component of the update
+      if (onReportUpdate) {
+        onReportUpdate(report);
+      }
+      
+      console.log('Report saved successfully:', report);
+    } catch (error) {
+      console.error('Error saving report changes:', error);
+      alert('Failed to save report changes. Please try again.');
+    }
   };
 
   return (
     <div className="flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl overflow-hidden">
       {/* Card Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-100 rounded-t-xl min-h-[64px]">
-        <h3 className="text-lg font-semibold text-gray-900">Report Data</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-gray-900">Report Data</h3>
+          {selectedReport && isOwner(selectedReport) && (
+            <div className="flex items-center gap-1">
+              {isInEditMode ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleSaveChanges}
+                    className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-xl"
+                    title="Save changes"
+                  >
+                    <Check className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleEditToggle}
+                    className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl"
+                    title="Cancel changes"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleEditToggle}
+                  className="h-6 w-6 p-0 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-xl"
+                  title="Edit filters"
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
         {selectedReport && (
           <div className="flex items-center space-x-2">
             <Button
@@ -284,15 +420,17 @@ export function ReportBody({
               </div>
             ) : data ? (
               <DataTable
+                key={`${selectedReport?.uid}-${isInEditMode ? 'edit' : 'view'}`}
                 data={data}
                 columns={columns}
                 isLoading={isLoading}
                 reportDefinition={localReportDefinition}
-                filters={filters}
+                filters={currentFilters}
                 onFiltersChange={handleFiltersChange}
                 hasMore={hasMore}
                 fetchMore={fetchMore}
                 totalRows={totalRows}
+                isInEditMode={isInEditMode}
               />
             ) : (
               <div className="text-center text-gray-500 py-8">

@@ -32,6 +32,7 @@ export interface DataTableProps {
   hasMore?: boolean;
   fetchMore?: () => void;
   totalRows?: number;
+  isInEditMode?: boolean;
 }
 
 interface FilterDropdownProps {
@@ -237,7 +238,8 @@ export function DataTable({
   filters = {},
   hasMore = false,
   fetchMore,
-  totalRows
+  totalRows,
+  isInEditMode = false
 }: DataTableProps) {
   const [localFilters, setLocalFilters] = useState<Record<string, string[]>>(filters);
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -319,6 +321,12 @@ export function DataTable({
 
   const getFilterIcon = (columnKey: string) => {
     const hasFilter = localFilters[columnKey] && localFilters[columnKey].length > 0;
+    
+    // Only show filters when in edit mode
+    if (!isInEditMode) {
+      return null;
+    }
+    
     return (
       <div className="flex items-center gap-1">
         <FilterDropdown
@@ -378,7 +386,7 @@ export function DataTable({
           {data.length} of {totalRows ?? data.length} rows
         </h3>
         <div className="flex items-center gap-2">
-          {Object.keys(localFilters).length > 0 && (
+          {isInEditMode && Object.keys(localFilters).length > 0 && (
             <Button
               variant="outline"
               size="sm"
