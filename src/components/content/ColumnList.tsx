@@ -161,7 +161,7 @@ export function ColumnList({
                   )}
                   {/* Edit Controls */}
                   {(selectedReport && isOwner(selectedReport) && !creatingNewReport) || creatingNewReport ? (
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1 pr-4">
                       {showEditHeader ? (
                         <>
                           <Button
