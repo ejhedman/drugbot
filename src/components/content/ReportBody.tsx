@@ -393,7 +393,7 @@ export function ReportBody({
             </Button>
             <Button
               size="sm"
-              variant="outline"
+              variant="ghost"
               onClick={() => setIsJsonViewerOpen(true)}
               className="flex items-center rounded-xl"
               title="View Report Configuration"
