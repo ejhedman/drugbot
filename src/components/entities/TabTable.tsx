@@ -76,6 +76,11 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
       // Keep original entity data for updates
       flatRow._originalEntity = entity;
       
+      // Preserve any existing _uid field from the original data
+      if (entity._uid) {
+        flatRow._uid = entity._uid;
+      }
+      
       return flatRow;
     });
   };
@@ -153,7 +158,9 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
 
   const handleEdit = (index: number) => {
     setEditingRow(index);
-    setEditedData({ ...flatTableData[index] });
+    // Create editedData without the _uid field to avoid sending it to the API
+    const { _uid, _originalEntity, ...editableData } = flatTableData[index];
+    setEditedData(editableData);
   };
 
   const handleCancel = () => {
@@ -169,6 +176,9 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
         const idToUpdate = isUsingUIEntityData 
           ? index
           : flatTableData[index]?._uid || flatTableData[index]?.uid || index;
+        
+
+        
         await onUpdate(idToUpdate, editedData);
       }
       
