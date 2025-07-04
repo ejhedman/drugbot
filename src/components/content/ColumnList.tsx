@@ -199,6 +199,7 @@ export function ColumnList({
                             setEditingName(selectedReport ? selectedReport.display_name : '');
                           }}
                           className="h-6 w-6 p-0"
+                          title="Edit report name"
                         >
                           <Edit className="h-3 w-3" />
                         </Button>
