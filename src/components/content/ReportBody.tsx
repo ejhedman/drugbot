@@ -28,16 +28,46 @@ function arrayToCSV(data: any[], columns: any[]): string {
   return [header, ...rows].join('\n');
 }
 
+// Helper to map report definition to distinct data params
+function getDistinctParams(reportDefinition: any) {
+  if (!reportDefinition || !reportDefinition.columnList) return null;
+  const activeColumns = Object.entries(reportDefinition.columnList)
+    .filter(([_, col]) => (col as any).isActive)
+    .sort(([, a], [, b]) => ((a as any).ordinal ?? 0) - ((b as any).ordinal ?? 0))
+    .map(([key]) => key);
+  if (activeColumns.length === 0) return null;
+  // Build filters in the format expected by the API
+  const filters: Record<string, any> = {};
+  Object.entries(reportDefinition.columnList).forEach(([columnName, column]) => {
+    const col = column as any;
+    if (col.filter && Object.keys(col.filter).length > 0) {
+      const selectedValues = Object.keys(col.filter).filter(key => col.filter[key]);
+      if (selectedValues.length > 0) {
+        filters[columnName] = selectedValues.length === 1 ? selectedValues[0] : selectedValues;
+      }
+    }
+  });
+  return {
+    tableName: reportDefinition.tableName || 'generic_drugs_wide_view',
+    columnList: activeColumns,
+    filters,
+    orderBy: activeColumns[0] // Default order by first active column
+  };
+}
+
+// Updated: fetch all distinct data with filters and columns
 async function fetchAllReportData(reportDefinition: any, pageSize = 1000, onProgress?: (loaded: number, total: number) => void) {
   let allRows: any[] = [];
   let offset = 0;
   let totalRows = 0;
   let columns: any[] = [];
+  const distinctParams = getDistinctParams(reportDefinition);
+  if (!distinctParams) return { allRows: [], columns: [] };
   while (true) {
-    const response = await fetch('/api/reports/data', {
+    const response = await fetch('/api/reports/distinct-data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reportDefinition, offset, limit: pageSize })
+      body: JSON.stringify({ ...distinctParams, offset, limit: pageSize })
     });
     if (!response.ok) throw new Error('Failed to fetch report data');
     const result = await response.json();
