@@ -54,7 +54,20 @@ function FilterDropdown({
   const [localSelectedValues, setLocalSelectedValues] = useState<string[]>(selectedValues);
   const [dropdownWidth, setDropdownWidth] = useState<number>(240);
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const measureRef = useRef<HTMLDivElement>(null);
+
+  // Filter available values based on search term
+  const filteredValues = useMemo(() => {
+    if (!searchTerm.trim()) return availableValues;
+    const term = searchTerm.toLowerCase();
+    return availableValues.filter(value => 
+      value.toLowerCase().includes(term)
+    );
+  }, [availableValues, searchTerm]);
+
+  // Show search box if more than 10 options
+  const showSearch = availableValues.length > 10;
 
   // Fetch values only when dropdown is opened
   useEffect(() => {
@@ -105,6 +118,7 @@ function FilterDropdown({
     setIsOpen(open);
     if (!open) {
       applyFilterIfChanged();
+      setSearchTerm(''); // Clear search when closing
     }
   };
 
@@ -191,7 +205,18 @@ function FilterDropdown({
               className="max-h-60 overflow-y-auto px-1 py-1"
               style={{ minWidth: dropdownWidth - 8, maxWidth: 400 }}
             >
-              {availableValues.map((value) => (
+              {showSearch && (
+                <div className="px-2 py-1">
+                  <Input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              )}
+              {showSearch && <DropdownMenuSeparator />}
+              {filteredValues.map((value) => (
                 <div
                   key={value}
                   className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-100 rounded"
