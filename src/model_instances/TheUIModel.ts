@@ -95,7 +95,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         propertyName: 'route_type',
         ordinal: 2,
         isEditable: true,
-        isVisible: false,
+        isVisible: true,
         isRequired: false,
         isId: false,
         selectValues: ['Subcutaneous', 'Intravenous', 'Oral'],
@@ -110,7 +110,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         isRequired: true,
         isId: false,
         displayName: 'Loading Dose',
-        controlType: 'text',
+        controlType: 'number',
         placeholder: 'Enter loading dose'
       },{
         propertyName: 'load_measure',
@@ -120,7 +120,8 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         isRequired: true,
         isId: false,
         displayName: 'Loading Dose Unit',
-        controlType: 'text',
+        controlType: 'select',
+        selectValues: ['mL', 'g', 'IU', 'mcg'],
         placeholder: 'Enter dose unit (mg, ml, etc.)'
       },{
         propertyName: 'maintain_dose',
@@ -130,7 +131,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         isRequired: true,
         isId: false,
         displayName: 'Maintenance Dose',
-        controlType: 'text',
+        controlType: 'number',
         placeholder: 'Enter maintenance dose'
       },{
         propertyName: 'maintain_measure',
@@ -140,7 +141,8 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         isRequired: true,
         isId: false,
         displayName: 'Maintenance Dose Unit',
-        controlType: 'text',
+        controlType: 'select',
+        selectValues: ['mL', 'g', 'IU', 'mcg'],
         placeholder: 'Enter dose unit'
       },{
         propertyName: 'montherapy',
@@ -150,7 +152,8 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         isRequired: true,
         isId: false,
         displayName: 'Monotherapy Status',
-        controlType: 'text',
+        controlType: 'select',
+        selectValues: ['Yes', 'No', 'Conditional'],
         placeholder: 'Enter monotherapy approval status'
       },{
         propertyName: 'half_life',
@@ -160,7 +163,8 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         isRequired: true,
         isId: false,
         displayName: 'Half Life',
-        controlType: 'textarea',
+        controlType: 'select',
+        selectValues: ['6h', 'Variable', '48h', '24h', '2 weeks', '1 week'],
         placeholder: 'Enter drug half-life information'
       }
     ],
@@ -195,7 +199,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         propertyName: 'country',
         ordinal: 17,
         isEditable: true,
-        isVisible: false,
+        isVisible: true,
         isRequired: false,
         isId: false,
         selectValues: ['USA', 'CAN', 'FRA', 'UK'],
@@ -298,7 +302,7 @@ export const ENTITY_AGGREGATES: Record<string, UIAggregateMeta> = {
         isRequired: false,
         isId: false,
         displayName: 'Biosimilar',
-        controlType: 'text'
+        controlType: 'number'
       },{
         propertyName: 'biosimilar_suffix',
         ordinal: 7,

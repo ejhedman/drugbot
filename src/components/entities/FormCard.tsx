@@ -8,7 +8,7 @@ import { UIPropertyMeta } from '@/model_defs/UIModel';
 export interface FormField {
   key: string;
   label: string;
-  type?: 'text' | 'number' | 'email';
+  type?: 'text' | 'number' | 'numeric' | 'email' | 'date' | 'select' | 'checkbox';
   placeholder?: string;
   required?: boolean;
   defaultValue?: any;
@@ -88,6 +88,83 @@ export function FormCard({
     }));
   };
 
+  const renderFormControl = (field: FormField, value: any, onChange: (value: any) => void) => {
+    const def = getPropertyDef(field.key);
+    const controlType = def?.controlType || field.type || 'text';
+    const baseClasses = `flex-1 px-4 py-2 border rounded-xl text-sm focus-accent ${errors[field.key] ? 'border-red-500' : 'border-gray-300'}`;
+    
+    switch (controlType) {
+      case 'checkbox':
+        return (
+          <input
+            type="checkbox"
+            checked={Boolean(value)}
+            onChange={(e) => onChange(e.target.checked)}
+            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+            disabled={loading}
+          />
+        );
+      
+      case 'select':
+        const selectValues = def?.selectValues || [];
+        return (
+          <select
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+            disabled={loading}
+          >
+            <option value="">Select...</option>
+            {selectValues.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        );
+      
+      case 'number':
+      case 'numeric':
+        return (
+          <input
+            type="number"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+            placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+            required={field.required}
+            disabled={loading}
+          />
+        );
+      
+      case 'date':
+        return (
+          <input
+            type="date"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+            placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+            required={field.required}
+            disabled={loading}
+          />
+        );
+      
+      default: // text, textarea, etc.
+        return (
+          <input
+            type="text"
+            value={value?.toString() || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+            placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+            required={field.required}
+            disabled={loading}
+          />
+        );
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors = validateAll();
@@ -118,15 +195,7 @@ export function FormCard({
                 <div key={field.key} className="flex flex-col gap-1 w-full">
                   <div className="flex items-center gap-4">
                     <label className="label w-32">{field.label}:</label>
-                    <input
-                      type={field.type || (def?.controlType === 'number' ? 'number' : 'text')}
-                      value={formData[field.key] || ''}
-                      onChange={(e) => handleInputChange(field.key, e.target.value)}
-                      className={`flex-1 px-4 py-2 border rounded-xl text-sm focus-accent ${error ? 'border-red-500' : 'border-gray-300'}`}
-                      placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
-                      required={field.required}
-                      disabled={loading}
-                    />
+                    {renderFormControl(field, formData[field.key], (value) => handleInputChange(field.key, value))}
                   </div>
                   {error && <span className="text-red-600 text-xs ml-36">{error}</span>}
                 </div>

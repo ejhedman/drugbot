@@ -21,6 +21,7 @@ interface TabPropertiesProps {
 export function TabProperties({ data, title, emptyMessage, loading = false, onUpdate, schemaEntityName, canEdit = true }: TabPropertiesProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<Record<string, any>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
   
   // Get display name for a field using schema metadata
   const getFieldDisplayName = (fieldName: string): string => {
@@ -81,18 +82,155 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
   };
 
   const handleSave = async () => {
+    // Validate all fields before saving
+    let hasError = false;
+    const errors: Record<string, boolean> = {};
+    const fields = Object.keys(editedData);
+    fields.forEach((field) => {
+      if (!validateField(field, editedData[field])) {
+        errors[field] = true;
+        hasError = true;
+      }
+    });
+    setValidationErrors(errors);
+    if (hasError) return;
+
     try {
       if (onUpdate) {
         await onUpdate(0, editedData);
       }
       setIsEditing(false);
       setEditedData({});
+      setValidationErrors({});
     } catch (error) {
       console.error('Error updating properties:', error);
     }
   };
 
-  const handleInputChange = (key: string, value: string) => {
+  // Helper to get controlType for a property
+  const getControlType = (fieldName: string): string => {
+    if (!schemaEntityName) return 'text';
+    let schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
+    if (!schema) return 'text';
+    const field = (schema.propertyDefs || []).find((f: UIProperty) => f.propertyName === fieldName);
+    return field?.controlType || 'text';
+  };
+
+  // Helper to get select values
+  const getSelectValues = (fieldName: string): string[] => {
+    if (!schemaEntityName) return ['no values defined'];
+    let schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
+    if (!schema) return ['no values defined'];
+    const field = (schema.propertyDefs || []).find((f: UIProperty) => f.propertyName === fieldName);
+    return field?.selectValues || ['no values defined'];
+  };
+
+  // Validation logic
+  const validateField = (fieldName: string, value: any): boolean => {
+    const controlType = getControlType(fieldName);
+    if (controlType === 'number' || controlType === 'numeric') {
+      return value === '' || !isNaN(Number(value));
+    }
+    if (controlType === 'select') {
+      return getSelectValues(fieldName).includes(value);
+    }
+    return true;
+  };
+
+  // Render appropriate control based on controlType
+  const renderEditControl = (fieldName: string, value: any, onChange: (value: any) => void) => {
+    const controlType = getControlType(fieldName);
+    const hasError = validationErrors[fieldName];
+    const baseClasses = `w-full px-4 py-2 border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-xl text-sm focus-accent`;
+
+    switch (controlType) {
+      case 'boolean':
+        return (
+          <input
+            type="checkbox"
+            checked={Boolean(value)}
+            onChange={(e) => onChange(e.target.checked)}
+            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+          />
+        );
+      
+      case 'select':
+        const selectValues = getSelectValues(fieldName);
+        return (
+          <select
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={(e) => {
+              if (!validateField(fieldName, e.target.value)) {
+                setValidationErrors((prev) => ({
+                  ...prev,
+                  [fieldName]: true
+                }));
+              } else {
+                setValidationErrors((prev) => ({
+                  ...prev,
+                  [fieldName]: false
+                }));
+              }
+            }}
+            className={baseClasses}
+          >
+            <option value="">Select...</option>
+            {selectValues.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        );
+      
+      case 'number':
+      case 'numeric':
+        return (
+          <input
+            type="number"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={(e) => {
+              if (!validateField(fieldName, e.target.value)) {
+                setValidationErrors((prev) => ({
+                  ...prev,
+                  [fieldName]: true
+                }));
+              } else {
+                setValidationErrors((prev) => ({
+                  ...prev,
+                  [fieldName]: false
+                }));
+              }
+            }}
+            className={baseClasses}
+          />
+        );
+      
+      case 'date':
+        return (
+          <input
+            type="date"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+          />
+        );
+      
+      default: // text, textarea, etc.
+        return (
+          <input
+            type="text"
+            value={value?.toString() || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+          />
+        );
+    }
+  };
+
+  const handleInputChange = (key: string, value: any) => {
     setEditedData((prev) => ({
       ...prev,
       [key]: value
@@ -192,12 +330,11 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
             <div className="flex-1">
               {isEditing ? (
                 isFieldEditable(key) ? (
-                  <input
-                    type="text"
-                    value={editedData[key] || ''}
-                    onChange={(e) => handleInputChange(key, e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                  />
+                  renderEditControl(
+                    key,
+                    editedData[key],
+                    (value) => handleInputChange(key, value)
+                  )
                 ) : (
                   <span className="text-gray-500 italic">{value}</span>
                 )

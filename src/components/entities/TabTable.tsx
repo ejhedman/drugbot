@@ -28,6 +28,7 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
   const [tableData, setTableData] = useState(data);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newItemData, setNewItemData] = useState<any>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
 
   const confirmDialog = useConfirmDialog();
 
@@ -156,6 +157,129 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     return propertyDef ? propertyDef.isEditable : true; // Assume editable if no definition found
   };
 
+  // Helper to get controlType for a property
+  const getControlType = (fieldName: string): string => {
+    if (!schemaEntityName) return 'text';
+    let schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
+    if (!schema) return 'text';
+    const field = (schema.propertyDefs || []).find((f: UIProperty) => f.propertyName === fieldName);
+    return field?.controlType || 'text';
+  };
+
+  // Helper to get select values
+  const getSelectValues = (fieldName: string): string[] => {
+    if (!schemaEntityName) return ['no values defined'];
+    let schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
+    if (!schema) return ['no values defined'];
+    const field = (schema.propertyDefs || []).find((f: UIProperty) => f.propertyName === fieldName);
+    return field?.selectValues || ['no values defined'];
+  };
+
+  // Validation logic
+  const validateField = (fieldName: string, value: any): boolean => {
+    const controlType = getControlType(fieldName);
+    if (controlType === 'number' || controlType === 'numeric') {
+      return value === '' || !isNaN(Number(value));
+    }
+    if (controlType === 'select') {
+      return getSelectValues(fieldName).includes(value);
+    }
+    return true;
+  };
+
+  // Render appropriate control based on controlType
+  const renderEditControl = (fieldName: string, value: any, onChange: (value: any) => void) => {
+    const controlType = getControlType(fieldName);
+    const hasError = validationErrors[fieldName];
+    const baseClasses = `w-full px-4 py-2 border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-xl text-sm focus-accent text-left`;
+
+    switch (controlType) {
+      case 'boolean':
+        return (
+          <input
+            type="checkbox"
+            checked={Boolean(value)}
+            onChange={(e) => onChange(e.target.checked)}
+            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+          />
+        );
+      
+      case 'select':
+        const selectValues = getSelectValues(fieldName);
+        return (
+          <select
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={(e) => {
+              if (!validateField(fieldName, e.target.value)) {
+                setValidationErrors((prev) => ({
+                  ...prev,
+                  [fieldName]: true
+                }));
+              } else {
+                setValidationErrors((prev) => ({
+                  ...prev,
+                  [fieldName]: false
+                }));
+              }
+            }}
+            className={baseClasses}
+          >
+            <option value="">Select...</option>
+            {selectValues.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        );
+      
+      case 'number':
+      case 'numeric':
+        return (
+          <input
+            type="number"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={(e) => {
+              if (!validateField(fieldName, e.target.value)) {
+                setValidationErrors((prev) => ({
+                  ...prev,
+                  [fieldName]: true
+                }));
+              } else {
+                setValidationErrors((prev) => ({
+                  ...prev,
+                  [fieldName]: false
+                }));
+              }
+            }}
+            className={baseClasses}
+          />
+        );
+      
+      case 'date':
+        return (
+          <input
+            type="date"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+          />
+        );
+      
+      default: // text, textarea, etc.
+        return (
+          <input
+            type="text"
+            value={value?.toString() || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+          />
+        );
+    }
+  };
+
   const handleEdit = (index: number) => {
     setEditingRow(index);
     // Create editedData without the _uid field to avoid sending it to the API
@@ -169,6 +293,19 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
   };
 
   const handleSave = async (index: number) => {
+    // Validate all fields before saving
+    let hasError = false;
+    const errors: Record<string, boolean> = {};
+    const fields = isUsingUIEntityData ? propertyColumns : Object.keys(flatTableData[index] || {}).filter(key => key !== 'uid' && key !== '_uid');
+    fields.forEach((field) => {
+      if (!validateField(field, editedData[field])) {
+        errors[field] = true;
+        hasError = true;
+      }
+    });
+    setValidationErrors(errors);
+    if (hasError) return;
+
     try {
       if (onUpdate) {
         // For aggregates, pass the uid of the record being updated
@@ -325,11 +462,77 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
     return value.toString();
   };
 
-  const handleNewItemInputChange = (key: string, value: string) => {
+  const handleNewItemInputChange = (key: string, value: any) => {
     setNewItemData((prev: any) => ({
       ...prev,
       [key]: value
     }));
+  };
+
+  const renderNewItemControl = (fieldName: string, value: any, onChange: (value: any) => void) => {
+    const controlType = getControlType(fieldName);
+    const baseClasses = "w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent";
+    
+    switch (controlType) {
+      case 'checkbox':
+        return (
+          <input
+            type="checkbox"
+            checked={Boolean(value)}
+            onChange={(e) => onChange(e.target.checked)}
+            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+          />
+        );
+      
+      case 'select':
+        const selectValues = getSelectValues(fieldName);
+        return (
+          <select
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+          >
+            <option value="">Select...</option>
+            {selectValues.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        );
+      
+      case 'number':
+      case 'numeric':
+        return (
+          <input
+            type="number"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+          />
+        );
+      
+      case 'date':
+        return (
+          <input
+            type="date"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+          />
+        );
+      
+      default: // text, textarea, etc.
+        return (
+          <input
+            type="text"
+            value={value?.toString() || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={baseClasses}
+            placeholder={`Enter ${getFieldDisplayName(fieldName)}`}
+          />
+        );
+    }
   };
 
   if (loading) {
@@ -365,24 +568,20 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                   <>
                     <div className="space-y-2">
                       <label className="label">Display Name</label>
-                      <input
-                        type="text"
-                        value={newItemData.displayName || ''}
-                        onChange={(e) => handleNewItemInputChange('displayName', e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                        placeholder="Enter Display Name"
-                      />
+                      {renderNewItemControl(
+                        'displayName',
+                        newItemData.displayName,
+                        (value) => handleNewItemInputChange('displayName', value)
+                      )}
                     </div>
                     {propertyColumns.filter(propName => propName !== 'uid' && propName !== '_uid').map((propName) => (
                       <div key={propName} className="space-y-2">
                         <label className="label">{getFieldDisplayName(propName)}</label>
-                        <input
-                          type="text"
-                          value={newItemData[propName] || ''}
-                          onChange={(e) => handleNewItemInputChange(propName, e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                          placeholder={`Enter ${getFieldDisplayName(propName)}`}
-                        />
+                        {renderNewItemControl(
+                          propName,
+                          newItemData[propName],
+                          (value) => handleNewItemInputChange(propName, value)
+                        )}
                       </div>
                     ))}
                   </>
@@ -390,13 +589,11 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                   Object.keys(newItemData).filter(key => key !== 'uid' && key !== '_uid').map((key) => (
                     <div key={key} className="space-y-2">
                       <label className="label">{getFieldDisplayName(key)}</label>
-                      <input
-                        type="text"
-                        value={newItemData[key] || ''}
-                        onChange={(e) => handleNewItemInputChange(key, e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                        placeholder={`Enter ${getFieldDisplayName(key)}`}
-                      />
+                      {renderNewItemControl(
+                        key,
+                        newItemData[key],
+                        (value) => handleNewItemInputChange(key, value)
+                      )}
                     </div>
                   ))
                 )}
@@ -451,47 +648,41 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
         <div className="p-4 rounded-b-lg flex-1 min-h-0 overflow-y-auto overflow-x-auto scrollbar-always-visible">
           <form onSubmit={(e) => { e.preventDefault(); handleSubmitAdd(); }} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {isUsingUIEntityData ? (
-                <>
-                  {isFieldEditable('displayName') && (
-                    <div className="space-y-2">
-                      <label className="label">Display Name</label>
-                      <input
-                        type="text"
-                        value={newItemData.displayName || ''}
-                        onChange={(e) => handleNewItemInputChange('displayName', e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                        placeholder="Enter Display Name"
-                      />
-                    </div>
+                                {isUsingUIEntityData ? (
+                    <>
+                      {isFieldEditable('displayName') && (
+                        <div className="space-y-2">
+                          <label className="label">Display Name</label>
+                          {renderNewItemControl(
+                            'displayName',
+                            newItemData.displayName,
+                            (value) => handleNewItemInputChange('displayName', value)
+                          )}
+                        </div>
+                      )}
+                      {propertyColumns.filter(propName => propName !== 'uid' && propName !== '_uid').map((propName) => (
+                        <div key={propName} className="space-y-2">
+                          <label className="label">{getFieldDisplayName(propName)}</label>
+                          {renderNewItemControl(
+                            propName,
+                            newItemData[propName],
+                            (value) => handleNewItemInputChange(propName, value)
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    Object.keys(newItemData).filter(key => key !== 'uid' && key !== '_uid').map((key) => (
+                      <div key={key} className="space-y-2">
+                        <label className="label">{getFieldDisplayName(key)}</label>
+                        {renderNewItemControl(
+                          key,
+                          newItemData[key],
+                          (value) => handleNewItemInputChange(key, value)
+                        )}
+                      </div>
+                    ))
                   )}
-                  {propertyColumns.filter(propName => propName !== 'uid' && propName !== '_uid').map((propName) => (
-                    <div key={propName} className="space-y-2">
-                      <label className="label">{getFieldDisplayName(propName)}</label>
-                      <input
-                        type="text"
-                        value={newItemData[propName] || ''}
-                        onChange={(e) => handleNewItemInputChange(propName, e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                        placeholder={`Enter ${getFieldDisplayName(propName)}`}
-                      />
-                    </div>
-                  ))}
-                </>
-              ) : (
-                Object.keys(newItemData).filter(key => key !== 'uid' && key !== '_uid').map((key) => (
-                  <div key={key} className="space-y-2">
-                    <label className="label">{getFieldDisplayName(key)}</label>
-                    <input
-                      type="text"
-                      value={newItemData[key] || ''}
-                      onChange={(e) => handleNewItemInputChange(key, e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent"
-                      placeholder={`Enter ${getFieldDisplayName(key)}`}
-                    />
-                  </div>
-                ))
-              )}
             </div>
             <div className="flex items-center gap-3 pt-4">
               <Button
@@ -574,17 +765,16 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                         <td key={propName} className="px-4 py-1 text-gray-900 text-left border-r border-gray-200">
                           {editingRow === idx ? (
                             isFieldEditable(propName) ? (
-                              <input
-                                type="text"
-                                value={editedData?.[propName]?.toString() || ''}
-                                onChange={(e) => {
+                              renderEditControl(
+                                propName,
+                                editedData?.[propName],
+                                (value) => {
                                   setEditedData((prev: any) => ({
                                     ...prev,
-                                    [propName]: e.target.value
+                                    [propName]: value
                                   }));
-                                }}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
-                              />
+                                }
+                              )
                             ) : (
                               <span className="text-gray-500 italic">{formatCellValue(row[propName])}</span>
                             )
@@ -598,17 +788,16 @@ export function TabTable({ data, title, icon, emptyMessage, loading = false, onU
                         <td key={key} className="px-4 py-1 text-gray-900 text-left border-r border-gray-200">
                           {editingRow === idx ? (
                             isFieldEditable(key) ? (
-                              <input
-                                type="text"
-                                value={editedData?.[key]?.toString() || ''}
-                                onChange={(e) => {
+                              renderEditControl(
+                                key,
+                                editedData?.[key],
+                                (value) => {
                                   setEditedData((prev: any) => ({
                                     ...prev,
-                                    [key]: e.target.value
+                                    [key]: value
                                   }));
-                                }}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm focus-accent text-left"
-                              />
+                                }
+                              )
                             ) : (
                               <span className="text-gray-500 italic">{formatCellValue(row[key])}</span>
                             )
