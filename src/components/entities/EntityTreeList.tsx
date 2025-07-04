@@ -136,7 +136,7 @@ export function EntityTreeList({
     <div className={getBorderClasses("flex-1 min-h-0 h-full flex flex-col bg-white rounded-xl p-4", "border-6 border-orange-500")}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-200 rounded-t-xl">
-        <h2 className="section-title text-white">Entities</h2>
+        <h2 className="section-title text-white">Generic Drugs</h2>
         <div className="flex items-center gap-2">
           <Button
             onClick={handleRefresh}

@@ -498,17 +498,6 @@ export function EntityDetailPage({
           canEdit: theUIModel.getAggregate('GenericAlias')?.canEdit ?? true,
           ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericAlias')?.ordinal ?? 1,
         },
-        {
-          key: 'wide-view',
-          label: 'Complete Drug Information',
-          icon: <Database className="w-4 h-4" />,
-          data: convertUIAggregateToTabData(wideViewList),
-          emptyMessage: 'No complete drug information available.',
-          schemaEntityName: 'GenericDrugsWideView',
-          isTable: wideViewList?.isTable ?? true,
-          canEdit: theUIModel.getAggregate('GenericDrugsWideView')?.canEdit ?? false,
-          ordinal: entityAggregateRefs.find(ref => ref.aggregateType === 'GenericDrugsWideView')?.ordinal ?? 5,
-        },
       ].sort((a, b) => a.ordinal - b.ordinal) // Sort tabs by ordinal
     : [];
 
