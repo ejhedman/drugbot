@@ -86,7 +86,7 @@ async function fetchAllTableData(supabase: any, tableName: string): Promise<any[
   let from = 0;
   let hasMore = true;
 
-  console.log(`Fetching all data from table: ${tableName}`);
+  // console.log(`Fetching all data from table: ${tableName}`);
 
   while (hasMore) {
     try {
@@ -107,16 +107,16 @@ async function fetchAllTableData(supabase: any, tableName: string): Promise<any[
 
       // Add the fetched data to our collection
       allData.push(...data);
-      console.log(`Fetched ${data.length} rows from ${tableName} (total so far: ${allData.length})`);
+      // console.log(`Fetched ${data.length} rows from ${tableName} (total so far: ${allData.length})`);
 
       // Check if we've fetched all data
       if (count !== null && allData.length >= count) {
         hasMore = false;
-        console.log(`Completed fetching all ${count} rows from ${tableName}`);
+        // console.log(`Completed fetching all ${count} rows from ${tableName}`);
       } else if (data.length < pageSize) {
         // If we got fewer rows than requested, we've reached the end
         hasMore = false;
-        console.log(`Reached end of data for ${tableName} (fetched ${allData.length} total rows)`);
+        // console.log(`Reached end of data for ${tableName} (fetched ${allData.length} total rows)`);
       } else {
         // Move to next page
         from += pageSize;
@@ -127,6 +127,6 @@ async function fetchAllTableData(supabase: any, tableName: string): Promise<any[
     }
   }
 
-  console.log(`Total rows fetched from ${tableName}: ${allData.length}`);
+  // console.log(`Total rows fetched from ${tableName}: ${allData.length}`);
   return allData;
 } 

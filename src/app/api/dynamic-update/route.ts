@@ -34,7 +34,7 @@ export async function PATCH(request: NextRequest) {
 
     // Validate property keys
     const validColumns = dbTable.fields.map(f => f.name);
-    console.log('dynamic-update: Valid columns:', validColumns);
+    // console.log('dynamic-update: Valid columns:', validColumns);
     console.log('dynamic-update: Properties to update:', Object.keys(properties));
     
     for (const propKey of Object.keys(properties)) {

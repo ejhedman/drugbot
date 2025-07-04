@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { reportDefinition, columnName, excludeColumn } = body;
 
-    console.log('data-values API called with:', { columnName, excludeColumn, tableName: reportDefinition?.tableName });
+    // console.log('data-values API called with:', { columnName, excludeColumn, tableName: reportDefinition?.tableName });
 
     if (!reportDefinition || !reportDefinition.columnList || !columnName) {
       return NextResponse.json({ error: 'Invalid request parameters' }, { status: 400 });
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Log the filters
-    console.log('[FILTER DROPDOWN FILTERS]', filters);
+    // console.log('[FILTER DROPDOWN FILTERS]', filters);
 
     // Call the SQL function via RPC
     const { data, error } = await supabase.rpc('get_distinct_values_with_filters', {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Log the raw data returned
-    console.log('[FILTER DROPDOWN RAW DATA]', data);
+    // console.log('[FILTER DROPDOWN RAW DATA]', data);
 
     if (error) {
       console.error('Error fetching distinct values:', error);
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       .filter((value) => typeof value === 'string' && value !== '')
       .sort();
 
-    console.log('Returning values:', { count: uniqueValues.length, sample: uniqueValues.slice(0, 3) });
+    // console.log('Returning values:', { count: uniqueValues.length, sample: uniqueValues.slice(0, 3) });
 
     return NextResponse.json({ 
       values: uniqueValues,
