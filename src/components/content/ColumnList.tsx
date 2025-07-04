@@ -221,7 +221,11 @@ export function ColumnList({
       )}
       {/* Content */}
       {collapsed ? (
-        <div className="flex-1 flex items-center justify-center">
+        <div 
+          className="flex-1 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setCollapsed(false)}
+          title="Click to expand"
+        >
           <span className="text-xs text-gray-500 font-semibold" style={{ writingMode: 'vertical-rl', transform: 'rotate(-180deg)' }}>
             Report Column List
           </span>
