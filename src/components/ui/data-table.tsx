@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Filter, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useColumnValues } from '@/hooks/useColumnValues';
+import { useDebounce } from '@/hooks/useDebounce';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -241,27 +242,32 @@ export function DataTable({
   const [localFilters, setLocalFilters] = useState<Record<string, string[]>>(filters);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  // Infinite scroll handler
+  // Use useCallback for handleScroll
+  const handleScroll = useCallback(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    if (scrollHeight - scrollTop - clientHeight < 200) {
+      fetchMore?.();
+    }
+  }, [fetchMore]);
+
+  // Debounce the scroll handler at the top level
+  const debouncedHandleScroll = useDebounce(handleScroll, 100);
+
+  // Infinite scroll handler with debouncing
   useEffect(() => {
     if (!fetchMore || !hasMore) return;
-    const handleScroll = () => {
-      const container = tableContainerRef.current;
-      if (!container) return;
-      const { scrollTop, scrollHeight, clientHeight } = container;
-      if (scrollHeight - scrollTop - clientHeight < 200) {
-        fetchMore();
-      }
-    };
     const container = tableContainerRef.current;
     if (container) {
-      container.addEventListener('scroll', handleScroll);
+      container.addEventListener('scroll', debouncedHandleScroll, { passive: true });
     }
     return () => {
       if (container) {
-        container.removeEventListener('scroll', handleScroll);
+        container.removeEventListener('scroll', debouncedHandleScroll);
       }
     };
-  }, [fetchMore, hasMore]);
+  }, [fetchMore, hasMore, debouncedHandleScroll]);
 
   // Apply filters to data
   const filteredData = useMemo(() => {

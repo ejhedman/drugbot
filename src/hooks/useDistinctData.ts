@@ -1,8 +1,14 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { ReportDefinition } from './useReports';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebounce } from './useDebounce';
 
-export interface ReportData {
+export interface DistinctDataParams {
+  tableName: string;
+  columnList: string[];
+  filters?: Record<string, any>;
+  orderBy?: string;
+}
+
+export interface DistinctData {
   data: Record<string, any>[];
   columns: Array<{
     key: string;
@@ -14,74 +20,52 @@ export interface ReportData {
   limit: number;
 }
 
-// Request queue for serializing data fetches
-class RequestQueue {
+export interface RequestQueue {
+  clear(): void;
+  add<T>(request: () => Promise<T>): Promise<T>;
+}
+
+class RequestQueueImpl implements RequestQueue {
   private queue: Array<() => Promise<any>> = [];
-  private isProcessing = false;
-  private lastRequestParams: string | null = null;
+  private processing = false;
 
-  async add<T>(requestFn: () => Promise<T>, requestParams: string): Promise<T> {
-    // If this is the same request as the last one, return the existing promise
-    if (requestParams === this.lastRequestParams && this.queue.length > 0) {
-      return new Promise<T>((resolve, reject) => {
-        // Find the existing request in the queue and chain to it
-        const existingRequest = this.queue.find(item => {
-          // This is a simplified check - in practice, we'd need to store the request params with each queued item
-          return true; // For now, we'll just return the first pending request
-        });
-        if (existingRequest) {
-          existingRequest().then(resolve).catch(reject);
-        } else {
-          reject(new Error('Duplicate request not found in queue'));
-        }
-      });
-    }
+  clear() {
+    this.queue = [];
+  }
 
-    return new Promise<T>((resolve, reject) => {
-      const wrappedRequest = async () => {
+  async add<T>(request: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.queue.push(async () => {
         try {
-          this.lastRequestParams = requestParams;
-          const result = await requestFn();
+          const result = await request();
           resolve(result);
-          return result;
         } catch (error) {
           reject(error);
-          throw error;
         }
-      };
+      });
 
-      this.queue.push(wrappedRequest);
       this.processQueue();
     });
   }
 
   private async processQueue() {
-    if (this.isProcessing || this.queue.length === 0) return;
+    if (this.processing || this.queue.length === 0) return;
 
-    this.isProcessing = true;
-    
+    this.processing = true;
     while (this.queue.length > 0) {
       const request = this.queue.shift();
       if (request) {
-        try {
-          await request();
-        } catch (error) {
-          console.error('Request failed:', error);
-        }
+        await request();
       }
     }
-
-    this.isProcessing = false;
-  }
-
-  clear() {
-    this.queue = [];
-    this.isProcessing = false;
-    this.lastRequestParams = null;
+    this.processing = false;
   }
 }
 
-export function useReportData(reportDefinition: ReportDefinition | null, pageSize: number = 1000) {
+export function useDistinctData(
+  params: DistinctDataParams | null, 
+  pageSize: number = 1000
+) {
   const [data, setData] = useState<Record<string, any>[]>([]);
   const [columns, setColumns] = useState<any[]>([]);
   const [totalRows, setTotalRows] = useState(0);
@@ -89,32 +73,32 @@ export function useReportData(reportDefinition: ReportDefinition | null, pageSiz
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const lastReportDefRef = useRef<ReportDefinition | null>(null);
+  const lastParamsRef = useRef<DistinctDataParams | null>(null);
   
   // Request queue for serializing fetches
-  const requestQueue = useRef<RequestQueue>(new RequestQueue());
+  const requestQueue = useRef<RequestQueue>(new RequestQueueImpl());
   
   // Track the last fetch parameters to prevent duplicates
   const lastFetchParamsRef = useRef<string>('');
 
-  // Reset data when reportDefinition changes
+  // Reset data when params change
   useEffect(() => {
     setData([]);
     setColumns([]);
     setTotalRows(0);
     setOffset(0);
     setHasMore(true);
-    lastReportDefRef.current = reportDefinition;
+    lastParamsRef.current = params;
     requestQueue.current.clear();
     lastFetchParamsRef.current = '';
-  }, [reportDefinition]);
+  }, [params]);
 
   const fetchPage = useCallback(async (pageOffset: number) => {
-    if (!reportDefinition) return;
+    if (!params) return;
     
     // Create a unique identifier for this request
     const requestParams = JSON.stringify({
-      reportDefinition: reportDefinition,
+      ...params,
       offset: pageOffset,
       limit: pageSize
     });
@@ -129,14 +113,18 @@ export function useReportData(reportDefinition: ReportDefinition | null, pageSiz
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch('/api/reports/data', {
+      const response = await fetch('/api/reports/distinct-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportDefinition, offset: pageOffset, limit: pageSize })
+        body: JSON.stringify({
+          ...params,
+          offset: pageOffset,
+          limit: pageSize
+        })
       });
       
       if (response.ok) {
-        const result = await response.json();
+        const result: DistinctData = await response.json();
         setColumns(result.columns || []);
         setTotalRows(result.totalRows || 0);
         setOffset(result.offset + result.data.length);
@@ -146,8 +134,8 @@ export function useReportData(reportDefinition: ReportDefinition | null, pageSiz
         if (pageOffset === 0) {
           setData(result.data || []);
         } else {
-          // Prevent appending if the reportDefinition has changed
-          if (lastReportDefRef.current === reportDefinition) {
+          // Prevent appending if the params have changed
+          if (lastParamsRef.current === params) {
             setData(prev => [...prev, ...(result.data || [])]);
           } else {
             setData(result.data || []);
@@ -158,32 +146,32 @@ export function useReportData(reportDefinition: ReportDefinition | null, pageSiz
         lastFetchParamsRef.current = requestParams;
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to fetch report data');
+        setError(errorData.error || 'Failed to fetch distinct data');
       }
     } catch (error) {
-      console.error('Error fetching report data:', error);
-      setError('Failed to fetch report data');
+      console.error('Error fetching distinct data:', error);
+      setError('Failed to fetch distinct data');
     } finally {
       setIsLoading(false);
     }
-  }, [reportDefinition, pageSize]);
+  }, [params, pageSize]);
 
-  // Initial load or when reportDefinition changes
+  // Initial load or when params change
   useEffect(() => {
-    if (reportDefinition) {
+    if (params) {
       fetchPage(0);
     }
-  }, [fetchPage, reportDefinition]);
+  }, [fetchPage, params]);
 
   // Create a debounced version of fetchPage for infinite scrolling
   const debouncedFetchPage = useDebounce(fetchPage, 150);
 
   // Fetch next page (debounced)
   const fetchMore = useCallback(() => {
-    if (!isLoading && hasMore && reportDefinition && lastReportDefRef.current === reportDefinition) {
+    if (!isLoading && hasMore && params && lastParamsRef.current === params) {
       debouncedFetchPage(offset);
     }
-  }, [isLoading, hasMore, reportDefinition, debouncedFetchPage, offset]);
+  }, [isLoading, hasMore, params, debouncedFetchPage, offset]);
 
   // Cleanup on unmount
   useEffect(() => {

@@ -5,7 +5,7 @@ import { Settings, Download, Code } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { JsonViewer } from '@/components/ui/json-viewer';
 import { DataTable } from '@/components/ui/data-table';
-import { useReportData } from '@/hooks/useReportData';
+import { useDistinctData } from '@/hooks/useDistinctData';
 
 interface ReportBodyProps {
   selectedReport: Report | null;
@@ -79,8 +79,34 @@ export function ReportBody({
     return filterObj;
   }, [localReportDefinition]);
 
-  // Use the report data hook (paged) with local report definition
-  const { data, columns, totalRows, isLoading, error, hasMore, fetchMore } = useReportData(localReportDefinition, 200);
+  // Map report definition to distinct data params
+  const distinctParams = useMemo(() => {
+    if (!localReportDefinition || !localReportDefinition.columnList) return null;
+    const activeColumns = Object.entries(localReportDefinition.columnList)
+      .filter(([_, col]) => (col as any).isActive)
+      .sort(([, a], [, b]) => ((a as any).ordinal ?? 0) - ((b as any).ordinal ?? 0))
+      .map(([key]) => key);
+    if (activeColumns.length === 0) return null;
+    // Build filters in the format expected by the API
+    const filters: Record<string, any> = {};
+    Object.entries(localReportDefinition.columnList).forEach(([columnName, column]) => {
+      const col = column as any;
+      if (col.filter && Object.keys(col.filter).length > 0) {
+        const selectedValues = Object.keys(col.filter).filter(key => col.filter[key]);
+        if (selectedValues.length > 0) {
+          filters[columnName] = selectedValues.length === 1 ? selectedValues[0] : selectedValues;
+        }
+      }
+    });
+    return {
+      tableName: localReportDefinition.tableName || 'generic_drugs_wide_view',
+      columnList: activeColumns,
+      filters,
+      orderBy: activeColumns[0] // Default order by first active column
+    };
+  }, [localReportDefinition]);
+
+  const { data, columns, totalRows, isLoading, error, hasMore, fetchMore } = useDistinctData(distinctParams, 200);
 
   // Download dialog state
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
