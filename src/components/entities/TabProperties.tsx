@@ -31,12 +31,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
     }
     
     // First try to find in main entity schemas
-    let schema = theUIModel.getEntity(schemaEntityName);
-    
-    // If not found in main schemas, try sub-collections
-    if (!schema) {
-      schema = ENTITY_AGGREGATES[schemaEntityName];
-    }
+    const schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
     
     if (!schema) {
       return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -54,12 +49,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
     }
     
     // First try to find in main entity schemas
-    let schema = theUIModel.getEntity(schemaEntityName);
-    
-    // If not found in main schemas, try sub-collections
-    if (!schema) {
-      schema = ENTITY_AGGREGATES[schemaEntityName];
-    }
+    const schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
     
     if (!schema || !schema.propertyDefs) {
       // If no schema found, assume editable unless it's a key/id field
@@ -110,7 +100,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
   // Helper to get controlType for a property
   const getControlType = (fieldName: string): string => {
     if (!schemaEntityName) return 'text';
-    let schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
+    const schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
     if (!schema) return 'text';
     const field = (schema.propertyDefs || []).find((f: UIProperty) => f.propertyName === fieldName);
     return field?.controlType || 'text';
@@ -119,7 +109,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
   // Helper to get select values
   const getSelectValues = (fieldName: string): string[] => {
     if (!schemaEntityName) return ['no values defined'];
-    let schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
+    const schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
     if (!schema) return ['no values defined'];
     const field = (schema.propertyDefs || []).find((f: UIProperty) => f.propertyName === fieldName);
     return field?.selectValues || ['no values defined'];
@@ -257,12 +247,7 @@ export function TabProperties({ data, title, emptyMessage, loading = false, onUp
     }
     
     // First try to find in main entity schemas
-    let schema = theUIModel.getEntity(schemaEntityName);
-    
-    // If not found in main schemas, try sub-collections
-    if (!schema) {
-      schema = ENTITY_AGGREGATES[schemaEntityName];
-    }
+    const schema = theUIModel.getEntity(schemaEntityName) || ENTITY_AGGREGATES[schemaEntityName];
     
     if (!schema || !schema.propertyDefs) {
       // If no schema found, show all properties

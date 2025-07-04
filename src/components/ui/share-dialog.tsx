@@ -53,7 +53,7 @@ export function ShareDialog({ isOpen, onClose, shareUrl, reportName }: ShareDial
         <div className="space-y-4">
           <div>
             <p className="text-sm text-gray-600 mb-2">
-              Share this link to allow others to view "{reportName}":
+              Share this link to allow others to view &quot;{reportName}&quot;:
             </p>
             <Input
               value={shareUrl}

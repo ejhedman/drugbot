@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { UIEntity } from '@/model_defs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -38,32 +38,7 @@ export function EntityTreeList({
     fetchTreeData();
   }, [refreshTrigger]); // Refresh when refreshTrigger changes
 
-  useEffect(() => {
-    if (searchTerm) {
-      // For search, we'll filter the existing tree data
-      filterTreeData();
-    } else {
-      fetchTreeData();
-    }
-  }, [searchTerm]);
-
-  const fetchTreeData = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/entities/tree');
-      if (response.ok) {
-        const data = await response.json();
-        setEntities(data.ancestors || []);
-        setChildrenMap(data.childrenMap || {});
-      }
-    } catch (error) {
-      console.error('Error fetching tree data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterTreeData = async () => {
+  const filterTreeData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/dynamic-select', {
@@ -100,6 +75,31 @@ export function EntityTreeList({
       }
     } catch (error) {
       console.error('Error searching entities:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (searchTerm) {
+      // For search, we'll filter the existing tree data
+      filterTreeData();
+    } else {
+      fetchTreeData();
+    }
+  }, [searchTerm, filterTreeData]);
+
+  const fetchTreeData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/entities/tree');
+      if (response.ok) {
+        const data = await response.json();
+        setEntities(data.ancestors || []);
+        setChildrenMap(data.childrenMap || {});
+      }
+    } catch (error) {
+      console.error('Error fetching tree data:', error);
     } finally {
       setLoading(false);
     }

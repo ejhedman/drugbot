@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   UIEntity, 
   UIProperty, 
@@ -81,32 +81,7 @@ export function EntityDetailPage({
     };
   };
 
-  useEffect(() => {
-    if (childUid) {
-      fetchChild();
-      // Child entities (manu_drugs) have no collections, so no fetching needed
-    } else if (entityUid) {
-      fetchEntity();
-      // fetchEntityCollections will be called after entity is loaded
-    } else {
-      setEntity(null);
-      setChild(null);
-      setAliasesList(null);
-      setRoutesList(null);
-      setApprovalsList(null);
-      setManuDrugsList(null);
-      setWideViewList(null);
-    }
-  }, [entityUid, childUid]);
-
-  // Fetch collections when entity is loaded
-  useEffect(() => {
-    if (entity && !child && entity.entityUid) {
-      fetchEntityCollections();
-    }
-  }, [entity, child]);
-
-  const fetchEntity = async () => {
+  const fetchEntity = useCallback(async () => {
     if (!entityUid) return;
     const table = getEntityTableName(entityType);
     if (!table) {
@@ -135,9 +110,9 @@ export function EntityDetailPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [entityUid, entityType]);
 
-  const fetchChild = async () => {
+  const fetchChild = useCallback(async () => {
     if (!childUid) return;
     const table = getEntityTableName(childType);
     if (!table) {
@@ -166,9 +141,9 @@ export function EntityDetailPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [childUid, childType]);
 
-  const fetchEntityCollections = async () => {
+  const fetchEntityCollections = useCallback(async () => {
     try {
       setCollectionsLoading(true);
       // Get the entity UID from the entity object
@@ -234,7 +209,32 @@ export function EntityDetailPage({
     } finally {
       setCollectionsLoading(false);
     }
-  };
+  }, [entity]);
+
+  useEffect(() => {
+    if (childUid) {
+      fetchChild();
+      // Child entities (manu_drugs) have no collections, so no fetching needed
+    } else if (entityUid) {
+      fetchEntity();
+      // fetchEntityCollections will be called after entity is loaded
+    } else {
+      setEntity(null);
+      setChild(null);
+      setAliasesList(null);
+      setRoutesList(null);
+      setApprovalsList(null);
+      setManuDrugsList(null);
+      setWideViewList(null);
+    }
+  }, [entityUid, childUid, fetchEntity, fetchChild]);
+
+  // Fetch collections when entity is loaded
+  useEffect(() => {
+    if (entity && !child && entity.entityUid) {
+      fetchEntityCollections();
+    }
+  }, [entity, child, fetchEntityCollections]);
 
   async function fetchRoutes(entityUid: string): Promise<UIAggregate> {
     const routesRes = await fetch(`/api/dynamic-aggregate?entityUid=${encodeURIComponent(entityUid)}&aggregateType=GenericRoute`);

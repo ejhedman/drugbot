@@ -2,15 +2,17 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { SharedReportLayout } from '@/components/layout/SharedReportLayout';
 
 interface SharedReportPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-export default function SharedReportPage({ params }: SharedReportPageProps) {
+export default async function SharedReportPage({ params }: SharedReportPageProps) {
+  const { slug } = await params;
+
   return (
     <AuthProvider>
-      <SharedReportLayout reportSlug={params.slug} />
+      <SharedReportLayout reportSlug={slug} />
     </AuthProvider>
   );
 } 

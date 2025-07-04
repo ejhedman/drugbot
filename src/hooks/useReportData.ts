@@ -187,8 +187,9 @@ export function useReportData(reportDefinition: ReportDefinition | null, pageSiz
 
   // Cleanup on unmount
   useEffect(() => {
+    const queue = requestQueue.current;
     return () => {
-      requestQueue.current.clear();
+      queue.clear();
     };
   }, []);
 

@@ -175,8 +175,9 @@ export function useDistinctData(
 
   // Cleanup on unmount
   useEffect(() => {
+    const queue = requestQueue.current;
     return () => {
-      requestQueue.current.clear();
+      queue.clear();
     };
   }, []);
 

@@ -113,7 +113,7 @@ export default function DocsPage() {
       setSelectedCategory(firstDoc.category);
       fetchMarkdown(firstDoc.path);
     }
-  }, []);
+  }, [selectedDoc]);
 
   const renderMarkdown = (content: string) => {
     const lines = content.split('\n');
