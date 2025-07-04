@@ -27,7 +27,11 @@ import { ReportBody } from '@/components/content/ReportBody';
 
 type PanelState = 'RLISTE' | 'RLISTC' | 'RCROPEN' | 'RCCOPEN' | 'RCCCLOSED';
 
-export function ReportsPage() {
+interface ReportsPageProps {
+  resetTrigger?: number;
+}
+
+export function ReportsPage({ resetTrigger = 0 }: ReportsPageProps) {
   const { user } = useAuth();
   const { reports, isLoading, createReport, updateReport, deleteReport } = useReports();
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
@@ -46,7 +50,21 @@ export function ReportsPage() {
   const [panelState, setPanelState] = useState<PanelState>('RLISTE');
   const [creatingNewReport, setCreatingNewReport] = useState(false);
 
-
+  // Clear selected report when resetTrigger changes (when reports button is clicked)
+  useEffect(() => {
+    if (resetTrigger > 0) {
+      setSelectedReport(null);
+      setReportDefinition(null);
+      setOriginalReportDefinition(null);
+      setSelectedReportType('');
+      setSelectedColumns([]);
+      setIsInConfigEditMode(false);
+      setIsEditingName(false);
+      setEditingName('');
+      setCreatingNewReport(false);
+      setPanelState('RLISTE');
+    }
+  }, [resetTrigger]);
 
   // Auto-collapse/expand Reports list based on report selection
   useEffect(() => {

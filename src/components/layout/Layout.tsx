@@ -24,6 +24,7 @@ export function Layout() {
   const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const [showHelpFeedback, setShowHelpFeedback] = useState(false);
   const [activeFeature, setActiveFeature] = useState('home');
+  const [reportsResetTrigger, setReportsResetTrigger] = useState(0);
   
   // Use the login help submission hook with default logging behavior
   const { submitHelpRequest } = useLoginHelpSubmission();
@@ -88,6 +89,10 @@ export function Layout() {
 
   const handleFeatureChange = (feature: string) => {
     setActiveFeature(feature);
+    // Reset reports state when reports feature is selected
+    if (feature === 'reports') {
+      setReportsResetTrigger(prev => prev + 1);
+    }
     // Close any modals when switching features
     setShowReleaseNotes(false);
     setShowHelpFeedback(false);
@@ -149,7 +154,7 @@ export function Layout() {
         case 'drugs':
           return <AuthenticatedContent />;
         case 'reports':
-          return <ReportsPage />;
+          return <ReportsPage resetTrigger={reportsResetTrigger} />;
         case 'documentation':
           return <DocumentationPage />;
         default:
