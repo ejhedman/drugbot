@@ -11,6 +11,7 @@ import { UnauthenticatedContent } from '@/components/content/UnauthenticatedCont
 import { AuthenticatedContent } from '@/components/content/AuthenticatedContent';
 import { HomePage } from '@/components/content/HomePage';
 import { ReportsPage } from '@/components/content/ReportsPage';
+import { SelectListsPage } from '@/components/content/SelectListsPage';
 import { DocumentationPage } from '@/components/content/DocumentationPage';
 import { ReleaseNotesPage } from '@/components/content/ReleaseNotesPage';
 import { HelpFeedbackPage } from '@/components/content/HelpFeedbackPage';
@@ -25,6 +26,7 @@ export function Layout() {
   const [showHelpFeedback, setShowHelpFeedback] = useState(false);
   const [activeFeature, setActiveFeature] = useState('home');
   const [reportsResetTrigger, setReportsResetTrigger] = useState(0);
+  const [selectListsResetTrigger, setSelectListsResetTrigger] = useState(0);
   
   // Use the login help submission hook with default logging behavior
   const { submitHelpRequest } = useLoginHelpSubmission();
@@ -93,6 +95,10 @@ export function Layout() {
     if (feature === 'reports') {
       setReportsResetTrigger(prev => prev + 1);
     }
+    // Reset select lists state when select-lists feature is selected
+    if (feature === 'select-lists') {
+      setSelectListsResetTrigger(prev => prev + 1);
+    }
     // Close any modals when switching features
     setShowReleaseNotes(false);
     setShowHelpFeedback(false);
@@ -155,6 +161,8 @@ export function Layout() {
           return <AuthenticatedContent />;
         case 'reports':
           return <ReportsPage resetTrigger={reportsResetTrigger} />;
+        case 'select-lists':
+          return <SelectListsPage resetTrigger={selectListsResetTrigger} />;
         case 'documentation':
           return <DocumentationPage />;
         default:

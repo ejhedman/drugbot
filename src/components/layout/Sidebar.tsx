@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Pill, BarChart3, HelpCircle, Download, Upload } from 'lucide-react';
+import { Home, Pill, BarChart3, List, HelpCircle, Download, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useCallback, useRef } from 'react';
 import {
@@ -230,6 +230,19 @@ export function Sidebar({ activeFeature, onFeatureChange }: SidebarProps) {
 
       {/* Bottom section with utility buttons */}
       <div className="flex flex-col items-center space-y-4 mt-auto">
+
+        {/* Select Lists Icon */}
+        <button
+          onClick={() => onFeatureChange('select-lists')}
+          className={cn(
+            "w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200 group relative",
+            activeFeature === 'select-lists'
+              ? "bg-blue-500 text-white shadow-md" 
+              : "bg-white text-gray-600 hover:bg-gray-200 hover:text-gray-800"
+          )}
+        >
+          <List size={20} />
+        </button>
 
         {/* Download Icon */}
         <Dialog
