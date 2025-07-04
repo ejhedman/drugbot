@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Report } from '@/hooks/useReports';
 import { Button } from '@/components/ui/button';
 import { Settings, Download, Code } from 'lucide-react';
@@ -57,11 +57,19 @@ export function ReportBody({
   isJsonViewerOpen,
   setIsJsonViewerOpen
 }: ReportBodyProps) {
-  // Extract filters from report definition
+  // Local state for report definition with filter updates
+  const [localReportDefinition, setLocalReportDefinition] = useState(reportDefinition);
+
+  // Update local report definition when prop changes
+  useEffect(() => {
+    setLocalReportDefinition(reportDefinition);
+  }, [reportDefinition]);
+
+  // Extract filters from local report definition
   const filters = useMemo(() => {
-    if (!reportDefinition?.columnList) return {};
+    if (!localReportDefinition?.columnList) return {};
     const filterObj: Record<string, string[]> = {};
-    Object.entries(reportDefinition.columnList).forEach(([columnName, column]) => {
+    Object.entries(localReportDefinition.columnList).forEach(([columnName, column]) => {
       const col = column as any;
       if (col.filter && Object.keys(col.filter).length > 0) {
         // Convert filter object to array of selected values
@@ -69,10 +77,10 @@ export function ReportBody({
       }
     });
     return filterObj;
-  }, [reportDefinition]);
+  }, [localReportDefinition]);
 
-  // Use the report data hook (paged)
-  const { data, columns, totalRows, isLoading, error, hasMore, fetchMore } = useReportData(reportDefinition, 200);
+  // Use the report data hook (paged) with local report definition
+  const { data, columns, totalRows, isLoading, error, hasMore, fetchMore } = useReportData(localReportDefinition, 200);
 
   // Download dialog state
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
@@ -82,7 +90,7 @@ export function ReportBody({
   const [downloading, setDownloading] = useState(false);
 
   const handleDownloadCSV = async () => {
-    if (!reportDefinition) return;
+    if (!localReportDefinition) return;
     setDownloadDialogOpen(true);
     setDownloadProgress(0);
     setDownloadTotal(0);
@@ -90,7 +98,7 @@ export function ReportBody({
     setDownloading(true);
     try {
       const { allRows, columns: allColumns } = await fetchAllReportData(
-        reportDefinition,
+        localReportDefinition,
         1000,
         (loaded, total) => {
           setDownloadProgress(loaded);
@@ -118,10 +126,10 @@ export function ReportBody({
 
   // Handle filter changes
   const handleFiltersChange = (newFilters: Record<string, string[]>) => {
-    if (!reportDefinition) return;
+    if (!localReportDefinition) return;
     
     // Update the report definition with new filters
-    const updatedColumnList = { ...reportDefinition.columnList };
+    const updatedColumnList = { ...localReportDefinition.columnList };
     Object.entries(updatedColumnList).forEach(([columnName, column]) => {
       const col = column as any;
       if (newFilters[columnName]) {
@@ -135,10 +143,16 @@ export function ReportBody({
         col.filter = {};
       }
     });
-    // Note: In a real implementation, you would want to save this back to the database
-    // For now, we'll just update the local state
+    
+    // Update local report definition to trigger data refetch
+    const updatedReportDefinition = {
+      ...localReportDefinition,
+      columnList: updatedColumnList
+    };
+    setLocalReportDefinition(updatedReportDefinition);
+    
     console.log('Filters updated:', newFilters);
-    console.log('Updated report definition:', { ...reportDefinition, columnList: updatedColumnList });
+    console.log('Updated report definition:', updatedReportDefinition);
   };
 
   return (
@@ -205,7 +219,7 @@ export function ReportBody({
       </Dialog>
       {/* Content */}
       <div className="flex-1 min-h-0 p-4">
-        {selectedReport && reportDefinition ? (
+        {selectedReport && localReportDefinition ? (
           <div className="flex-1 min-h-0">
             {error ? (
               <div className="text-center text-red-500 py-8">
@@ -217,7 +231,7 @@ export function ReportBody({
                 data={data}
                 columns={columns}
                 isLoading={isLoading}
-                reportDefinition={reportDefinition}
+                reportDefinition={localReportDefinition}
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
                 hasMore={hasMore}
@@ -247,9 +261,9 @@ export function ReportBody({
               </DialogDescription>
             </DialogHeader>
             <div className="overflow-auto max-h-[60vh]">
-              {reportDefinition ? (
+              {localReportDefinition ? (
                 <JsonViewer
-                  data={reportDefinition}
+                  data={localReportDefinition}
                   title="Report Definition"
                 />
               ) : (

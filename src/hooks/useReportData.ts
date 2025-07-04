@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { ReportDefinition } from './useReports';
 
 export interface ReportData {
@@ -21,6 +21,7 @@ export function useReportData(reportDefinition: ReportDefinition | null, pageSiz
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const lastReportDefRef = useRef<ReportDefinition | null>(null);
 
   // Reset data when reportDefinition changes
   useEffect(() => {
@@ -29,6 +30,7 @@ export function useReportData(reportDefinition: ReportDefinition | null, pageSiz
     setTotalRows(0);
     setOffset(0);
     setHasMore(true);
+    lastReportDefRef.current = reportDefinition;
   }, [reportDefinition]);
 
   const fetchPage = useCallback(async (pageOffset: number) => {
@@ -47,10 +49,16 @@ export function useReportData(reportDefinition: ReportDefinition | null, pageSiz
         setTotalRows(result.totalRows || 0);
         setOffset(result.offset + result.data.length);
         setHasMore(result.offset + result.data.length < result.totalRows);
+        // Only append if this is a true next page, not a filter change or reset
         if (pageOffset === 0) {
           setData(result.data || []);
         } else {
-          setData(prev => [...prev, ...(result.data || [])]);
+          // Prevent appending if the reportDefinition has changed
+          if (lastReportDefRef.current === reportDefinition) {
+            setData(prev => [...prev, ...(result.data || [])]);
+          } else {
+            setData(result.data || []);
+          }
         }
       } else {
         const errorData = await response.json();
@@ -71,7 +79,8 @@ export function useReportData(reportDefinition: ReportDefinition | null, pageSiz
 
   // Fetch next page
   const fetchMore = useCallback(() => {
-    if (!isLoading && hasMore && reportDefinition) {
+    // Prevent fetchMore if offset is not correct for the current filter set
+    if (!isLoading && hasMore && reportDefinition && lastReportDefRef.current === reportDefinition) {
       fetchPage(offset);
     }
   }, [isLoading, hasMore, reportDefinition, fetchPage, offset]);

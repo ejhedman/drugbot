@@ -46,11 +46,18 @@ function FilterDropdown({
   onClear,
   reportDefinition
 }: FilterDropdownProps) {
-  const { values: availableValues, isLoading: isLoadingValues } = useColumnValues(reportDefinition, column.key);
+  const { values: availableValues, isLoading: isLoadingValues, refetch } = useColumnValues(reportDefinition, column.key, column.key, false);
   const [localSelectedValues, setLocalSelectedValues] = useState<string[]>(selectedValues);
   const [dropdownWidth, setDropdownWidth] = useState<number>(240);
   const [isOpen, setIsOpen] = useState(false);
   const measureRef = useRef<HTMLDivElement>(null);
+
+  // Fetch values only when dropdown is opened
+  useEffect(() => {
+    if (isOpen) {
+      refetch();
+    }
+  }, [isOpen, refetch]);
 
   // Sync local state with prop changes
   useEffect(() => {
@@ -79,17 +86,21 @@ function FilterDropdown({
     setDropdownWidth(Math.min(Math.max(240, maxWidth + 56), 400));
   }, [availableValues]);
 
+  // Helper to apply filter if changed
+  const applyFilterIfChanged = () => {
+    const a = [...selectedValues].sort();
+    const b = [...localSelectedValues].sort();
+    const changed = a.length !== b.length || a.some((v, i) => v !== b[i]);
+    if (changed) {
+      onFilterChange(localSelectedValues);
+    }
+  };
+
   // Only apply filter when dropdown closes and selection has changed
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (!open) {
-      // Compare arrays (order-insensitive)
-      const a = [...selectedValues].sort();
-      const b = [...localSelectedValues].sort();
-      const changed = a.length !== b.length || a.some((v, i) => v !== b[i]);
-      if (changed) {
-        onFilterChange(localSelectedValues);
-      }
+      applyFilterIfChanged();
     }
   };
 
@@ -131,7 +142,20 @@ function FilterDropdown({
         className="!overflow-visible"
       >
         <div className="px-2 py-1.5 text-sm font-medium text-gray-700 border-b">
-          Filter {column.displayName}
+          <div className="flex items-center justify-between">
+            <span>Filter {column.displayName}</span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs h-6 px-2 ml-2"
+              onClick={() => {
+                applyFilterIfChanged();
+                setIsOpen(false);
+              }}
+            >
+              OK
+            </Button>
+          </div>
         </div>
         {isLoadingValues ? (
           <div className="px-2 py-2 text-sm text-gray-500">Loading values...</div>
@@ -156,16 +180,6 @@ function FilterDropdown({
               >
                 Select None
               </Button>
-              {localSelectedValues.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClear}
-                  className="text-xs h-6"
-                >
-                  Clear
-                </Button>
-              )}
             </div>
             <DropdownMenuSeparator />
             <div

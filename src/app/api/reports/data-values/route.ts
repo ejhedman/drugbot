@@ -12,7 +12,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { reportDefinition, columnName } = body;
+    const { reportDefinition, columnName, excludeColumn } = body;
+
+    console.log('data-values API called with:', { columnName, excludeColumn, tableName: reportDefinition?.tableName });
 
     if (!reportDefinition || !reportDefinition.columnList || !columnName) {
       return NextResponse.json({ error: 'Invalid request parameters' }, { status: 400 });
@@ -26,12 +28,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Column not found in report definition' }, { status: 400 });
     }
 
-    // Query distinct values for the specified column using raw SQL
-    const { data: distinctValues, error } = await supabase
-      .rpc('get_distinct_values', {
-        table_name: tableName,
-        column_name: columnName
-      });
+    // Build filters, excluding the current column being filtered
+    const filters: Record<string, string[]> = {};
+    Object.entries(reportDefinition.columnList).forEach(([colName, column]) => {
+      const col = column as any;
+      if (colName !== excludeColumn && col.filter && Object.keys(col.filter).length > 0) {
+        const selectedValues = Object.keys(col.filter).filter(key => col.filter[key]);
+        if (selectedValues.length > 0) {
+          filters[colName] = selectedValues;
+        }
+      }
+    });
+
+    // Log the filters
+    console.log('[FILTER DROPDOWN FILTERS]', filters);
+
+    // Call the SQL function via RPC
+    const { data, error } = await supabase.rpc('get_distinct_values_with_filters', {
+      table_name: tableName,
+      column_name: columnName,
+      filters: filters
+    });
+
+    // Log the raw data returned
+    console.log('[FILTER DROPDOWN RAW DATA]', data);
 
     if (error) {
       console.error('Error fetching distinct values:', error);
@@ -39,10 +59,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract unique values and convert to strings
-    const uniqueValues = distinctValues
-      .map((row: any) => String(row.value || ''))
-      .filter((value: string) => value !== '')
+    const uniqueValues = [...new Set(data?.map((row: any) => String(row.result_value) || '') || [])]
+      .filter((value) => typeof value === 'string' && value !== '')
       .sort();
+
+    console.log('Returning values:', { count: uniqueValues.length, sample: uniqueValues.slice(0, 3) });
 
     return NextResponse.json({ 
       values: uniqueValues,
