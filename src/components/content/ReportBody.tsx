@@ -101,7 +101,9 @@ async function arrayToPDF(data: any[], columns: any[], reportName: string = 'Rep
     (col.displayName || col.key) !== '#'
   );
   // Now prepend the row number
-  const headers = ['#', ...filteredColumns.map((col: any) => col.displayName || col.key)];
+  const headers = [
+    '#', 
+    ...filteredColumns.map((col: any) => col.displayName || col.key)];
   const tableData = data.map((row, idx) => [
     (idx + 1).toString(),
     ...filteredColumns.map((col: any) => {
@@ -121,7 +123,7 @@ async function arrayToPDF(data: any[], columns: any[], reportName: string = 'Rep
     margin: { top: 30 },
     tableWidth: 'auto', // fit table to page width
     horizontalPageBreak: true,
-    horizontalPageBreakRepeat: 1, // repeat first column on each horizontal page
+    horizontalPageBreakRepeat: 0, // repeat first column on each horizontal page
   });
 
   return doc.output('arraybuffer');
