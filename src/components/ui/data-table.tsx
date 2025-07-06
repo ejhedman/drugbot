@@ -425,7 +425,7 @@ export function DataTable({
       </div>
 
       {/* Table Container with Scrollbars */}
-      <div ref={tableContainerRef} className="h-[70vh] overflow-x-auto overflow-y-auto">
+      <div ref={tableContainerRef} className="flex-1 h-0 overflow-x-auto overflow-y-auto">
         <table className="w-full min-w-max text-sm border-collapse">
           <thead>
             <tr className="bg-gray-50">

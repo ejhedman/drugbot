@@ -609,9 +609,9 @@ export function ReportBody({
         </DialogContent>
       </Dialog>
       {/* Content */}
-      <div className="flex-1 min-h-0 p-4">
+      <div className="flex-1 h-0 p-4 flex flex-col overflow-hidden">
         {selectedReport && localReportDefinition ? (
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 h-0 overflow-hidden flex flex-col">
             {error ? (
               <div className="text-center text-red-500 py-8">
                 <p className="text-lg">Error loading report data</p>

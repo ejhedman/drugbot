@@ -314,7 +314,7 @@ export function SharedReportBody({
       </div>
 
       {/* Report Table */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 h-0 p-4 flex flex-col overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -329,7 +329,7 @@ export function SharedReportBody({
             </div>
           </div>
         ) : reportData && reportColumns ? (
-          <div className="h-full overflow-hidden">
+          <div className="flex-1 h-0 overflow-hidden flex flex-col">
             <DataTable 
               data={reportData} 
               columns={reportColumns}
